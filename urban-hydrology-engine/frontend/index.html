@@ -1,0 +1,2650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Delhi Municipal Flood Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+  /* ═══════════════════════════════════════════════════════════════
+     DESIGN TOKENS — Municipal Intelligence
+     ═══════════════════════════════════════════════════════════════ */
+  :root {
+    --navy:       #1B2A4A;
+    --navy-light: #2D3E5F;
+    --navy-dark:  #0F1B33;
+    --cyan:       #00BCD4;
+    --cyan-light: #4DD0E1;
+    --cyan-dim:   #00BCD422;
+    --bg:         #F0F2F5;
+    --bg-card:    #FFFFFF;
+    --bg-panel:   #F8F9FB;
+    --text:       #1B2A4A;
+    --text-sec:   #6B7B8D;
+    --text-dim:   #94A3B8;
+    --border:     #E2E8F0;
+    --border-light:#EDF2F7;
+    --green:      #16A34A;
+    --green-bg:   #DCFCE7;
+    --yellow:     #D97706;
+    --yellow-bg:  #FEF3C7;
+    --red:        #DC2626;
+    --red-bg:     #FEE2E2;
+    --critical:   #991B1B;
+    --purple:     #7C3AED;
+    --purple-bg:  #F3E8FF;
+    --shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.08);
+    --shadow-lg:  0 8px 24px rgba(0,0,0,.12);
+    --radius:     8px;
+    --radius-sm:  6px;
+    --header-h:   60px;
+    --ctrl-h:     56px;
+    --panel-w:    340px;
+    --font:       'DM Sans', system-ui, -apple-system, sans-serif;
+    --mono:       'DM Mono', 'Fira Code', monospace;
+  }
+
+  /* ── Dark theme overrides ─────────────────────────────────── */
+  [data-theme="dark"] {
+    --bg:         #0F1117;
+    --bg-card:    #1A1D27;
+    --bg-panel:   #151820;
+    --text:       #E2E8F0;
+    --text-sec:   #94A3B8;
+    --text-dim:   #64748B;
+    --border:     #2D3548;
+    --border-light:#232838;
+    --green-bg:   #052E16;
+    --yellow-bg:  #422006;
+    --red-bg:     #450A0A;
+    --purple-bg:  #2E1065;
+    --shadow-sm:  0 1px 2px rgba(0,0,0,.3);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.4);
+    --shadow-lg:  0 8px 24px rgba(0,0,0,.5);
+  }
+  [data-theme="dark"] #header {
+    background: #0B0E14;
+    border-bottom-color: #1E2433;
+  }
+  [data-theme="dark"] .leaflet-control-zoom a {
+    background: #1A1D27 !important;
+    color: #E2E8F0 !important;
+    border-color: #2D3548 !important;
+  }
+  [data-theme="dark"] .leaflet-control-zoom a:hover {
+    background: #232838 !important;
+  }
+  [data-theme="dark"] .leaflet-popup-content-wrapper {
+    background: #1A1D27;
+    border-color: #2D3548;
+  }
+  [data-theme="dark"] .leaflet-popup-tip {
+    background: #1A1D27;
+    border-color: #2D3548;
+  }
+  [data-theme="dark"] .popup-header {
+    background: #0B0E14;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     RESET & BASE
+     ═══════════════════════════════════════════════════════════════ */
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     HEADER — 60px navy bar
+     ═══════════════════════════════════════════════════════════════ */
+  #header {
+    height: var(--header-h);
+    background: var(--navy);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--navy-light);
+    z-index: 100;
+    position: relative;
+  }
+  #header .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #header .brand-icon {
+    width: 36px; height: 36px;
+    background: var(--cyan);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 12px rgba(0,188,212,.3);
+  }
+  #header .brand-text h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: .3px;
+    line-height: 1.2;
+  }
+  #header .brand-text span {
+    font-size: 11px;
+    color: var(--cyan-light);
+    font-weight: 400;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .header-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.85);
+    white-space: nowrap;
+  }
+  .stat-pill .pill-val {
+    font-weight: 700;
+    font-family: var(--mono);
+    color: #FFFFFF;
+  }
+  .stat-pill.live {
+    border-color: var(--cyan);
+    background: rgba(0,188,212,.12);
+  }
+  .stat-pill.live .pill-val { color: var(--cyan-light); }
+  .stat-pill.warn {
+    border-color: var(--yellow);
+    background: rgba(217,119,6,.12);
+  }
+  .stat-pill.warn .pill-val { color: #FBBF24; }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #m-weather {
+    font-size: 12px;
+    color: rgba(255,255,255,.6);
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #header-clock {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cyan-light);
+    min-width: 60px;
+    text-align: right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MAIN LAYOUT — Map + Side Panel
+     ═══════════════════════════════════════════════════════════════ */
+  #main {
+    display: flex;
+    height: calc(100vh - var(--header-h) - var(--ctrl-h));
+    height: calc(100dvh - var(--header-h) - var(--ctrl-h));
+    position: relative;
+  }
+  #map-container {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+  #map {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+  }
+
+  /* ── Map Legends ──────────────────────────────────────────────── */
+  .map-legend {
+    position: absolute;
+    z-index: 800;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 12px;
+    line-height: 2;
+    box-shadow: var(--shadow-md);
+    display: none;
+    bottom: 20px;
+    left: 16px;
+  }
+  .map-legend.visible { display: block; }
+  .map-legend .legend-title {
+    font-weight: 600;
+    font-size: 11px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .legend-row { display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     SIDE PANEL — 340px
+     ═══════════════════════════════════════════════════════════════ */
+  #side-panel {
+    width: var(--panel-w);
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform .3s ease;
+  }
+
+  /* Stat Cards row */
+  .stat-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    box-shadow: var(--shadow-sm);
+  }
+  .stat-card .sc-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 4px;
+  }
+  .stat-card .sc-value {
+    font-size: 22px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .stat-card .sc-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .stat-card.accent-cyan .sc-value { color: var(--cyan); }
+  .stat-card.accent-green .sc-value { color: var(--green); }
+  .stat-card.accent-yellow .sc-value { color: var(--yellow); }
+  .stat-card.accent-red .sc-value { color: var(--red); }
+
+  /* Console section */
+  .panel-section-header {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-section-header .dot-live {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+
+  #console-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.7;
+    background: var(--bg-card);
+  }
+  #console-log::-webkit-scrollbar { width: 5px; }
+  #console-log::-webkit-scrollbar-track { background: transparent; }
+  #console-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .log-entry {
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    animation: log-slide .25s ease;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  @keyframes log-slide {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .log-entry .log-ts {
+    font-size: 10px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    min-width: 55px;
+  }
+  .log-entry .log-msg { flex: 1; }
+  .log-safe { color: var(--green); }
+  .log-safe .log-ts { color: var(--green); opacity: .6; }
+  .log-triggered { color: var(--yellow); background: rgba(217,119,6,.05); }
+  .log-triggered .log-ts { color: var(--yellow); opacity: .6; }
+  .log-critical { color: var(--red); background: rgba(220,38,38,.06); font-weight: 500; }
+  .log-critical .log-ts { color: var(--red); opacity: .6; }
+  .log-system { color: var(--navy-light); }
+  .log-error { color: var(--red); background: var(--red-bg); }
+  .log-error .log-ts { color: var(--red); opacity: .6; }
+
+  .log-tag {
+    display: inline-block;
+    min-width: 64px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+    font-family: var(--mono);
+  }
+  .log-tag-system { background: var(--bg); color: var(--text-sec); }
+  .log-tag-safe { background: var(--green-bg); color: var(--green); }
+  .log-tag-triggered { background: var(--yellow-bg); color: var(--yellow); }
+  .log-tag-critical { background: var(--red-bg); color: var(--red); }
+  .log-tag-error { background: var(--red-bg); color: var(--red); }
+
+  /* Last cycle footer */
+  .panel-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-card);
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-footer .cycle-time {
+    font-family: var(--mono);
+    font-weight: 500;
+    color: var(--text-sec);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     CONTROL BAR — 56px
+     ═══════════════════════════════════════════════════════════════ */
+  #control-bar {
+    height: var(--ctrl-h);
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.04);
+    z-index: 50;
+    position: relative;
+  }
+
+  .btn {
+    padding: 8px 18px;
+    border: 1px solid;
+    border-radius: var(--radius-sm);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s ease;
+    font-family: var(--font);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .45; cursor: wait; }
+
+  /* Primary (cyan) */
+  .btn-primary {
+    background: var(--cyan);
+    color: #FFFFFF;
+    border-color: var(--cyan);
+    box-shadow: 0 1px 3px rgba(0,188,212,.25);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #00ACC1;
+    border-color: #00ACC1;
+    box-shadow: 0 2px 8px rgba(0,188,212,.35);
+  }
+
+  /* Danger */
+  .btn-danger {
+    background: var(--red);
+    color: #FFFFFF;
+    border-color: var(--red);
+    box-shadow: 0 1px 3px rgba(220,38,38,.2);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: #B91C1C;
+    border-color: #B91C1C;
+  }
+
+  /* Ghost */
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-sec);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  /* Toggle active state for ghost buttons */
+  .btn-ghost.active {
+    background: var(--navy);
+    color: #FFFFFF;
+    border-color: var(--navy);
+  }
+  .btn-ghost.active:hover:not(:disabled) {
+    background: var(--navy-light);
+    border-color: var(--navy-light);
+  }
+
+  /* History toggle — purple accent */
+  .btn-history.active {
+    background: var(--purple);
+    color: #FFFFFF;
+    border-color: var(--purple);
+  }
+
+  .btn-spinner {
+    display: none;
+    width: 14px; height: 14px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ctrl-sep { width: 1px; height: 28px; background: var(--border); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     LEAFLET OVERRIDES
+     ═══════════════════════════════════════════════════════════════ */
+  .leaflet-popup-content-wrapper {
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 0;
+    overflow: hidden;
+  }
+  .leaflet-popup-tip { background: var(--bg-card); border: 1px solid var(--border); }
+  .leaflet-popup-content { margin: 0; font-size: 13px; line-height: 1.5; }
+  .leaflet-popup-close-button { color: var(--text-dim) !important; font-size: 18px !important; top: 6px !important; right: 8px !important; }
+
+  .popup-header {
+    background: var(--navy);
+    padding: 10px 14px;
+    color: #FFFFFF;
+  }
+  .popup-ward {
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+  .popup-ward-zone {
+    font-size: 11px;
+    color: var(--cyan-light);
+    margin-top: 2px;
+  }
+  .popup-body {
+    padding: 12px 14px;
+  }
+  .popup-score {
+    font-size: 28px;
+    font-weight: 800;
+    font-family: var(--mono);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .popup-score.safe { color: var(--green); }
+  .popup-score.warn { color: var(--yellow); }
+  .popup-score.danger { color: var(--red); }
+  .popup-status {
+    font-size: 11px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .popup-status .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .popup-status .status-dot.safe { background: var(--green); }
+  .popup-status .status-dot.warn { background: var(--yellow); }
+  .popup-status .status-dot.danger { background: var(--red); }
+  .popup-msg {
+    font-size: 12px;
+    color: var(--text-sec);
+    border-top: 1px solid var(--border-light);
+    padding-top: 6px;
+    margin-top: 4px;
+  }
+  .popup-terrain {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .popup-terrain b { color: var(--text); }
+
+  /* ═══════════════════════════════════════════════════════════════
+     HISTORY PANEL — slides up from control bar
+     ═══════════════════════════════════════════════════════════════ */
+  #history-panel {
+    position: fixed;
+    bottom: var(--ctrl-h);
+    left: 0; right: 0;
+    height: 0;
+    overflow: hidden;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+    transition: height .35s cubic-bezier(.4,0,.2,1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+  #history-panel.open { height: 52vh; }
+
+  #history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--bg-card);
+  }
+  #history-header .h-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #history-header .h-title .h-icon {
+    width: 28px; height: 28px;
+    background: var(--purple-bg);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .h-controls { display: flex; gap: 8px; align-items: center; }
+  .h-select {
+    background: var(--bg-card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    outline: none;
+    font-weight: 500;
+  }
+  .h-select:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-dim); }
+
+  #data-source-badge {
+    padding: 6px 24px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-sec);
+  }
+  #badge-icon { font-size: 13px; }
+  #badge-text { font-weight: 500; }
+
+  #history-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 16px 24px;
+    gap: 24px;
+  }
+  #history-chart-wrap { flex: 0 0 62%; position: relative; min-height: 0; }
+  #history-chart-wrap canvas { width: 100% !important; height: 100% !important; }
+  #history-sidebar {
+    flex: 0 0 36%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+  }
+  #history-sidebar::-webkit-scrollbar { width: 4px; }
+  #history-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .h-summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .h-summary-card .h-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: .7px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .h-summary-card .h-value {
+    font-size: 20px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--text);
+  }
+  .h-summary-card .h-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .h-summary-row { display: flex; gap: 10px; }
+  .h-summary-row .h-summary-card { flex: 1; }
+
+  #worst-wards-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 6px; }
+  #worst-wards-table th {
+    text-align: left;
+    padding: 5px 8px;
+    color: var(--text-dim);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  #worst-wards-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-light); color: var(--text); }
+  #worst-wards-table tr { cursor: pointer; transition: background .15s; }
+  #worst-wards-table tr:hover { background: var(--bg); }
+  .ww-critical { color: var(--red); font-weight: 600; }
+  .ww-zone { color: var(--text-dim); font-size: 10px; }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MOBILE DRAWER — iPad responsive
+     ═══════════════════════════════════════════════════════════════ */
+  #drawer-fab {
+    display: none;
+    position: fixed;
+    bottom: calc(var(--ctrl-h) + 16px);
+    right: 16px;
+    z-index: 900;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: var(--shadow-lg);
+    align-items: center;
+    justify-content: center;
+    transition: transform .2s;
+  }
+  #drawer-fab:active { transform: scale(.9); }
+  #drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.3);
+    z-index: 899;
+  }
+
+  /* ── Tablet / iPad (portrait + landscape) ─────────────────── */
+  @media (max-width: 1024px) {
+    :root {
+      --panel-w: 300px;
+      --header-h: 52px;
+      --ctrl-h: 48px;
+    }
+    body { height: 100vh; height: 100dvh; }
+    #header { padding: 0 16px; }
+    #header .brand-icon { width: 30px; height: 30px; }
+    #header .brand-icon svg { width: 15px; height: 15px; }
+    #header .brand-text h1 { font-size: 13px; }
+    #side-panel {
+      position: fixed;
+      top: var(--header-h);
+      right: 0;
+      bottom: var(--ctrl-h);
+      z-index: 900;
+      transform: translateX(100%);
+      box-shadow: var(--shadow-lg);
+    }
+    #side-panel.drawer-open { transform: translateX(0); }
+    #drawer-fab { display: flex; }
+    #drawer-overlay.visible { display: block; }
+    .header-stats { display: none; }
+    #header .brand-text span { display: none; }
+    #control-bar {
+      padding: 0 10px;
+      gap: 5px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .btn { padding: 6px 10px; font-size: 11px; }
+    .btn svg { width: 12px; height: 12px; }
+    .ctrl-sep { height: 22px; }
+    #history-panel.open { height: 50vh; height: 50dvh; }
+    #history-body { padding: 12px 16px; gap: 16px; flex-direction: column; }
+    #history-chart-wrap { flex: 0 0 auto; min-height: 200px; }
+    #history-sidebar { flex: 0 0 auto; max-height: 180px; }
+    #history-header { padding: 10px 16px; }
+    #history-header .h-title { font-size: 13px; }
+    .map-legend { font-size: 11px; padding: 10px 12px; }
+    #m-weather { max-width: 180px; font-size: 11px; }
+    #header-clock { font-size: 12px; }
+  }
+
+  /* ── Small tablet / iPad Mini portrait ────────────────────── */
+  @media (max-width: 820px) {
+    :root {
+      --header-h: 48px;
+      --ctrl-h: 44px;
+      --panel-w: 280px;
+    }
+    #header .brand-text h1 { font-size: 12px; }
+    #m-weather { display: none; }
+    .btn span:not(.btn-spinner) { /* hide button text on narrow screens */ }
+    #history-panel.open { height: 55vh; height: 55dvh; }
+  }
+
+  /* ── Landscape iPad safe-area + notch handling ────────────── */
+  @supports (padding: env(safe-area-inset-bottom)) {
+    #control-bar {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    #header {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     MISC
+     ═══════════════════════════════════════════════════════════════ */
+  .leaflet-control-zoom {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: var(--shadow-sm) !important;
+    overflow: hidden;
+  }
+  .leaflet-control-zoom a {
+    background: var(--bg-card) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    font-size: 16px !important;
+  }
+  .leaflet-control-zoom a:hover {
+    background: var(--bg) !important;
+  }
+  .leaflet-control-attribution { display: none; }
+
+  /* ── Dark mode toggle button ──────────────────────────────── */
+  #btn-theme {
+    background: none;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 6px;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: rgba(255,255,255,.6);
+    transition: all .2s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+  #btn-theme:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
+  #btn-theme svg { pointer-events: none; }
+
+  /* ── Loading skeleton states ─────────────────────────────── */
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .skeleton .sc-value,
+  .skeleton .sc-sub {
+    background: var(--border-light);
+    color: transparent !important;
+    border-radius: 4px;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+    user-select: none;
+  }
+  .skeleton .sc-value { min-height: 26px; min-width: 50px; }
+  .skeleton .sc-sub { min-height: 12px; min-width: 70px; margin-top: 4px; }
+  .map-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .4s ease;
+  }
+  .map-skeleton.hidden { opacity: 0; pointer-events: none; }
+  .map-skeleton-inner {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .map-skeleton-bar {
+    width: 120px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .map-skeleton-bar::after {
+    content: '';
+    position: absolute;
+    left: -40%;
+    top: 0;
+    width: 40%;
+    height: 100%;
+    background: var(--cyan);
+    border-radius: 2px;
+    animation: skeleton-slide 1.2s ease-in-out infinite;
+  }
+  @keyframes skeleton-slide {
+    0% { left: -40%; }
+    100% { left: 100%; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     WARD DRILL-DOWN PANEL — slides in from LEFT
+     ═══════════════════════════════════════════════════════════════ */
+  #drill-panel {
+    position: fixed;
+    top: var(--header-h);
+    left: 0;
+    bottom: var(--ctrl-h);
+    width: 400px;
+    max-width: 92vw;
+    background: #fff;
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 960;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #drill-panel.open { transform: translateX(0); }
+  [data-theme="dark"] #drill-panel {
+    background: #141821;
+    border-color: #2D3548;
+  }
+
+  /* Header */
+  #drill-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #drill-ward-name {
+    font-family: var(--font);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    line-height: 1.2;
+    margin: 0;
+  }
+  #drill-subtitle {
+    font-size: 12px;
+    color: var(--text-sec);
+    margin-top: 3px;
+  }
+  .drill-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+  .drill-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    font-family: var(--mono);
+  }
+  .drill-badge.safe { background: var(--green-bg); color: var(--green); }
+  .drill-badge.triggered { background: var(--yellow-bg); color: var(--yellow); }
+  .drill-badge.critical { background: var(--red-bg); color: var(--critical); }
+  #drill-close {
+    width: 30px; height: 30px;
+    border: none;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sec);
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  #drill-close:hover { background: var(--border); }
+  [data-theme="dark"] #drill-close { background: #1E2230; color: #94A3B8; }
+
+  /* Body */
+  #drill-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .drill-section {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .drill-section:last-child { border-bottom: none; }
+  .drill-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  /* Stat cards (4-up) */
+  .drill-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .drill-stat {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    text-align: center;
+  }
+  [data-theme="dark"] .drill-stat { background: #1A1D27; }
+  .drill-stat-label {
+    font-size: 9px;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .drill-stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+
+  /* Infra row */
+  .drill-infra-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .drill-infra-card {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--text);
+  }
+  [data-theme="dark"] .drill-infra-card { background: #1A1D27; }
+  .drill-infra-card svg { flex-shrink: 0; }
+  .drill-infra-card .infra-count {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 16px;
+    margin-left: auto;
+  }
+
+  /* Chart */
+  #drill-chart-wrap {
+    height: 160px;
+    position: relative;
+  }
+
+  /* Summary */
+  .drill-summary {
+    font-size: 12px;
+    color: var(--text-sec);
+    line-height: 1.6;
+    font-family: var(--font);
+  }
+  .drill-summary strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Loading */
+  .drill-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--text-dim);
+    font-size: 12px;
+    gap: 8px;
+  }
+  .drill-loading::before {
+    content: '';
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--cyan);
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 820px) {
+    #drill-panel { width: 100vw; max-width: 100vw; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     FORECAST WIDGET — in side panel
+     ═══════════════════════════════════════════════════════════════ */
+  #forecast-section {
+    border-bottom: 1px solid var(--border-light);
+  }
+  .forecast-header {
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .forecast-body {
+    padding: 12px 16px;
+    background: var(--bg-card);
+  }
+  .forecast-risk-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .forecast-risk-label {
+    font-size: 11px;
+    color: var(--text-sec);
+  }
+  .forecast-risk-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .6px;
+    padding: 3px 12px;
+    border-radius: 10px;
+    font-family: var(--mono);
+  }
+  .forecast-risk-pill.pulse {
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  .forecast-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+  .forecast-bar-time {
+    width: 38px;
+    text-align: right;
+    font-family: var(--mono);
+    color: var(--text-sec);
+    flex-shrink: 0;
+  }
+  .forecast-bar-track {
+    flex: 1;
+    height: 14px;
+    background: var(--bg);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+  [data-theme="dark"] .forecast-bar-track { background: #1A1D27; }
+  .forecast-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .3s ease;
+    min-width: 2px;
+  }
+  .forecast-bar-val {
+    width: 46px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-sec);
+    flex-shrink: 0;
+  }
+  .forecast-bar-peak {
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-left: 2px;
+  }
+  .forecast-est {
+    margin-top: 10px;
+    font-size: 11px;
+    color: var(--text-sec);
+    font-family: var(--mono);
+  }
+  .forecast-none {
+    padding: 12px 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HEADER
+     ════════════════════════════════════════════════════════════════ -->
+<div id="header">
+  <div class="brand">
+    <div class="brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
+    <div class="brand-text">
+      <h1>Delhi Flood Intelligence</h1>
+      <span>Municipal Hydrology Command &middot; Real-Time</span>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill live">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/></svg>
+      Triggered <span class="pill-val" id="m-triggered">0</span>
+    </div>
+    <div class="stat-pill">
+      Pumps <span class="pill-val" id="m-pumps">0</span>
+    </div>
+    <div class="stat-pill warn" id="pill-weather" style="display:none">
+      <span class="pill-val" id="pill-weather-text"></span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="m-weather">Loading weather...</span>
+
+    <span id="header-clock">--:--</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     MAIN — Map + Side Panel
+     ════════════════════════════════════════════════════════════════ -->
+<div id="main">
+  <div id="map-container">
+    <div id="map"></div>
+    <div class="map-skeleton" id="map-skeleton">
+      <div class="map-skeleton-inner">
+        Loading map data
+        <div class="map-skeleton-bar"></div>
+      </div>
+    </div>
+
+    <!-- Infrastructure Legend -->
+    <div id="infra-legend" class="map-legend">
+      <div class="legend-title">Critical Infrastructure</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#DC2626"></span> <span id="leg-hosp">Hospital (—)</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#D97706"></span> <span id="leg-sub">Substation (—)</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#2563EB"></span> <span id="leg-fire">Fire Station (—)</span></div>
+    </div>
+
+    <!-- Elevation Legend -->
+    <div id="elev-legend" class="map-legend">
+      <div class="legend-title">Terrain Classification</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#2166ac"></span> Floodplain (1.0×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#74add1"></span> Flat (1.3×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#fee090"></span> Moderate (1.7×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#f46d43"></span> Steep (2.2×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#a50026"></span> Ridge (3.5×)</div>
+    </div>
+  </div>
+
+  <!-- Side Panel -->
+  <div id="side-panel">
+    <!-- Stat Cards -->
+    <div class="stat-cards" id="stat-cards-wrap">
+      <div class="stat-card accent-cyan skeleton">
+        <div class="sc-label">Last Cycle</div>
+        <div class="sc-value" id="m-time">—</div>
+        <div class="sc-sub">IST timestamp</div>
+      </div>
+      <div class="stat-card accent-red skeleton">
+        <div class="sc-label">Triggered</div>
+        <div class="sc-value" id="m-triggered-panel">0</div>
+        <div class="sc-sub">wards at risk</div>
+      </div>
+      <div class="stat-card accent-green skeleton">
+        <div class="sc-label">Pumps Active</div>
+        <div class="sc-value" id="m-pumps-panel">0</div>
+        <div class="sc-sub">dispatched units</div>
+      </div>
+      <div class="stat-card skeleton">
+        <div class="sc-label">Wards Online</div>
+        <div class="sc-value" id="m-wards-online">290</div>
+        <div class="sc-sub">monitored zones</div>
+      </div>
+    </div>
+
+    <!-- 6-Hour Forecast -->
+    <div id="forecast-section">
+      <div class="forecast-header">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        6-Hour Forecast
+      </div>
+      <div class="forecast-body" id="forecast-body">
+        <div class="forecast-none">Loading forecast...</div>
+      </div>
+    </div>
+
+    <!-- Console -->
+    <div class="panel-section-header">
+      <span class="dot-live"></span>
+      Dispatch Console
+    </div>
+    <div id="console-log"></div>
+
+    <!-- Footer -->
+    <div class="panel-footer">
+      <span>Auto-refresh: 30s</span>
+      <span class="cycle-time" id="last-cycle-footer">Awaiting first cycle</span>
+    </div>
+  </div>
+</div>
+
+<!-- Drawer toggle for mobile -->
+<div id="drawer-overlay" onclick="toggleDrawer()"></div>
+<button id="drawer-fab" onclick="toggleDrawer()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CONTROL BAR
+     ════════════════════════════════════════════════════════════════ -->
+<div id="control-bar">
+  <button class="btn btn-primary" id="btn-cycle" onclick="runCycle()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Run Cycle <span class="btn-spinner" id="sp-cycle"></span>
+  </button>
+  <button class="btn btn-danger" id="btn-storm" onclick="simulateCloudburst()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Cloudburst <span class="btn-spinner" id="sp-storm"></span>
+  </button>
+  <button class="btn btn-ghost" id="btn-reset" onclick="resetCity()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reset <span class="btn-spinner" id="sp-reset"></span>
+  </button>
+
+  <div class="ctrl-sep"></div>
+
+  <button class="btn btn-ghost" id="btn-infra" onclick="toggleInfrastructure()">
+    Infrastructure
+  </button>
+  <button class="btn btn-ghost" id="btn-elev" onclick="toggleElevation()">
+    Elevation
+  </button>
+
+  <div class="ctrl-sep"></div>
+
+  <button class="btn btn-ghost btn-history" id="btn-history" onclick="toggleHistory()">
+    History
+  </button>
+  <button class="btn btn-ghost" id="btn-report" onclick="window.open('/report/snapshot','_blank')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Report
+  </button>
+
+  <span style="flex:1"></span>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     HISTORY PANEL
+     ════════════════════════════════════════════════════════════════ -->
+<div id="history-panel">
+  <div id="history-header">
+    <div class="h-title">
+      <span class="h-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/><rect x="17" y="3" width="4" height="18"/></svg></span>
+      Historical Monsoon Analytics
+    </div>
+    <div class="h-controls">
+      <select id="season-select" class="h-select" onchange="onSeasonChange(this.value)">
+        <option value="2024">Monsoon 2024 (Jun–Sep)</option>
+        <option value="recent">Last 30 days</option>
+      </select>
+    </div>
+  </div>
+  <div id="data-source-badge">
+    <span id="badge-icon" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--green)"></span>
+    <span id="badge-text">Real rainfall data — Open-Meteo / Delhi 2024</span>
+  </div>
+  <div id="history-body">
+    <div id="history-chart-wrap">
+      <canvas id="historyChart"></canvas>
+    </div>
+    <div id="history-sidebar">
+      <div class="h-summary-row">
+        <div class="h-summary-card">
+          <div class="h-label">Peak Day</div>
+          <div class="h-value" id="hs-peak-day">—</div>
+          <div class="h-sub" id="hs-peak-detail"></div>
+        </div>
+        <div class="h-summary-card">
+          <div class="h-label">Avg Daily Triggered</div>
+          <div class="h-value" id="hs-avg-trig">—</div>
+        </div>
+      </div>
+      <div class="h-summary-row">
+        <div class="h-summary-card">
+          <div class="h-label">Total Dispatches</div>
+          <div class="h-value" id="hs-total-disp">—</div>
+          <div class="h-sub" id="hs-total-crit"></div>
+        </div>
+        <div class="h-summary-card">
+          <div class="h-label">Most Affected Zone</div>
+          <div class="h-value" id="hs-zone">—</div>
+          <div class="h-sub" id="hs-zone-count"></div>
+        </div>
+      </div>
+      <div class="h-summary-card" style="flex:1;overflow-y:auto">
+        <div class="h-label">Worst Wards</div>
+        <table id="worst-wards-table">
+          <thead><tr><th>#</th><th>Ward</th><th>Triggers</th><th>Critical</th><th>Avg Score</th></tr></thead>
+          <tbody id="worst-wards-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     WARD DRILL-DOWN PANEL (slides from LEFT)
+     ════════════════════════════════════════════════════════════════ -->
+<div id="drill-panel">
+  <div id="drill-header">
+    <div style="flex:1;min-width:0">
+      <div id="drill-ward-name">—</div>
+      <div id="drill-subtitle"></div>
+      <div class="drill-header-row">
+        <span class="drill-badge" id="drill-badge">—</span>
+        <button id="drill-close" onclick="closeDrillPanel()" title="Close (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div id="drill-body">
+    <div class="drill-loading" id="drill-loading">Loading ward data</div>
+    <div id="drill-content" style="display:none">
+      <!-- Stats Row (4 cards) -->
+      <div class="drill-section">
+        <div class="drill-section-title">Key Metrics</div>
+        <div class="drill-stat-grid" id="drill-stats"></div>
+      </div>
+      <!-- Nearby Infrastructure -->
+      <div class="drill-section">
+        <div class="drill-section-title">Infrastructure within 500m</div>
+        <div class="drill-infra-row" id="drill-infra"></div>
+      </div>
+      <!-- 30-Day Score History Chart -->
+      <div class="drill-section">
+        <div class="drill-section-title">30-Day Score History</div>
+        <div id="drill-chart-wrap"><canvas id="drillChart"></canvas></div>
+      </div>
+      <!-- Summary -->
+      <div class="drill-section">
+        <div class="drill-section-title">Summary</div>
+        <div class="drill-summary" id="drill-summary"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  // CONFIG
+  // ═══════════════════════════════════════════════════════════════
+  const API_KEY = 'hydro-mvp-secret-2026';
+  const AUTH_HEADERS = { 'Content-Type': 'application/json', 'X-API-Key': API_KEY };
+  const POST_AUTH = { 'X-API-Key': API_KEY };
+
+  // ═══════════════════════════════════════════════════════════════
+  // IST CLOCK
+  // ═══════════════════════════════════════════════════════════════
+  function updateClock() {
+    const now = new Date();
+    const ist = new Date(now.getTime() + (330 - now.getTimezoneOffset()) * 60000);
+    document.getElementById('header-clock').textContent =
+      ist.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  updateClock();
+  setInterval(updateClock, 30000);
+
+  // ═══════════════════════════════════════════════════════════════
+  // MOBILE DRAWER
+  // ═══════════════════════════════════════════════════════════════
+  function toggleDrawer() {
+    const panel = document.getElementById('side-panel');
+    const overlay = document.getElementById('drawer-overlay');
+    panel.classList.toggle('drawer-open');
+    overlay.classList.toggle('visible');
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // DARK MODE
+  // ═══════════════════════════════════════════════════════════════
+  const TILE_LIGHT = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const TILE_DARK  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  let currentTileLayer = null;
+
+  function isDark() {
+    return document.documentElement.getAttribute('data-theme') === 'dark';
+  }
+
+  function applyThemeIcons() {
+    const sun = document.getElementById('icon-sun');
+    const moon = document.getElementById('icon-moon');
+    if (sun) sun.style.display = isDark() ? 'block' : 'none';
+    if (moon) moon.style.display = isDark() ? 'none' : 'block';
+  }
+
+  function swapTiles() {
+    if (!currentTileLayer) return;
+    const url = isDark() ? TILE_DARK : TILE_LIGHT;
+    currentTileLayer.setUrl(url);
+  }
+
+  function toggleTheme() {
+    const next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('hydro-theme', next);
+    applyThemeIcons();
+    swapTiles();
+  }
+
+  // Restore saved theme
+  (function() {
+    const saved = localStorage.getItem('hydro-theme');
+    if (saved === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    applyThemeIcons();
+  })();
+
+  // ═══════════════════════════════════════════════════════════════
+  // MAP INIT
+  // ═══════════════════════════════════════════════════════════════
+  const map = L.map('map', {
+    center: [28.65, 77.25],
+    zoom: 12,
+    zoomControl: true,
+    attributionControl: false,
+  });
+
+  currentTileLayer = L.tileLayer(isDark() ? TILE_DARK : TILE_LIGHT, {
+    maxZoom: 19,
+  }).addTo(map);
+
+  let wardLayer = null;
+  let hotspotLayer = null;
+
+  const TILE_URL = '/tiles';
+
+  const COLORS_LIGHT = {
+    green:  '#dcfce7',
+    yellow: '#fef3c7',
+    red:    '#fee2e2',
+    critical: '#fecaca',
+    grey:   '#f1f5f9',
+  };
+  const COLORS_DARK = {
+    green:  '#052e16',
+    yellow: '#422006',
+    red:    '#450a0a',
+    critical: '#7f1d1d',
+    grey:   '#1e293b',
+  };
+
+  function getColors() { return isDark() ? COLORS_DARK : COLORS_LIGHT; }
+
+  function wardFillColor(props) {
+    const C = getColors();
+    if (props.color === 'grey') return C.grey;
+    if (props.ws_score !== null && props.ws_score < 0) return C.critical;
+    return C[props.color] || C.grey;
+  }
+
+  function hotspotColor(cap) {
+    if (cap >= 60) return COLORS.green;
+    if (cap >= 30) return COLORS.yellow;
+    return COLORS.red;
+  }
+
+  function scoreClass(ws) {
+    if (ws === null || ws === undefined) return 'safe';
+    if (ws >= 70) return 'safe';
+    if (ws >= 0) return 'warn';
+    return 'danger';
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // WARD DRILL-DOWN (left panel)
+  // ═══════════════════════════════════════════════════════════════
+  let drillChart = null;
+
+  function openDrillPanel(wardId, wardName) {
+    const panel = document.getElementById('drill-panel');
+    const loading = document.getElementById('drill-loading');
+    const content = document.getElementById('drill-content');
+    document.getElementById('drill-ward-name').textContent = wardName || '—';
+    document.getElementById('drill-subtitle').textContent = '';
+    document.getElementById('drill-badge').textContent = '...';
+    document.getElementById('drill-badge').className = 'drill-badge';
+    loading.style.display = 'flex';
+    loading.textContent = 'Loading ward data';
+    content.style.display = 'none';
+    panel.classList.add('open');
+    console.log(`%c[DRILL] Opening ward ${wardId}: ${wardName}`, 'color:#7C3AED');
+    fetchWardDetail(wardId);
+  }
+
+  function closeDrillPanel() {
+    document.getElementById('drill-panel').classList.remove('open');
+    if (drillChart) { drillChart.destroy(); drillChart = null; }
+  }
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeDrillPanel();
+  });
+
+  async function fetchWardDetail(wardId) {
+    const loading = document.getElementById('drill-loading');
+    const content = document.getElementById('drill-content');
+    try {
+      const resp = await fetch(`/ward/${wardId}/detail`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const d = await resp.json();
+      if (d.error) throw new Error(d.error);
+      renderDrillDown(d);
+      loading.style.display = 'none';
+      content.style.display = 'block';
+    } catch (err) {
+      console.error('[DRILL] Error:', err);
+      loading.textContent = 'Failed to load ward data';
+    }
+  }
+
+  function renderDrillDown(d) {
+    // Header
+    document.getElementById('drill-ward-name').textContent = d.ward_name;
+    const subtitleParts = [d.zone_name, d.terrain_class].filter(Boolean);
+    document.getElementById('drill-subtitle').textContent = subtitleParts.join(' / ');
+
+    // Badge
+    const badge = document.getElementById('drill-badge');
+    const worstSc = d.worst_score;
+    const badgeCls = d.times_critical_30d > 0 ? 'critical'
+                   : d.times_triggered_30d > 0 ? 'triggered'
+                   : 'safe';
+    const badgeText = badgeCls === 'critical' ? 'CRITICAL'
+                    : badgeCls === 'triggered' ? 'TRIGGERED'
+                    : 'SAFE';
+    badge.textContent = badgeText;
+    badge.className = `drill-badge ${badgeCls}`;
+
+    // Stats row (4 cards)
+    document.getElementById('drill-stats').innerHTML = `
+      <div class="drill-stat">
+        <div class="drill-stat-label">Elevation</div>
+        <div class="drill-stat-value">${d.mean_elevation ? d.mean_elevation + 'm' : '—'}</div>
+      </div>
+      <div class="drill-stat">
+        <div class="drill-stat-label">Runoff</div>
+        <div class="drill-stat-value">${d.runoff_t ? d.runoff_t + 'x' : '—'}</div>
+      </div>
+      <div class="drill-stat">
+        <div class="drill-stat-label">Hotspots</div>
+        <div class="drill-stat-value">${d.hotspot_count}</div>
+      </div>
+      <div class="drill-stat">
+        <div class="drill-stat-label">Critical</div>
+        <div class="drill-stat-value" style="color:var(--red)">${d.critical_hotspots}</div>
+      </div>
+    `;
+
+    // Infrastructure (3 cards)
+    const ni = d.nearby_infrastructure || {};
+    document.getElementById('drill-infra').innerHTML = `
+      <div class="drill-infra-card">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v20M2 12h20"/></svg>
+        Hospitals
+        <span class="infra-count">${ni.hospitals ?? 0}</span>
+      </div>
+      <div class="drill-infra-card">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--yellow)" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Substations
+        <span class="infra-count">${ni.substations ?? 0}</span>
+      </div>
+      <div class="drill-infra-card">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5" stroke-linecap="round"><path d="M12 2C8 7 4 10 4 14a8 8 0 0016 0c0-4-4-7-8-12z"/></svg>
+        Fire Stn
+        <span class="infra-count">${ni.fire_stations ?? 0}</span>
+      </div>
+    `;
+
+    // Chart — 30 day score history
+    if (drillChart) { drillChart.destroy(); drillChart = null; }
+    const canvas = document.getElementById('drillChart');
+    const ctx = canvas.getContext('2d');
+    const hist = d.score_history || [];
+    const labels = hist.map(h => h.date.slice(5));
+    const scores = hist.map(h => h.ws_score);
+    const darkMode = isDark();
+
+    // Build segment colours: red < 0, amber 0-70, green > 70
+    const segmentColor = (ctx2) => {
+      const val = ctx2.p0.parsed.y;
+      if (val === null || val === undefined) return '#94A3B8';
+      if (val < 0) return '#DC2626';
+      if (val <= 70) return '#D97706';
+      return '#16A34A';
+    };
+
+    // Find worst day for annotation
+    let worstIdx = 0;
+    let worstVal = Infinity;
+    scores.forEach((s, i) => {
+      if (s !== null && s < worstVal) { worstVal = s; worstIdx = i; }
+    });
+
+    const annotations = hist.length > 0 ? {
+      worstPoint: {
+        type: 'point',
+        xValue: worstIdx,
+        yValue: worstVal,
+        radius: 5,
+        backgroundColor: '#DC2626',
+        borderColor: '#fff',
+        borderWidth: 2,
+      },
+      worstLabel: {
+        type: 'label',
+        xValue: worstIdx,
+        yValue: worstVal,
+        content: `Worst: ${worstVal !== null ? worstVal.toFixed(1) : '—'}`,
+        font: { size: 9, family: "'DM Sans'" },
+        color: '#DC2626',
+        position: 'start',
+        yAdjust: -14,
+      }
+    } : {};
+
+    drillChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'PMRS Score',
+          data: scores,
+          segment: { borderColor: segmentColor },
+          backgroundColor: 'rgba(124,58,237,.06)',
+          borderWidth: 2,
+          pointRadius: 1.5,
+          fill: true,
+          tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          annotation: { annotations },
+        },
+        scales: {
+          x: {
+            ticks: { font: { size: 9, family: "'DM Mono'" }, color: darkMode ? '#4B5563' : '#94A3B8', maxRotation: 0, maxTicksLimit: 7 },
+            grid: { display: false },
+          },
+          y: {
+            ticks: { font: { size: 9, family: "'DM Mono'" }, color: darkMode ? '#4B5563' : '#94A3B8' },
+            grid: { color: darkMode ? '#1E293B' : '#F1F5F9' },
+          },
+        },
+      },
+    });
+
+    // Summary text
+    const worstDateStr = d.worst_date || '—';
+    const worstDisplay = d.worst_score !== null
+      ? (d.worst_score <= -999 ? 'CRITICAL' : d.worst_score)
+      : '—';
+    document.getElementById('drill-summary').innerHTML =
+      `Triggered <strong>${d.times_triggered_30d}</strong> times in last 30 days. ` +
+      `Critical <strong>${d.times_critical_30d}</strong> times.<br>` +
+      `Worst score: <strong>${worstDisplay}</strong> on ${worstDateStr}`;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 6-HOUR FORECAST WIDGET
+  // ═══════════════════════════════════════════════════════════════
+  async function loadForecast() {
+    const body = document.getElementById('forecast-body');
+    try {
+      const resp = await fetch('/forecast/6hour');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const fc = await resp.json();
+      if (fc.error && fc.hours.length === 0) {
+        body.innerHTML = '<div class="forecast-none">Forecast unavailable</div>';
+        return;
+      }
+      renderForecast(fc);
+    } catch (err) {
+      console.error('[FORECAST]', err);
+      body.innerHTML = '<div class="forecast-none">Forecast unavailable</div>';
+    }
+  }
+
+  function renderForecast(fc) {
+    const body = document.getElementById('forecast-body');
+
+    if (fc.risk_level === 'NONE') {
+      body.innerHTML = '<div class="forecast-none">No precipitation forecast</div>';
+      return;
+    }
+
+    const pulseClass = (fc.risk_level === 'HIGH' || fc.risk_level === 'EXTREME') ? ' pulse' : '';
+    const peak = fc.peak_rain_mm || 1;
+
+    let barsHtml = '';
+    fc.hours.forEach(h => {
+      const pct = peak > 0 ? Math.max(2, (h.rain_mm / peak) * 100) : 2;
+      let barColor;
+      if (h.rain_mm < 2) barColor = 'rgba(22,163,74,.3)';
+      else if (h.rain_mm < 10) barColor = 'rgba(217,119,6,.6)';
+      else barColor = 'rgba(220,38,38,.8)';
+
+      const peakMark = (h.time === fc.peak_hour && fc.peak_rain_mm > 0)
+        ? '<span class="forecast-bar-peak">peak</span>' : '';
+
+      barsHtml += `
+        <div class="forecast-bar-row">
+          <span class="forecast-bar-time">${h.time}</span>
+          <div class="forecast-bar-track">
+            <div class="forecast-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+          </div>
+          <span class="forecast-bar-val">${h.rain_mm}mm ${peakMark}</span>
+        </div>`;
+    });
+
+    body.innerHTML = `
+      <div class="forecast-risk-row">
+        <span class="forecast-risk-label">Risk Level:</span>
+        <span class="forecast-risk-pill${pulseClass}" style="background:${fc.risk_colour}22;color:${fc.risk_colour}">${fc.risk_level}</span>
+      </div>
+      ${barsHtml}
+      <div class="forecast-est">Est. ~${fc.predicted_triggered} wards at risk</div>
+    `;
+  }
+
+  // Load forecast on init and every 10 min
+  loadForecast();
+  setInterval(loadForecast, 600000);
+
+  // ═══════════════════════════════════════════════════════════════
+  // MAP REFRESH
+  // ═══════════════════════════════════════════════════════════════
+  async function refreshMap() {
+    try {
+      const resp = await fetch('/map/state');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      if (wardLayer) map.removeLayer(wardLayer);
+
+      wardLayer = L.geoJSON(data.features, {
+        style: (feature) => ({
+          fillColor: wardFillColor(feature.properties),
+          fillOpacity: isDark() ? 0.5 : 0.6,
+          color: isDark() ? '#334155' : '#CBD5E1',
+          weight: 0.8,
+          opacity: 0.5,
+        }),
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          const ws = p.ws_score !== null && p.ws_score !== undefined ? Number(p.ws_score) : null;
+          const cls = scoreClass(ws);
+          const sc = ws !== null && ws < 0
+            ? 'CRITICAL'
+            : (ws !== null ? ws.toFixed(1) : '—');
+          const dotClass = cls;
+          const terrainLine = p.terrain_class
+            ? `<div class="popup-terrain">
+                 <span><b>${p.terrain_class}</b> slope (${p.terrain_runoff_t}× runoff)</span>
+                 <span>Elev: ${p.mean_elevation}m</span>
+               </div>`
+            : '';
+          layer.bindPopup(`
+            <div class="popup-header">
+              <div class="popup-ward">${p.ward_name}</div>
+              ${p.zone_name ? '<div class="popup-ward-zone">' + p.zone_name + '</div>' : ''}
+            </div>
+            <div class="popup-body">
+              <div class="popup-score ${cls}">${sc}</div>
+              <div class="popup-status">
+                <span class="status-dot ${dotClass}"></span>
+                ${p.status}
+              </div>
+              <div class="popup-msg">${p.dispatch_message || 'No dispatch data'}</div>
+              ${terrainLine}
+              <div style="text-align:center;margin-top:6px">
+                <button onclick="openDrillPanel(${p.ward_id}, '${p.ward_name.replace(/'/g, "\\'")}')" style="font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--purple);cursor:pointer;font-family:var(--font);font-weight:500;transition:background .15s" onmouseover="this.style.background='var(--purple-bg)'" onmouseout="this.style.background='var(--bg)'">View Details</button>
+              </div>
+            </div>
+          `);
+        },
+      }).addTo(map);
+
+      if (hotspotLayer) map.removeLayer(hotspotLayer);
+      const cacheBust = Date.now();
+      hotspotLayer = L.vectorGrid.protobuf(
+        `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
+        {
+          vectorTileLayerStyles: {
+            hotspots: function(properties) {
+              const cap = properties.capacity_c != null ? properties.capacity_c : 80;
+              return {
+                weight: 0,
+                fillColor: hotspotColor(cap),
+                fillOpacity: 0.3,
+                fill: true,
+                radius: 2,
+              };
+            }
+          },
+          maxZoom: 19,
+          interactive: false,
+        }
+      ).addTo(map);
+
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONSOLE
+  // ═══════════════════════════════════════════════════════════════
+  const consoleEl = document.getElementById('console-log');
+  let logCount = 0;
+
+  function logConsole(msg, type = 'system') {
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = `log-entry log-${type}`;
+    const tagMap = { system: 'SYSTEM', safe: 'SAFE', triggered: 'DISPATCH', critical: 'CRITICAL', error: 'ERROR' };
+    const tag = tagMap[type] || 'SYSTEM';
+    entry.innerHTML = `<span class="log-ts">${ts}</span><span class="log-tag log-tag-${type}">${tag}</span><span class="log-msg">${msg}</span>`;
+    consoleEl.prepend(entry);
+    logCount++;
+    while (consoleEl.children.length > 50) {
+      consoleEl.removeChild(consoleEl.lastChild);
+    }
+  }
+
+  function clearConsole() {
+    consoleEl.innerHTML = '';
+    logCount = 0;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // BUTTONS
+  // ═══════════════════════════════════════════════════════════════
+  function setButtons(disabled) {
+    document.getElementById('btn-cycle').disabled = disabled;
+    document.getElementById('btn-storm').disabled = disabled;
+    document.getElementById('btn-reset').disabled = disabled;
+  }
+
+  function showSpinner(id, show) {
+    document.getElementById(id).style.display = show ? 'inline-block' : 'none';
+  }
+
+  // Helper to sync stats across header pills + side panel cards
+  function syncStats(triggered, pumps) {
+    // Header pills
+    document.getElementById('m-triggered').textContent = triggered;
+    document.getElementById('m-pumps').textContent = pumps;
+    // Side panel cards
+    document.getElementById('m-triggered-panel').textContent = triggered;
+    document.getElementById('m-pumps-panel').textContent = pumps;
+  }
+
+  // ── RUN CYCLE ─────────────────────────────────────────────────
+  async function runCycle() {
+    setButtons(true);
+    showSpinner('sp-cycle', true);
+    logConsole('Running scoring cycle...', 'system');
+
+    try {
+      const resp = await fetch('/run/cycle', { method: 'POST', headers: POST_AUTH });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      const cycleTime = new Date().toTimeString().slice(0, 8);
+      document.getElementById('m-time').textContent = cycleTime;
+      document.getElementById('last-cycle-footer').textContent = `Last: ${cycleTime} IST`;
+
+      let totalPumps = 0;
+      for (const d of data.dispatches) {
+        const m = d.dispatch_message.match(/(\d+) pumps/);
+        if (m) totalPumps += parseInt(m[1]);
+      }
+      syncStats(data.wards_triggered, totalPumps);
+
+      for (const d of data.dispatches) {
+        const ws = d.ws_score;
+        const type = ws < 0 ? 'critical' : 'triggered';
+        const m = d.dispatch_message.match(/(\d+) pumps to (\d+) locations/);
+        const pumps = m ? m[1] : '?';
+        const locs = m ? m[2] : '?';
+        const prefix = ws < 0 ? 'CRITICAL | ' : '';
+        const scoreLabel = ws <= -999 ? 'CRITICAL' : ws.toFixed(1);
+        logConsole(`${prefix}${d.ward_name} | PMRS ${scoreLabel} | ${pumps} pumps → ${locs} locations`, type);
+      }
+      logConsole(`Cycle complete — ${data.wards_triggered} triggered, ${data.safe_wards} safe`, 'system');
+
+      await refreshMap();
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-cycle', false);
+      setButtons(false);
+    }
+  }
+
+  // ── SIMULATE CLOUDBURST ───────────────────────────────────────
+  async function simulateCloudburst() {
+    setButtons(true);
+    showSpinner('sp-storm', true);
+    logConsole('Simulating cloudburst...', 'system');
+
+    try {
+      const boundsResp = await fetch('/city/bounds');
+      if (!boundsResp.ok) throw new Error(`Bounds GET HTTP ${boundsResp.status}`);
+      const bounds = await boundsResp.json();
+
+      const rainResp = await fetch('/ingest/rain', {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({
+          geojson_polygon: bounds.rain_polygon,
+          intensity_r: 8.5
+        })
+      });
+      if (!rainResp.ok) throw new Error(`Rain POST HTTP ${rainResp.status}`);
+      const rainData = await rainResp.json();
+      logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
+
+      logConsole('Degrading drainage capacity...', 'system');
+      const maxHid = bounds.hotspot_count || 5000;
+      for (let i = 0; i < 30; i++) {
+        const hid = 1 + Math.floor(Math.random() * maxHid);
+        const delta = -(5 + Math.random() * 10);
+        await fetch('/ingest/sensor', {
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          body: JSON.stringify({ hotspot_id: hid, delta_capacity: parseFloat(delta.toFixed(2)) })
+        });
+      }
+      logConsole('30 sensor degradation events pushed', 'triggered');
+
+      logConsole('Auto-triggering scoring cycle...', 'system');
+      await runCycle();
+
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-storm', false);
+      setButtons(false);
+    }
+  }
+
+  // ── RESET CITY ────────────────────────────────────────────────
+  async function resetCity() {
+    if (!confirm('Reset all city data? This clears rain events, sensor events, and dispatch history.')) return;
+
+    setButtons(true);
+    showSpinner('sp-reset', true);
+
+    try {
+      const resp = await fetch('/reset', { method: 'POST', headers: POST_AUTH });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      clearConsole();
+      logConsole('City reset to baseline — all wards nominal', 'system');
+
+      document.getElementById('m-time').textContent = '—';
+      document.getElementById('last-cycle-footer').textContent = 'Awaiting first cycle';
+      syncStats(0, 0);
+
+      await refreshMap();
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-reset', false);
+      setButtons(false);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // WEATHER STATUS + AUTO-REFRESH
+  // ═══════════════════════════════════════════════════════════════
+  let lastKnownCycleAt = null;
+
+  async function refreshWeatherStatus() {
+    try {
+      const resp = await fetch('/weather/status');
+      if (!resp.ok) return;
+      const w = await resp.json();
+      const el = document.getElementById('m-weather');
+      const pill = document.getElementById('pill-weather');
+      const pillText = document.getElementById('pill-weather-text');
+      // If weather hasn't been fetched yet, show loading state
+      if (!w.last_checked || w.condition === 'unknown') {
+        el.style.color = 'rgba(255,255,255,.4)';
+        el.innerHTML = 'Checking weather…';
+        pill.style.display = 'none';
+        return;
+      }
+      const ts = w.last_checked.slice(11, 16);
+      if (w.is_raining) {
+        el.style.color = 'var(--cyan-light)';
+        el.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="20"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="16" x2="16" y2="20"/></svg>${w.condition} | ${w.intensity_r}mm/hr | ${ts}`;
+        pill.style.display = 'inline-flex';
+        pillText.textContent = `${w.intensity_r}mm/hr`;
+      } else {
+        el.style.color = 'rgba(255,255,255,.55)';
+        el.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>${w.condition || 'Clear'} | ${ts}`;
+        pill.style.display = 'none';
+      }
+    } catch (_) {}
+  }
+
+  async function pollCycleLatest() {
+    try {
+      const resp = await fetch('/cycle/latest');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.last_cycle_at) return;
+      if (lastKnownCycleAt && data.last_cycle_at !== lastKnownCycleAt) {
+        logConsole('Auto-cycle detected (live weather trigger) — refreshing map...', 'system');
+        await refreshMap();
+        await refreshWeatherStatus();
+      }
+      lastKnownCycleAt = data.last_cycle_at;
+    } catch (_) {}
+  }
+
+  setInterval(pollCycleLatest, 30000);
+  setInterval(refreshWeatherStatus, 60000);
+
+  // ═══════════════════════════════════════════════════════════════
+  // WEBSOCKET — real-time cycle push
+  // ═══════════════════════════════════════════════════════════════
+  let ws = null;
+  let wsRetries = 0;
+  const WS_MAX_RETRIES = 10;
+
+  function connectWS() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws`);
+
+    ws.onopen = () => {
+      wsRetries = 0;
+      logConsole('WebSocket connected — live push active', 'system');
+    };
+
+    ws.onmessage = async (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        if (msg.type === 'cycle') {
+          logConsole(`Live push: ${msg.wards_triggered} wards triggered, ${msg.safe_wards} safe`, 'system');
+          await refreshMap();
+          await refreshWeatherStatus();
+        }
+      } catch (_) {}
+    };
+
+    ws.onclose = () => {
+      ws = null;
+      if (wsRetries < WS_MAX_RETRIES) {
+        wsRetries++;
+        const delay = Math.min(2000 * wsRetries, 30000);
+        setTimeout(connectWS, delay);
+      }
+    };
+
+    ws.onerror = () => { ws?.close(); };
+  }
+
+  connectWS();
+
+  // ═══════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════
+  (async () => {
+    logConsole('System initialised — loading map data...', 'system');
+
+    try {
+      const bResp = await fetch('/city/bounds');
+      if (bResp.ok) {
+        const b = await bResp.json();
+        map.setView(b.center, 11);
+        document.getElementById('m-wards-online').textContent = b.ward_count || 290;
+        logConsole(`City centered: ${b.center[0].toFixed(4)}, ${b.center[1].toFixed(4)}`, 'system');
+      }
+    } catch (_) {}
+
+    await refreshMap();
+    await refreshWeatherStatus();
+
+    try {
+      const cResp = await fetch('/cycle/latest');
+      if (cResp.ok) {
+        const cd = await cResp.json();
+        lastKnownCycleAt = cd.last_cycle_at;
+      }
+    } catch (_) {}
+
+    logConsole('Map loaded. Ready for operations.', 'system');
+
+    // Remove skeleton states
+    document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
+    const mapSkel = document.getElementById('map-skeleton');
+    if (mapSkel) { mapSkel.classList.add('hidden'); setTimeout(() => mapSkel.remove(), 500); }
+  })();
+
+  // ═══════════════════════════════════════════════════════════════
+  // INFRASTRUCTURE LAYER
+  // ═══════════════════════════════════════════════════════════════
+  let infraLayer = null;
+  let infraVisible = false;
+
+  const INFRA_COLORS = {
+    hospital: '#DC2626',
+    substation: '#D97706',
+    fire_station: '#2563EB',
+  };
+  const INFRA_RADIUS = {
+    hospital: 6,
+    substation: 5,
+    fire_station: 6,
+  };
+  const INFRA_ICONS = {
+    hospital: '',
+    substation: '',
+    fire_station: '',
+  };
+
+  async function toggleInfrastructure() {
+    const btn = document.getElementById('btn-infra');
+    const legend = document.getElementById('infra-legend');
+
+    if (infraVisible) {
+      if (infraLayer) { map.removeLayer(infraLayer); infraLayer = null; }
+      btn.classList.remove('active');
+      legend.classList.remove('visible');
+      infraVisible = false;
+      return;
+    }
+
+    btn.classList.add('active');
+    try {
+      const resp = await fetch('/map/infrastructure');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      const counts = data.counts || {};
+      document.getElementById('leg-hosp').textContent = `Hospital (${counts.hospital || 0})`;
+      document.getElementById('leg-sub').textContent = `Substation (${counts.substation || 0})`;
+      document.getElementById('leg-fire').textContent = `Fire Station (${counts.fire_station || 0})`;
+
+      infraLayer = L.geoJSON(data.features, {
+        pointToLayer: (feature, latlng) => {
+          const ft = feature.properties.facility_type;
+          return L.circleMarker(latlng, {
+            radius: INFRA_RADIUS[ft] || 5,
+            fillColor: INFRA_COLORS[ft] || '#999',
+            fillOpacity: 0.8,
+            color: '#fff',
+            weight: 1,
+            opacity: 0.9,
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          const icon = INFRA_ICONS[p.facility_type] || '';
+          const typeLabel = p.facility_type.replace('_', ' ');
+          layer.bindPopup(`
+            <div class="popup-header">
+              <div class="popup-ward">${p.name}</div>
+              <div class="popup-ward-zone" style="text-transform:capitalize">${typeLabel}</div>
+            </div>
+            <div class="popup-body">
+              <div class="popup-msg">Critical infrastructure facility</div>
+            </div>
+          `);
+        },
+      }).addTo(map);
+
+      legend.classList.add('visible');
+      infraVisible = true;
+      logConsole(`Infrastructure layer: ${data.features.length} facilities loaded`, 'system');
+    } catch (err) {
+      btn.classList.remove('active');
+      logConsole(`Infrastructure load error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ELEVATION LAYER
+  // ═══════════════════════════════════════════════════════════════
+  let elevLayer = null;
+  let elevVisible = false;
+
+  async function toggleElevation() {
+    const btn = document.getElementById('btn-elev');
+    const legend = document.getElementById('elev-legend');
+
+    if (elevVisible) {
+      if (elevLayer) { map.removeLayer(elevLayer); elevLayer = null; }
+      btn.classList.remove('active');
+      legend.classList.remove('visible');
+      elevVisible = false;
+      return;
+    }
+
+    btn.classList.add('active');
+    try {
+      const resp = await fetch('/map/elevation');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      elevLayer = L.geoJSON(data.features, {
+        style: (feature) => ({
+          fillColor: feature.properties.color || '#94A3B8',
+          fillOpacity: 0.5,
+          color: '#1B2A4A',
+          weight: 1,
+          opacity: 0.3,
+        }),
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          layer.bindPopup(`
+            <div class="popup-header">
+              <div class="popup-ward">${p.ward_name}</div>
+              <div class="popup-ward-zone">Terrain Analysis</div>
+            </div>
+            <div class="popup-body">
+              <div class="popup-terrain" style="border-top:none;padding-top:0;margin-top:0">
+                <span>Class: <b>${p.terrain_class}</b> (${p.runoff_t}× runoff)</span>
+                <span>Mean: ${p.mean_elevation}m</span>
+                <span>Slope: ${p.mean_slope}°</span>
+                <span>Relief: ${p.elevation_range}m</span>
+              </div>
+            </div>
+          `);
+        },
+      }).addTo(map);
+
+      legend.classList.add('visible');
+      elevVisible = true;
+
+      const tc = data.terrain_counts || {};
+      const countStr = Object.entries(tc).map(([k,v]) => `${k}: ${v}`).join(', ');
+      logConsole(`Elevation layer: ${data.features.length} wards | ${countStr}`, 'system');
+    } catch (err) {
+      btn.classList.remove('active');
+      logConsole(`Elevation load error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // HISTORY PANEL
+  // ═══════════════════════════════════════════════════════════════
+  let historyChart = null;
+  let historySeason = '2024';
+  let historyCache = {};
+  let historyCacheTs = {};
+  const HISTORY_CACHE_MS = 60000;
+
+  const MONSOON_EVENTS_2024 = [
+    { date: '2024-09-12', label: '\u26A1 Cloudburst 100.9mm', color: '#DC2626' },
+    { date: '2024-07-31', label: '\u26C6 Heavy 97.6mm', color: '#D97706' },
+    { date: '2024-09-13', label: '\u26C6 Heavy 54.6mm', color: '#D97706' },
+  ];
+
+  function toggleHistory() {
+    const panel = document.getElementById('history-panel');
+    const btn = document.getElementById('btn-history');
+    const isOpen = panel.classList.toggle('open');
+    btn.classList.toggle('active', isOpen);
+    if (isOpen) loadHistory();
+  }
+
+  function onSeasonChange(val) {
+    historySeason = val;
+    historyCache = {};
+    historyCacheTs = {};
+    updateBadge();
+    loadHistory();
+  }
+
+  function updateBadge() {
+    const icon = document.getElementById('badge-icon');
+    const text = document.getElementById('badge-text');
+    if (historySeason === '2024') {
+      icon.style.background = 'var(--green)';
+      text.textContent = 'Real rainfall data — Open-Meteo / Delhi 2024';
+      text.style.color = 'var(--green)';
+    } else {
+      icon.style.background = 'var(--text-dim)';
+      text.textContent = 'Simulated test cycles';
+      text.style.color = 'var(--text-dim)';
+    }
+  }
+
+  async function loadHistory() {
+    const now = Date.now();
+    const cacheKey = historySeason;
+
+    if (historyCache[cacheKey] && (now - historyCacheTs[cacheKey]) < HISTORY_CACHE_MS) {
+      renderHistory(historyCache[cacheKey]);
+      return;
+    }
+
+    try {
+      let qs;
+      if (historySeason === '2024') {
+        qs = 'days=122&year=2024';
+      } else {
+        qs = 'days=30';
+      }
+
+      const [timelineResp, worstResp, summaryResp] = await Promise.all([
+        fetch(`/history/timeline?${qs}`),
+        fetch(`/history/worst-wards?${qs}&limit=10`),
+        fetch(`/history/summary?${qs}`),
+      ]);
+
+      if (!timelineResp.ok || !worstResp.ok || !summaryResp.ok) {
+        throw new Error('History API error');
+      }
+
+      const data = {
+        timeline: await timelineResp.json(),
+        worst: await worstResp.json(),
+        summary: await summaryResp.json(),
+      };
+
+      historyCache[cacheKey] = data;
+      historyCacheTs[cacheKey] = now;
+      renderHistory(data);
+    } catch (err) {
+      logConsole(`History load error: ${err.message}`, 'error');
+    }
+  }
+
+  function renderHistory(data) {
+    renderChart(data.timeline);
+    renderSummary(data.summary);
+    renderWorstWards(data.worst);
+  }
+
+  function renderChart(timelineData) {
+    const tl = timelineData.timeline || [];
+    const rawDates = tl.map(d => d.date);
+    const labels = tl.map(d => {
+      const dt = new Date(d.date);
+      return dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    });
+    const criticalData = tl.map(d => d.critical);
+    const dispatchedData = tl.map(d => d.dispatched);
+    const safeData = tl.map(d => d.safe);
+
+    const annotations = {};
+    if (historySeason === '2024') {
+      MONSOON_EVENTS_2024.forEach((evt, i) => {
+        const idx = rawDates.indexOf(evt.date);
+        if (idx >= 0) {
+          annotations[`event${i}`] = {
+            type: 'line',
+            xMin: idx,
+            xMax: idx,
+            borderColor: evt.color,
+            borderWidth: 2,
+            borderDash: [4, 4],
+            label: {
+              display: true,
+              content: evt.label,
+              position: 'start',
+              backgroundColor: 'rgba(27,42,74,.9)',
+              color: '#fff',
+              font: { size: 10, weight: 'bold', family: 'DM Sans' },
+              padding: 4,
+              borderRadius: 4,
+            },
+          };
+        }
+      });
+    }
+
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    if (historyChart) historyChart.destroy();
+
+    historyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Critical',
+            data: criticalData,
+            backgroundColor: '#DC262688',
+            borderColor: '#DC2626',
+            borderWidth: 1,
+            borderRadius: 2,
+          },
+          {
+            label: 'Dispatched',
+            data: dispatchedData,
+            backgroundColor: '#D9770688',
+            borderColor: '#D97706',
+            borderWidth: 1,
+            borderRadius: 2,
+          },
+          {
+            label: 'Safe',
+            data: safeData,
+            backgroundColor: '#16A34A55',
+            borderColor: '#16A34A',
+            borderWidth: 1,
+            borderRadius: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#6B7B8D',
+              font: { size: 11, family: 'DM Sans' },
+              boxWidth: 12,
+              padding: 14,
+              usePointStyle: true,
+              pointStyle: 'rectRounded',
+            },
+          },
+          tooltip: {
+            backgroundColor: 'rgba(27,42,74,.92)',
+            titleColor: '#fff',
+            bodyColor: '#E2E8F0',
+            borderColor: 'rgba(0,188,212,.3)',
+            borderWidth: 1,
+            cornerRadius: 6,
+            padding: 10,
+            titleFont: { family: 'DM Sans', weight: '600' },
+            bodyFont: { family: 'DM Mono', size: 12 },
+            callbacks: {
+              afterBody(items) {
+                const idx = items[0].dataIndex;
+                const day = tl[idx];
+                return day ? `Intensity: ${day.intensity_label}` : '';
+              }
+            }
+          },
+          annotation: { annotations },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: '#94A3B8', font: { size: 10, family: 'DM Sans' }, maxRotation: 45 },
+            grid: { color: '#E2E8F022' },
+          },
+          y: {
+            stacked: true,
+            ticks: { color: '#94A3B8', font: { size: 10, family: 'DM Mono' } },
+            grid: { color: '#E2E8F044' },
+            title: { display: true, text: 'Ward Count', color: '#6B7B8D', font: { size: 11, family: 'DM Sans' } },
+          },
+        },
+      },
+    });
+  }
+
+  function renderSummary(s) {
+    document.getElementById('hs-peak-day').textContent = s.peak_day
+      ? new Date(s.peak_day).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+      : '—';
+    document.getElementById('hs-peak-detail').textContent = s.peak_day
+      ? `${s.peak_day_triggered} wards triggered`
+      : '';
+    document.getElementById('hs-avg-trig').textContent = s.avg_daily_triggered ?? '—';
+    document.getElementById('hs-total-disp').textContent = s.total_dispatches?.toLocaleString() ?? '—';
+    document.getElementById('hs-total-crit').textContent = s.total_critical
+      ? `${s.total_critical.toLocaleString()} critical`
+      : '';
+    document.getElementById('hs-zone').textContent = s.most_affected_zone || '—';
+    document.getElementById('hs-zone-count').textContent = s.most_affected_zone_count
+      ? `${s.most_affected_zone_count.toLocaleString()} triggers`
+      : '';
+  }
+
+  function renderWorstWards(worstData) {
+    const tbody = document.getElementById('worst-wards-body');
+    tbody.innerHTML = '';
+    const wards = worstData.wards || [];
+    wards.forEach((w, i) => {
+      const tr = document.createElement('tr');
+      tr.onclick = () => {
+        map.setView([w.lat, w.lng], 14);
+        openDrillPanel(w.ward_id, w.ward_name);
+      };
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${w.ward_name} <span class="ww-zone">${w.zone_name || ''}</span></td>
+        <td>${w.trigger_count}</td>
+        <td class="ww-critical">${w.critical_count}</td>
+        <td>${w.avg_score ?? '—'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
+</body>
+</html>

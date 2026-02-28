@@ -1,0 +1,63 @@
+# ──────────────────────────────────────────────────────
+# Render Blueprint — Urban Hydrology Engine
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: Connect this repo on Render → detect render.yaml
+# ──────────────────────────────────────────────────────
+
+databases:
+  - name: hydrology-db
+    plan: free            # free-tier PostgreSQL (90-day, 256 MB)
+    databaseName: hydrology
+    user: hydro
+    postgresMajorVersion: "15"
+    ipAllowList: []       # only internal connections
+
+services:
+  # ── FastAPI backend + static frontend ────────────────
+  - type: web
+    name: hydrology-engine
+    runtime: docker
+    plan: free
+    rootDir: urban-hydrology-engine
+    dockerfilePath: ./Dockerfile.render
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hydrology-db
+          property: connectionString
+      - key: OWM_API_KEY
+        sync: false                  # set manually in Render dashboard
+      - key: API_SECRET_KEY
+        generateValue: true          # auto-generate a secure secret
+      - key: CITY_LAT
+        value: "28.65"
+      - key: CITY_LON
+        value: "77.22"
+      - key: RAIN_POLL_INTERVAL_SECONDS
+        value: "600"
+      - key: RAIN_COVERAGE_DEGREES
+        value: "0.15"
+      - key: TILESERV_URL
+        value: "http://tileserv:7800"   # updated below if running tileserv
+      - key: PYTHON_VERSION
+        value: "3.11.7"
+
+  # ── pg_tileserv (vector tiles) — optional ────────────
+  # Uncomment to add a private pg_tileserv service.
+  # Render free tier only allows one web service, so this
+  # requires a paid plan.  The app works without it
+  # (tile proxy returns 502, map still renders GeoJSON).
+  #
+  # - type: pserv                      # private service
+  #   name: tileserv
+  #   runtime: docker
+  #   plan: starter
+  #   dockerImage: pramsey/pg_tileserv:latest
+  #   envVars:
+  #     - key: DATABASE_URL
+  #       fromDatabase:
+  #         name: hydrology-db
+  #         property: connectionString

@@ -1,0 +1,6434 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.10 2d4cfc48",
+  "osm3s": {
+    "timestamp_osm_base": "2026-02-28T05:47:14Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 1355999142,
+  "lat": 28.6413074,
+  "lon": 77.3192599,
+  "tags": {
+    "designation": "Kaushambi Electric Sub-station",
+    "power": "substation",
+    "source": "survey"
+  }
+},
+{
+  "type": "node",
+  "id": 1669092748,
+  "lat": 28.6388487,
+  "lon": 77.1831554,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 2674338879,
+  "lat": 28.6137890,
+  "lon": 77.0003441,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 11919302341,
+  "lat": 28.6841370,
+  "lon": 77.2118651,
+  "tags": {
+    "location": "indoor",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 12188021551,
+  "lat": 28.6923017,
+  "lon": 77.2145521,
+  "tags": {
+    "operator": "Raychem RPG Private Limited",
+    "power": "substation",
+    "ref": "418-2",
+    "substation": "transmission"
+  }
+},
+{
+  "type": "node",
+  "id": 12208815802,
+  "lat": 28.5680845,
+  "lon": 77.2464332,
+  "tags": {
+    "note": "Package Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12208815803,
+  "lat": 28.5680964,
+  "lon": 77.2463948,
+  "tags": {
+    "note": "Package Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12223915409,
+  "lat": 28.5899703,
+  "lon": 77.0717962,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12223941334,
+  "lat": 28.5878809,
+  "lon": 77.0716390,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12250037002,
+  "lat": 28.6845571,
+  "lon": 77.2037435,
+  "tags": {
+    "location": "surface",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 12352455226,
+  "lat": 28.6497641,
+  "lon": 77.3167582,
+  "tags": {
+    "name": "Anand Vihar Terminal Electric Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12393738167,
+  "lat": 28.6147361,
+  "lon": 77.0330375,
+  "tags": {
+    "name": "Sewak Park",
+    "power": "substation",
+    "voltage": "11000"
+  }
+},
+{
+  "type": "node",
+  "id": 12412682001,
+  "lat": 28.6176367,
+  "lon": 77.0284381,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12440450712,
+  "lat": 28.6409937,
+  "lon": 77.2401801,
+  "tags": {
+    "power": "substation",
+    "voltage": "11000"
+  }
+},
+{
+  "type": "node",
+  "id": 12522500925,
+  "lat": 28.6158020,
+  "lon": 77.0067756,
+  "tags": {
+    "power": "substation",
+    "voltage": "11000"
+  }
+},
+{
+  "type": "node",
+  "id": 12522522727,
+  "lat": 28.6161455,
+  "lon": 77.0067964,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12620240422,
+  "lat": 28.5852381,
+  "lon": 77.0696209,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12633639399,
+  "lat": 28.6143622,
+  "lon": 77.0330628,
+  "tags": {
+    "power": "substation",
+    "voltage": "11000"
+  }
+},
+{
+  "type": "node",
+  "id": 12638564952,
+  "lat": 28.6090747,
+  "lon": 77.0349166,
+  "tags": {
+    "power": "substation",
+    "voltage": "11000"
+  }
+},
+{
+  "type": "node",
+  "id": 12676083728,
+  "lat": 28.5891405,
+  "lon": 77.1695042,
+  "tags": {
+    "name": "Auxiliary Substation Room",
+    "operator": "Delhi Metro Rail Corporation",
+    "power": "substation",
+    "substation": "transmission"
+  }
+},
+{
+  "type": "node",
+  "id": 12728549801,
+  "lat": 28.6884897,
+  "lon": 77.2146544,
+  "tags": {
+    "location": "outdoor",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12728549812,
+  "lat": 28.6884766,
+  "lon": 77.2147007,
+  "tags": {
+    "location": "outdoor",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315814,
+  "lat": 28.6566143,
+  "lon": 77.2243686,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator": "BSES Yamuna Power Limited",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315815,
+  "lat": 28.6566152,
+  "lon": 77.2242653,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315816,
+  "lat": 28.6565844,
+  "lon": 77.2250613,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315817,
+  "lat": 28.6565781,
+  "lon": 77.2251149,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315818,
+  "lat": 28.6565699,
+  "lon": 77.2253142,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315819,
+  "lat": 28.6565727,
+  "lon": 77.2253709,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315820,
+  "lat": 28.6565437,
+  "lon": 77.2257498,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315821,
+  "lat": 28.6565419,
+  "lon": 77.2258045,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315822,
+  "lat": 28.6565410,
+  "lon": 77.2258613,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315823,
+  "lat": 28.6564966,
+  "lon": 77.2267408,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315824,
+  "lat": 28.6564902,
+  "lon": 77.2268079,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315825,
+  "lat": 28.6564223,
+  "lon": 77.2281789,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315826,
+  "lat": 28.6564205,
+  "lon": 77.2282367,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315827,
+  "lat": 28.6563199,
+  "lon": 77.2296313,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315828,
+  "lat": 28.6562891,
+  "lon": 77.2304520,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315829,
+  "lat": 28.6562864,
+  "lon": 77.2303891,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12752315830,
+  "lat": 28.6562719,
+  "lon": 77.2307566,
+  "tags": {
+    "location": "kiosk",
+    "manufacturer": "Siemens",
+    "operator:en": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "transformer": "main",
+    "voltage:primary": "11000",
+    "voltage:secondary": "433"
+  }
+},
+{
+  "type": "node",
+  "id": 12956870114,
+  "lat": 28.6891225,
+  "lon": 77.2094381,
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 12995516637,
+  "lat": 28.6029224,
+  "lon": 77.3229010,
+  "tags": {
+    "location": "indoor",
+    "power": "substation",
+    "substation": "minor_distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13028337457,
+  "lat": 28.5703081,
+  "lon": 77.3243783,
+  "tags": {
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13028415849,
+  "lat": 28.5697664,
+  "lon": 77.3247929,
+  "tags": {
+    "location": "underground",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "44000"
+  }
+},
+{
+  "type": "node",
+  "id": 13049601105,
+  "lat": 28.6879027,
+  "lon": 77.2118245,
+  "tags": {
+    "location": "indoor",
+    "name": "Botany Department Substation",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13061138064,
+  "lat": 28.5400351,
+  "lon": 77.2935286,
+  "tags": {
+    "location": "indoor",
+    "name": "Jasola Substation",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13061156417,
+  "lat": 28.5383596,
+  "lon": 77.2995095,
+  "tags": {
+    "location": "indoor",
+    "name": "N Pocket Substation",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13061156442,
+  "lat": 28.5376896,
+  "lon": 77.2997797,
+  "tags": {
+    "location": "indoor",
+    "name": "Institutional Area Substation",
+    "power": "substation",
+    "ref": "2",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13081854886,
+  "lat": 28.6187340,
+  "lon": 77.3084350,
+  "tags": {
+    "name": "Khichripur Grid",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 13094428786,
+  "lat": 28.5374841,
+  "lon": 77.2751031,
+  "tags": {
+    "location": "indoor",
+    "name": "Substation Number 1",
+    "power": "substation",
+    "ref": "1",
+    "substation": "converter"
+  }
+},
+{
+  "type": "node",
+  "id": 13110136454,
+  "lat": 28.6712725,
+  "lon": 77.2003089,
+  "tags": {
+    "operator": "TPDDL",
+    "power": "substation"
+  }
+},
+{
+  "type": "node",
+  "id": 13142484183,
+  "lat": 28.5486794,
+  "lon": 77.2157166,
+  "tags": {
+    "location": "outdoor",
+    "operator": "BSES",
+    "power": "substation",
+    "ref": "HKSFPA121",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13142484190,
+  "lat": 28.5482449,
+  "lon": 77.2161114,
+  "tags": {
+    "location": "outdoor",
+    "operator": "BSES",
+    "power": "substation",
+    "ref": "HKSFPA121",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13142488631,
+  "lat": 28.5496491,
+  "lon": 77.2153953,
+  "tags": {
+    "location": "outdoor",
+    "operator": "BSES",
+    "power": "substation",
+    "ref": "HKSFPA121",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13176664027,
+  "lat": 28.4775753,
+  "lon": 77.0934338,
+  "tags": {
+    "location": "outdoor",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13447597359,
+  "lat": 28.6330230,
+  "lon": 77.2231214,
+  "tags": {
+    "power": "substation",
+    "ref": "25 c",
+    "substation": "minor_distribution"
+  }
+},
+{
+  "type": "node",
+  "id": 13447649970,
+  "lat": 28.6334135,
+  "lon": 77.2241630,
+  "tags": {
+    "location": "indoor",
+    "name": "Mayur Bhawan Substation",
+    "operator": "New Delhi Municipal Corporation",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "110000"
+  }
+},
+{
+  "type": "node",
+  "id": 13447658223,
+  "lat": 28.6337549,
+  "lon": 77.2234002,
+  "tags": {
+    "location": "outdoor",
+    "operator": "NDMC",
+    "power": "substation",
+    "ref": "26",
+    "voltage": "440"
+  }
+},
+{
+  "type": "node",
+  "id": 13447658232,
+  "lat": 28.6339014,
+  "lon": 77.2236773,
+  "tags": {
+    "location": "outdoor",
+    "operator": "NDMC",
+    "power": "substation",
+    "ref": "29"
+  }
+},
+{
+  "type": "node",
+  "id": 13466938141,
+  "lat": 28.5880478,
+  "lon": 77.1701175,
+  "tags": {
+    "location": "surface",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "110000"
+  }
+},
+{
+  "type": "node",
+  "id": 13514311957,
+  "lat": 28.6698771,
+  "lon": 77.2307271,
+  "tags": {
+    "location": "indoor",
+    "name": "I.S.B.T. Kashmere Gate Substation",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "110000"
+  }
+},
+{
+  "type": "way",
+  "id": 36740280,
+  "center": {
+    "lat": 28.4361348,
+    "lon": 77.0421440
+  },
+  "nodes": [
+    427069503,
+    427069504,
+    427069505,
+    427069506,
+    427069503
+  ],
+  "tags": {
+    "name": "66KV Sector 38",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 38108840,
+  "center": {
+    "lat": 28.4468795,
+    "lon": 77.0821275
+  },
+  "nodes": [
+    448302148,
+    448302147,
+    2775584026,
+    2775584027,
+    448302149,
+    2775584024,
+    448302146,
+    448302148
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Gurgaon Sector 52-A Substation",
+    "name:en": "Gurgaon Sector 52-A Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 38108841,
+  "center": {
+    "lat": 28.4184206,
+    "lon": 77.1048590
+  },
+  "nodes": [
+    448302152,
+    448302151,
+    1868728935,
+    448302153,
+    8973272623,
+    448302150,
+    448302152
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Ghata Substation",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 38108843,
+  "center": {
+    "lat": 28.4555437,
+    "lon": 77.0732895
+  },
+  "nodes": [
+    448302157,
+    448302156,
+    789503419,
+    448302158,
+    1987622099,
+    11949884710,
+    448302155,
+    448302157
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Gurgaon Sector 44 Substation",
+    "name:en": "Gurgaon Sector 44 Substation",
+    "name:hi": "गुड़गाँव सेक्टर ४४ सबस्टेशन",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Haryana Vidyut Prasaran Nigam Limited (HVPNL)",
+    "operator:en": "Haryana Vidyut Prasaran Nigam Limited (HVPNL)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 38108844,
+  "center": {
+    "lat": 28.4841112,
+    "lon": 77.0956937
+  },
+  "nodes": [
+    448302163,
+    4757946180,
+    1987622471,
+    4757946182,
+    448302162,
+    448302164,
+    448302161,
+    1987622472,
+    448302163
+  ],
+  "tags": {
+    "name": "Nathupur Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 44091397,
+  "center": {
+    "lat": 28.5388455,
+    "lon": 77.1857574
+  },
+  "nodes": [
+    560379039,
+    560379040,
+    560379041,
+    560379043,
+    560379039
+  ],
+  "tags": {
+    "building": "yes",
+    "name": "Electric Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 63724935,
+  "center": {
+    "lat": 28.5483186,
+    "lon": 77.0190719
+  },
+  "nodes": [
+    788008366,
+    788009521,
+    788011853,
+    788011276,
+    788009025,
+    788008388,
+    788009435,
+    788008621,
+    788010754,
+    788009996,
+    788008366
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Bamnauli Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "400000"
+  }
+},
+{
+  "type": "way",
+  "id": 63724985,
+  "center": {
+    "lat": 28.5391733,
+    "lon": 77.0597255
+  },
+  "nodes": [
+    788010465,
+    788011625,
+    788009285,
+    788008606,
+    788010465
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 63724987,
+  "center": {
+    "lat": 28.7927784,
+    "lon": 77.0689539
+  },
+  "nodes": [
+    788010164,
+    788008324,
+    788009168,
+    788008537,
+    788010559,
+    1832124932,
+    1832124934,
+    1832124923,
+    1832124916,
+    1832124910,
+    788009850,
+    1832124886,
+    1832124897,
+    1832124902,
+    788010164
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Bawana Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "400000"
+  }
+},
+{
+  "type": "way",
+  "id": 63752215,
+  "center": {
+    "lat": 28.8676054,
+    "lon": 77.0995394
+  },
+  "nodes": [
+    788273515,
+    788273482,
+    788273591,
+    11059199165,
+    2699917210,
+    2699917188,
+    2699917196,
+    2699917199,
+    788273544,
+    788273743,
+    788273515
+  ],
+  "tags": {
+    "name": "Narela",
+    "power": "substation",
+    "voltage": "220000;132000"
+  }
+},
+{
+  "type": "way",
+  "id": 63844604,
+  "center": {
+    "lat": 28.8712195,
+    "lon": 77.1043567
+  },
+  "nodes": [
+    788751148,
+    788751026,
+    788751155,
+    788751133,
+    788751020,
+    788750974,
+    788751126,
+    788751065,
+    788751146,
+    788751148
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 63956553,
+  "center": {
+    "lat": 28.4640885,
+    "lon": 77.0396583
+  },
+  "nodes": [
+    789442410,
+    789442323,
+    789442400,
+    1999317459,
+    789442373,
+    789442345,
+    2229152385,
+    789442301,
+    789442448,
+    789442417,
+    789442410
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 63956555,
+  "center": {
+    "lat": 28.4554310,
+    "lon": 77.0424486
+  },
+  "nodes": [
+    789442386,
+    789442439,
+    789442404,
+    789442381,
+    789442319,
+    789442426,
+    789442391,
+    789442386
+  ],
+  "tags": {
+    "name": "Power Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 65453986,
+  "center": {
+    "lat": 28.4657713,
+    "lon": 77.3146331
+  },
+  "nodes": [
+    799206542,
+    799206647,
+    799206560,
+    1992173317,
+    799206530,
+    799206418,
+    799206679,
+    799206602,
+    799206553,
+    799206453,
+    799206712,
+    799206542
+  ],
+  "tags": {
+    "name": "A3 Palla",
+    "power": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 65462590,
+  "center": {
+    "lat": 28.5063542,
+    "lon": 77.3050059
+  },
+  "nodes": [
+    799224672,
+    799224710,
+    799224676,
+    799224665,
+    799224672
+  ],
+  "tags": {
+    "name": "Badarpur Thermal Power Station",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 65497386,
+  "center": {
+    "lat": 28.5497027,
+    "lon": 77.3428408
+  },
+  "nodes": [
+    799342163,
+    799342521,
+    799343708,
+    799343659,
+    799342163
+  ],
+  "tags": {
+    "name": "Noida IV",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 66348531,
+  "center": {
+    "lat": 28.5845974,
+    "lon": 77.3308624
+  },
+  "nodes": [
+    804087168,
+    804086990,
+    804087844,
+    804087757,
+    804087387,
+    804087407,
+    804086993,
+    804088179,
+    804087770,
+    804087168
+  ],
+  "tags": {
+    "name": "Noida Sector 20",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 69976580,
+  "center": {
+    "lat": 28.5282451,
+    "lon": 77.3018436
+  },
+  "nodes": [
+    836202436,
+    2443932911,
+    836202477,
+    836202452,
+    836202436
+  ],
+  "tags": {
+    "name": "Sarita Vihar",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 70214090,
+  "center": {
+    "lat": 28.6685006,
+    "lon": 77.2334204
+  },
+  "nodes": [
+    838393183,
+    838393188,
+    838393236,
+    838393195,
+    838393246,
+    838393162,
+    838393214,
+    838393183
+  ],
+  "tags": {
+    "name": "Delhi Metro Rail Corporation Kashmere Gate RSS",
+    "power": "substation",
+    "substation": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 70255404,
+  "center": {
+    "lat": 28.6254708,
+    "lon": 77.2485168
+  },
+  "nodes": [
+    838801769,
+    838801752,
+    838801667,
+    838801683,
+    838801789,
+    838801812,
+    838801769
+  ],
+  "tags": {
+    "name": "I.P.Station",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 70258946,
+  "center": {
+    "lat": 28.6374223,
+    "lon": 77.2539395
+  },
+  "nodes": [
+    838835400,
+    838835301,
+    838835383,
+    838835397,
+    838835334,
+    838835351,
+    838835400
+  ],
+  "tags": {
+    "name": "Rajghat",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 70258949,
+  "center": {
+    "lat": 28.6159595,
+    "lon": 77.2525172
+  },
+  "nodes": [
+    838835312,
+    838835344,
+    838835300,
+    838835325,
+    838835312
+  ],
+  "tags": {
+    "name": "Pragati",
+    "operator": "Pragati Power Station",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 71297432,
+  "center": {
+    "lat": 28.5993655,
+    "lon": 77.3111733
+  },
+  "nodes": [
+    848554003,
+    848554161,
+    848553951,
+    848553887,
+    848554003
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "substation": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 71298925,
+  "center": {
+    "lat": 28.6334290,
+    "lon": 77.3362046
+  },
+  "nodes": [
+    848590776,
+    848590815,
+    848590750,
+    848590828,
+    2069338717,
+    848590771,
+    6509006779,
+    848590766,
+    2069338715,
+    848590826,
+    848590776
+  ],
+  "tags": {
+    "name": "Vaishali",
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 72003009,
+  "center": {
+    "lat": 28.6499460,
+    "lon": 77.3333605
+  },
+  "nodes": [
+    855723730,
+    855723845,
+    855723536,
+    855723601,
+    7504668137,
+    855723730
+  ],
+  "tags": {
+    "name": "Sahibabad",
+    "power": "substation",
+    "voltage": "220000;132000"
+  }
+},
+{
+  "type": "way",
+  "id": 76727519,
+  "center": {
+    "lat": 28.6407948,
+    "lon": 77.3134114
+  },
+  "nodes": [
+    903988017,
+    903987615,
+    903989704,
+    903987563,
+    903988603,
+    903987410,
+    903988017
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76733235,
+  "center": {
+    "lat": 28.6343072,
+    "lon": 77.3084453
+  },
+  "nodes": [
+    904024651,
+    904024611,
+    904024781,
+    904024560,
+    904024591,
+    904024651
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76834870,
+  "center": {
+    "lat": 28.6127812,
+    "lon": 77.2851822
+  },
+  "nodes": [
+    905063464,
+    905063558,
+    905063095,
+    905063308,
+    905063509,
+    905063464
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76834910,
+  "center": {
+    "lat": 28.6251725,
+    "lon": 77.3080784
+  },
+  "nodes": [
+    905063349,
+    3573753845,
+    905063447,
+    905062972,
+    905063186,
+    905063349
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76842476,
+  "center": {
+    "lat": 28.6164854,
+    "lon": 77.3259235
+  },
+  "nodes": [
+    905114145,
+    905114174,
+    905114076,
+    905114122,
+    905114110,
+    905114145
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76842477,
+  "center": {
+    "lat": 28.6177170,
+    "lon": 77.3226458
+  },
+  "nodes": [
+    905114187,
+    905114062,
+    905114112,
+    905114147,
+    905114203,
+    905114099,
+    905114187
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Gazipur",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 76842478,
+  "center": {
+    "lat": 28.6186460,
+    "lon": 77.3082700
+  },
+  "nodes": [
+    905114198,
+    905114071,
+    905114158,
+    905114213,
+    905114198
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 76995145,
+  "center": {
+    "lat": 28.5939486,
+    "lon": 77.3012351
+  },
+  "nodes": [
+    906690648,
+    906690784,
+    906690378,
+    906690267,
+    906690238,
+    906690730,
+    906690657,
+    906690648
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 77629883,
+  "center": {
+    "lat": 28.7346274,
+    "lon": 77.1588336
+  },
+  "nodes": [
+    913486742,
+    913486909,
+    10704100394,
+    913487023,
+    11045514653,
+    11045514637,
+    11045499699,
+    11045514633,
+    913486231,
+    913486742
+  ],
+  "tags": {
+    "name": "66kV Grid Substation Building",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 77643407,
+  "center": {
+    "lat": 28.6881003,
+    "lon": 77.0970925
+  },
+  "nodes": [
+    913534960,
+    913535194,
+    913535960,
+    913534939,
+    913534960
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 77727829,
+  "center": {
+    "lat": 28.7077497,
+    "lon": 77.1355642
+  },
+  "nodes": [
+    914246262,
+    914246190,
+    914246321,
+    914316746,
+    914246262
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 77743801,
+  "center": {
+    "lat": 28.6990573,
+    "lon": 77.1578077
+  },
+  "nodes": [
+    914352870,
+    914351744,
+    914349829,
+    914351056,
+    914352699,
+    914352870
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 77766261,
+  "center": {
+    "lat": 28.6739899,
+    "lon": 77.1476978
+  },
+  "nodes": [
+    914532241,
+    4924903307,
+    914530832,
+    914532118,
+    914529702,
+    914531142,
+    914532814,
+    914530581,
+    914532271,
+    914529847,
+    914532241
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Rohtak Road",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 77885898,
+  "center": {
+    "lat": 28.6808693,
+    "lon": 77.0768465
+  },
+  "nodes": [
+    915474410,
+    915472796,
+    2685070888,
+    915473336,
+    2683200854,
+    915474028,
+    915474410
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 78471437,
+  "center": {
+    "lat": 28.7274601,
+    "lon": 77.1410111
+  },
+  "nodes": [
+    920937856,
+    920937680,
+    920938033,
+    920937986,
+    920937023,
+    920937492,
+    920937895,
+    920937719,
+    920936772,
+    920937140,
+    920937856
+  ],
+  "tags": {
+    "name": "S.Bagh",
+    "power": "substation",
+    "substation": "Rohini_Sec_18_Sub_Station",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 78484400,
+  "center": {
+    "lat": 28.7216203,
+    "lon": 77.1075167
+  },
+  "nodes": [
+    921084671,
+    921084144,
+    921083902,
+    921084198,
+    921084671
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78484432,
+  "center": {
+    "lat": 28.7316324,
+    "lon": 77.1063248
+  },
+  "nodes": [
+    921083952,
+    921084401,
+    921084735,
+    921084567,
+    921083952
+  ],
+  "tags": {
+    "name": "Rohini",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 78542447,
+  "center": {
+    "lat": 28.7454948,
+    "lon": 77.1287943
+  },
+  "nodes": [
+    921618586,
+    921619190,
+    921616385,
+    921618542,
+    921618586
+  ],
+  "tags": {
+    "addr:city": "Badli Industrial Area, Badli, Delhi",
+    "addr:postcode": "110042",
+    "name": "NDPL Office",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78542546,
+  "center": {
+    "lat": 28.7359698,
+    "lon": 77.1141688
+  },
+  "nodes": [
+    921616095,
+    921617778,
+    921616830,
+    11402816674,
+    921619113,
+    11402816673,
+    11402816675,
+    921616095
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78592763,
+  "center": {
+    "lat": 28.6921178,
+    "lon": 77.1447029
+  },
+  "nodes": [
+    922110470,
+    1824554817,
+    1824554818,
+    922110639,
+    922110470
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78595534,
+  "center": {
+    "lat": 28.7072684,
+    "lon": 77.1274794
+  },
+  "nodes": [
+    922124564,
+    922124418,
+    922124659,
+    922124542,
+    11422123265,
+    922124564
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78881810,
+  "center": {
+    "lat": 28.7278170,
+    "lon": 77.0807157
+  },
+  "nodes": [
+    923635823,
+    923637739,
+    923635243,
+    923636805,
+    923635823
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 78898623,
+  "center": {
+    "lat": 28.7181029,
+    "lon": 77.0722321
+  },
+  "nodes": [
+    923722774,
+    923722748,
+    923722782,
+    923722737,
+    923722774
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 87295104,
+  "center": {
+    "lat": 28.7801934,
+    "lon": 77.2798537
+  },
+  "nodes": [
+    1014966991,
+    1014969251,
+    1014966280,
+    1014969372,
+    1014985670,
+    1014968540,
+    1014962289,
+    1014966991
+  ],
+  "tags": {
+    "name": "Loni",
+    "power": "substation",
+    "voltage": "220000;132000"
+  }
+},
+{
+  "type": "way",
+  "id": 112973662,
+  "center": {
+    "lat": 28.8441615,
+    "lon": 77.0868943
+  },
+  "nodes": [
+    1282712653,
+    10812241313,
+    1282711752,
+    1282713444,
+    1282711102,
+    1282712653
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 112973666,
+  "center": {
+    "lat": 28.6795713,
+    "lon": 76.9086504
+  },
+  "nodes": [
+    1282712272,
+    1282713257,
+    1282712885,
+    1282711733,
+    1282712272
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 112973670,
+  "center": {
+    "lat": 28.7002722,
+    "lon": 77.2539266
+  },
+  "nodes": [
+    1282712983,
+    1282712178,
+    1282710496,
+    1282711599,
+    1282713306,
+    1282712409,
+    1282710876,
+    1282712024,
+    1282712983
+  ],
+  "tags": {
+    "name": "Wazirabad",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 112973679,
+  "center": {
+    "lat": 28.8262566,
+    "lon": 77.1108701
+  },
+  "nodes": [
+    1282712586,
+    1282713616,
+    1282711462,
+    1282713145,
+    1282712586
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 112973688,
+  "center": {
+    "lat": 28.7194042,
+    "lon": 77.2197826
+  },
+  "nodes": [
+    1282712975,
+    9838138216,
+    1282713627,
+    1282711489,
+    1282713175,
+    1282712975
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Burari",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 115800446,
+  "center": {
+    "lat": 28.4272200,
+    "lon": 76.9602254
+  },
+  "nodes": [
+    1307289716,
+    1307289471,
+    2751548348,
+    2751548347,
+    1307288932,
+    1307288799,
+    1307289716
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Harsaru",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 116046191,
+  "center": {
+    "lat": 28.5323234,
+    "lon": 77.2879837
+  },
+  "nodes": [
+    1309626281,
+    2636286437,
+    2636286436,
+    1309626285,
+    1309626278,
+    1309626260,
+    2636286429,
+    12951486979,
+    2636286435,
+    2636286428,
+    1309626259,
+    1309626258,
+    1309626262,
+    1309626275,
+    1309626281
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 125159508,
+  "center": {
+    "lat": 28.7747470,
+    "lon": 77.0510364
+  },
+  "nodes": [
+    1390789578,
+    1390790202,
+    1390790440,
+    1390789844,
+    1390790016,
+    1390789546,
+    1390789578
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 125159521,
+  "center": {
+    "lat": 28.6140469,
+    "lon": 76.9970483
+  },
+  "nodes": [
+    1390790378,
+    1390789684,
+    2162809733,
+    1390789838,
+    1390789413,
+    1390789541,
+    2162809742,
+    2162809734,
+    2162809738,
+    2162809741,
+    2162809732,
+    1390790105,
+    1390790378
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Najafgarh",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 125159522,
+  "center": {
+    "lat": 28.7833736,
+    "lon": 77.0633537
+  },
+  "nodes": [
+    1390789514,
+    1390790330,
+    1390789767,
+    1390789916,
+    1390789514
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 125159523,
+  "center": {
+    "lat": 28.6772146,
+    "lon": 76.8637664
+  },
+  "nodes": [
+    1390790334,
+    2743676672,
+    2743676679,
+    2743676678,
+    2743676688,
+    2743676685,
+    2743676675,
+    1390789965,
+    11042253969,
+    2743676670,
+    2743676666,
+    1390789515,
+    1390789648,
+    1390790272,
+    2743676658,
+    1390789372,
+    1390789472,
+    1390789585,
+    1390790175,
+    1390790409,
+    2743676662,
+    1390789816,
+    1390789981,
+    1390789524,
+    1390790334
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000;132000"
+  }
+},
+{
+  "type": "way",
+  "id": 125159529,
+  "center": {
+    "lat": 28.6883304,
+    "lon": 76.9474651
+  },
+  "nodes": [
+    1390790264,
+    1390789904,
+    1390789486,
+    1390789601,
+    1390790264
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 125161558,
+  "center": {
+    "lat": 28.5965739,
+    "lon": 76.9152859
+  },
+  "nodes": [
+    1390815006,
+    1390814971,
+    1390814990,
+    1390815024,
+    1390815006
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 125222827,
+  "center": {
+    "lat": 28.4055831,
+    "lon": 76.9634048
+  },
+  "nodes": [
+    1391458173,
+    2751398064,
+    2751398040,
+    1391458332,
+    2751398031,
+    2751398032,
+    1391458844,
+    1391459054,
+    1391458173
+  ],
+  "tags": {
+    "barrier": "wall",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 125222845,
+  "center": {
+    "lat": 28.7239547,
+    "lon": 77.0059208
+  },
+  "nodes": [
+    1391459204,
+    1391459462,
+    1391459902,
+    1391458693,
+    1391459114,
+    1391460444,
+    2229130148,
+    1391458266,
+    1391459204
+  ],
+  "tags": {
+    "name": "Kanjhawala Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 125982857,
+  "center": {
+    "lat": 28.4450073,
+    "lon": 76.9986838
+  },
+  "nodes": [
+    2006201405,
+    2006201409,
+    2006201407,
+    2006201403,
+    1397769492,
+    2006201401,
+    1397769493,
+    2006201405
+  ],
+  "tags": {
+    "name": "Sector 10",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 154191682,
+  "center": {
+    "lat": 28.6013370,
+    "lon": 77.0827091
+  },
+  "nodes": [
+    1667613153,
+    3832323473,
+    3832323474,
+    1667613135,
+    1667613117,
+    3832323472,
+    1667613150,
+    1667613153
+  ],
+  "tags": {
+    "operator": "Mahvir enclave power station",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 154330901,
+  "center": {
+    "lat": 28.6341366,
+    "lon": 77.0797036
+  },
+  "nodes": [
+    1668762884,
+    1668762871,
+    1668762870,
+    1668762885,
+    1668762884
+  ],
+  "tags": {
+    "name": "BSES",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 161130359,
+  "center": {
+    "lat": 28.4993475,
+    "lon": 76.9617049
+  },
+  "nodes": [
+    1731248757,
+    1731248799,
+    1731248800,
+    1731248807,
+    1731248806,
+    1731248816,
+    1731248815,
+    1731248834,
+    1731248823,
+    9882420525,
+    1731248804,
+    1731248755,
+    1731248757
+  ],
+  "tags": {
+    "name": "Daulatabad Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "400000;220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 161130361,
+  "center": {
+    "lat": 28.6771827,
+    "lon": 76.9818696
+  },
+  "nodes": [
+    1731251510,
+    1731251467,
+    1731251465,
+    1731251463,
+    1731251461,
+    1731251458,
+    1731251456,
+    1731251469,
+    1731251473,
+    1731251478,
+    1731251481,
+    1731251483,
+    1731251493,
+    1731251494,
+    1731251495,
+    1731251507,
+    2692948166,
+    1731251510
+  ],
+  "tags": {
+    "name": "Mundka",
+    "power": "substation",
+    "voltage": "400000;220000"
+  }
+},
+{
+  "type": "way",
+  "id": 170084068,
+  "center": {
+    "lat": 28.4024018,
+    "lon": 77.0333285
+  },
+  "nodes": [
+    1812345006,
+    1812345009,
+    1812344996,
+    1812344990,
+    1812345006
+  ],
+  "tags": {
+    "name": "Badshahpur Substation",
+    "operator": "DHBVN",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "400000;220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 170938273,
+  "center": {
+    "lat": 28.6307977,
+    "lon": 77.3333918
+  },
+  "nodes": [
+    1820483649,
+    1820483668,
+    1820483671,
+    1820483653,
+    1820483649
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000;132000"
+  }
+},
+{
+  "type": "way",
+  "id": 171422831,
+  "center": {
+    "lat": 28.7315487,
+    "lon": 77.1522434
+  },
+  "nodes": [
+    1824554823,
+    1824554825,
+    1824554821,
+    1824554819,
+    1824554823
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Delhi Metro Rail Corporation Jahangirpuri RSS",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171496278,
+  "center": {
+    "lat": 28.7033131,
+    "lon": 77.1143254
+  },
+  "nodes": [
+    1825166880,
+    1825166898,
+    1825166867,
+    1825166851,
+    1825166880
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171501210,
+  "center": {
+    "lat": 28.6936303,
+    "lon": 77.1049324
+  },
+  "nodes": [
+    1825206137,
+    1825206197,
+    1825206090,
+    1825206084,
+    1825206137
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171501211,
+  "center": {
+    "lat": 28.6876100,
+    "lon": 77.0820109
+  },
+  "nodes": [
+    1825205557,
+    1825205554,
+    1825205529,
+    1825205531,
+    1825205557
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171501217,
+  "center": {
+    "lat": 28.6913395,
+    "lon": 77.1298372
+  },
+  "nodes": [
+    1825205895,
+    1825205896,
+    1825205932,
+    1825205861,
+    1825205866,
+    1825205895
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171641948,
+  "center": {
+    "lat": 28.7072753,
+    "lon": 77.0920352
+  },
+  "nodes": [
+    1826404984,
+    1826404983,
+    1826404981,
+    1826404982,
+    1826404984
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171648782,
+  "center": {
+    "lat": 28.7192337,
+    "lon": 77.1079045
+  },
+  "nodes": [
+    1826452642,
+    1826452647,
+    1826452665,
+    1826452662,
+    1826452642
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171687612,
+  "center": {
+    "lat": 28.7989807,
+    "lon": 77.0569671
+  },
+  "nodes": [
+    1826800850,
+    1832124967,
+    1826800847,
+    1826800865,
+    1826800866,
+    1832125143,
+    1826800850
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 171687613,
+  "center": {
+    "lat": 28.8145911,
+    "lon": 77.0565201
+  },
+  "nodes": [
+    1826800927,
+    1826800932,
+    1826800933,
+    1826800931,
+    1826800927
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 171772524,
+  "center": {
+    "lat": 28.5662613,
+    "lon": 77.3307231
+  },
+  "nodes": [
+    1827515735,
+    1827515737,
+    1827515733,
+    1827515731,
+    1827515735
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 172302052,
+  "center": {
+    "lat": 28.7950994,
+    "lon": 77.0689919
+  },
+  "nodes": [
+    1832197632,
+    1832197698,
+    1832197654,
+    9894407862,
+    1832197623,
+    1832197613,
+    1832197632
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "400000"
+  }
+},
+{
+  "type": "way",
+  "id": 172306115,
+  "center": {
+    "lat": 28.7944081,
+    "lon": 77.0760359
+  },
+  "nodes": [
+    1832227132,
+    1832227148,
+    1832227225,
+    1832227214,
+    1832227166,
+    1832227152,
+    1832227132
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 172314920,
+  "center": {
+    "lat": 28.4354765,
+    "lon": 77.3042691
+  },
+  "nodes": [
+    1832306983,
+    1832306985,
+    1832306986,
+    1832306982,
+    1832306983
+  ],
+  "tags": {
+    "name": "Sector 46",
+    "power": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 172338281,
+  "center": {
+    "lat": 28.4398939,
+    "lon": 77.3181250
+  },
+  "nodes": [
+    1832495836,
+    1832495839,
+    1832495840,
+    1832495837,
+    1832495836
+  ],
+  "tags": {
+    "name": "Sector 31",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 172346145,
+  "center": {
+    "lat": 28.4172781,
+    "lon": 77.3290240
+  },
+  "nodes": [
+    1832571045,
+    1832571049,
+    1832571050,
+    1832571048,
+    1832571045
+  ],
+  "tags": {
+    "name": "A4",
+    "power": "substation",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 172701740,
+  "center": {
+    "lat": 28.5399981,
+    "lon": 77.2994247
+  },
+  "nodes": [
+    1835811763,
+    1835811768,
+    1835811761,
+    1835811757,
+    1835811763
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 172701741,
+  "center": {
+    "lat": 28.5233042,
+    "lon": 77.2943881
+  },
+  "nodes": [
+    1835811722,
+    1835811724,
+    1835811726,
+    1835811725,
+    1835811723,
+    1835811722
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 172701742,
+  "center": {
+    "lat": 28.4970231,
+    "lon": 77.3007018
+  },
+  "nodes": [
+    1835811084,
+    1835811098,
+    1835811099,
+    1835811095,
+    1835811091,
+    1835811086,
+    1835811084
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 175804100,
+  "center": {
+    "lat": 28.7027525,
+    "lon": 77.2795785
+  },
+  "nodes": [
+    1863531028,
+    1863531035,
+    2704123403,
+    1863531033,
+    2704123285,
+    1863531026,
+    1863531028
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 175804102,
+  "center": {
+    "lat": 28.6769518,
+    "lon": 77.2585573
+  },
+  "nodes": [
+    1863559828,
+    1863559825,
+    1863559831,
+    1863559833,
+    1863559828
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 175804105,
+  "center": {
+    "lat": 28.6952638,
+    "lon": 77.2908168
+  },
+  "nodes": [
+    1863559891,
+    1863559890,
+    1863559886,
+    1863559887,
+    1863559883,
+    1863559885,
+    1863559891
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 175804106,
+  "center": {
+    "lat": 28.7015654,
+    "lon": 77.2924278
+  },
+  "nodes": [
+    1863531021,
+    1863531015,
+    1863530971,
+    1863530973,
+    1863530983,
+    1863530989,
+    1863530997,
+    1863531006,
+    1863531021
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 176492791,
+  "center": {
+    "lat": 28.5910497,
+    "lon": 77.2341589
+  },
+  "nodes": [
+    1870091848,
+    1870091857,
+    1870091860,
+    1870091850,
+    1870091848
+  ],
+  "tags": {
+    "name": "Lodhi Road",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 187980829,
+  "center": {
+    "lat": 28.5790220,
+    "lon": 77.1011572
+  },
+  "nodes": [
+    1986129435,
+    1986129436,
+    1986129439,
+    1986129438,
+    1986129435
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 187980837,
+  "center": {
+    "lat": 28.6014003,
+    "lon": 77.0697237
+  },
+  "nodes": [
+    1986129604,
+    2837945714,
+    1986129609,
+    1986129673,
+    1986129671,
+    1986129640,
+    1986129639,
+    2837957923,
+    1986129604
+  ],
+  "tags": {
+    "alt_name": "Pappankalan-I",
+    "barrier": "wall",
+    "name": "Dwarka I (Sec-2) Substation",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 187980838,
+  "center": {
+    "lat": 28.6141828,
+    "lon": 77.1349081
+  },
+  "nodes": [
+    1986130028,
+    1986130026,
+    1986130006,
+    1986130002,
+    1986129999,
+    1986130001,
+    1986130005,
+    1986130028
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 188093515,
+  "center": {
+    "lat": 28.6045740,
+    "lon": 77.0216880
+  },
+  "nodes": [
+    1987165021,
+    2838850136,
+    1987165019,
+    1987165036,
+    1987165040,
+    1987165043,
+    1987165021
+  ],
+  "tags": {
+    "alt_name": "Pappankalan-II Substation",
+    "barrier": "wall",
+    "name": "Dwarka-II Sec-14 Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 188093516,
+  "center": {
+    "lat": 28.6060018,
+    "lon": 77.0223533
+  },
+  "nodes": [
+    1987165049,
+    1987165046,
+    1987165037,
+    1987165036,
+    1987165040,
+    1987165049
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Delhi Metro Rail Corporation Dwarka RSS",
+    "power": "substation",
+    "substation": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 188095018,
+  "center": {
+    "lat": 28.5510582,
+    "lon": 77.1175899
+  },
+  "nodes": [
+    1987192705,
+    1987192703,
+    1987192699,
+    1987192701,
+    1987192705
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 188137575,
+  "center": {
+    "lat": 28.4927707,
+    "lon": 77.0712088
+  },
+  "nodes": [
+    1987622524,
+    1987622525,
+    1987622522,
+    1987622521,
+    1987622524
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 188137578,
+  "center": {
+    "lat": 28.4919463,
+    "lon": 77.0612036
+  },
+  "nodes": [
+    1987622499,
+    1987622494,
+    1987622497,
+    1987622500,
+    1987622519,
+    1987622499
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 188137580,
+  "center": {
+    "lat": 28.4960848,
+    "lon": 77.0848529
+  },
+  "nodes": [
+    1987622558,
+    1987622559,
+    1987622541,
+    1987622537,
+    1987622558
+  ],
+  "tags": {
+    "name": "Jwala Mill Marg Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 188137582,
+  "center": {
+    "lat": 28.4714731,
+    "lon": 77.0888835
+  },
+  "nodes": [
+    1987622317,
+    1987622358,
+    1987622385,
+    1987622379,
+    1987622325,
+    1987622317
+  ],
+  "tags": {
+    "name": "Chakkarpur Substation",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 188146404,
+  "center": {
+    "lat": 28.5039797,
+    "lon": 77.0328743
+  },
+  "nodes": [
+    1987707097,
+    1987707099,
+    1987707100,
+    1987707101,
+    1987707113,
+    1987707114,
+    1987707117,
+    1987707119,
+    1987707109,
+    1987707110,
+    1987707097
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 188146406,
+  "center": {
+    "lat": 28.5031801,
+    "lon": 77.0555784
+  },
+  "nodes": [
+    1987707095,
+    1987707094,
+    1987707090,
+    1987707089,
+    1987707082,
+    1987707085,
+    1987707095
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 188237061,
+  "center": {
+    "lat": 28.5894567,
+    "lon": 77.1723291
+  },
+  "nodes": [
+    1988585238,
+    1988585237,
+    1988585234,
+    1988585235,
+    1988585238
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 188594252,
+  "center": {
+    "lat": 28.4750994,
+    "lon": 77.2980934
+  },
+  "nodes": [
+    1992173456,
+    1992173461,
+    1992173459,
+    1992173454,
+    1992173456
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189289389,
+  "center": {
+    "lat": 28.6471534,
+    "lon": 77.0722358
+  },
+  "nodes": [
+    1999317880,
+    1999317890,
+    1999317904,
+    1999317886,
+    1999317880
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 189289394,
+  "center": {
+    "lat": 28.6379392,
+    "lon": 77.1026192
+  },
+  "nodes": [
+    1999317843,
+    1999317841,
+    1999317835,
+    1999317837,
+    1999317843
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189289396,
+  "center": {
+    "lat": 28.6514032,
+    "lon": 77.0915652
+  },
+  "nodes": [
+    1999317927,
+    1999317926,
+    1999317922,
+    1999317923,
+    1999317927
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 189289403,
+  "center": {
+    "lat": 28.6183746,
+    "lon": 77.0773222
+  },
+  "nodes": [
+    1999317806,
+    1999317808,
+    2303619289,
+    1999317807,
+    1999317805,
+    1999317803,
+    1999317806
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 189289404,
+  "center": {
+    "lat": 28.7050764,
+    "lon": 76.9819974
+  },
+  "nodes": [
+    1999318002,
+    1999318005,
+    1999318006,
+    1999318007,
+    1999318001,
+    1999318002
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189289411,
+  "center": {
+    "lat": 28.6587059,
+    "lon": 77.0812646
+  },
+  "nodes": [
+    1999317960,
+    1999317966,
+    1999317968,
+    1999317967,
+    1999317965,
+    2683311350,
+    1999317958,
+    1999317960
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 189430941,
+  "center": {
+    "lat": 28.5931430,
+    "lon": 77.0419251
+  },
+  "nodes": [
+    2000516516,
+    2000516630,
+    2000516689,
+    2000516654,
+    2000516626,
+    2000516516
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189448080,
+  "center": {
+    "lat": 28.5773111,
+    "lon": 77.0587746
+  },
+  "nodes": [
+    2000646151,
+    2000646097,
+    2000646122,
+    2000646178,
+    2000646151
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189587020,
+  "center": {
+    "lat": 28.8282386,
+    "lon": 77.0957670
+  },
+  "nodes": [
+    2001745339,
+    2001745348,
+    2001745422,
+    2001745411,
+    2001745369,
+    2001745359,
+    2001745339
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 189610318,
+  "center": {
+    "lat": 28.6708782,
+    "lon": 77.2088549
+  },
+  "nodes": [
+    2001957686,
+    2001957688,
+    2001957678,
+    2001957676,
+    2001957680,
+    2001957682,
+    2001957686
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190021168,
+  "center": {
+    "lat": 28.4588665,
+    "lon": 76.9978466
+  },
+  "nodes": [
+    2006201596,
+    2006201621,
+    2006201635,
+    2006201601,
+    2006201596
+  ],
+  "tags": {
+    "name": "Sector 9",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190041781,
+  "center": {
+    "lat": 28.4305145,
+    "lon": 77.0196110
+  },
+  "nodes": [
+    2006381808,
+    2006381816,
+    2006381814,
+    2006381812,
+    2006381804,
+    2006381799,
+    2006381808
+  ],
+  "tags": {
+    "name": "Sector 34",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190246702,
+  "center": {
+    "lat": 28.5482018,
+    "lon": 77.1102094
+  },
+  "nodes": [
+    2008328941,
+    2008328940,
+    4230117270,
+    2008328944,
+    2008328946,
+    2008328942,
+    2008328941
+  ],
+  "tags": {
+    "name": "Delhi International Airport Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190261103,
+  "center": {
+    "lat": 28.5261612,
+    "lon": 77.2678992
+  },
+  "nodes": [
+    2008570176,
+    2008570189,
+    2008570226,
+    2008570195,
+    2008570176
+  ],
+  "tags": {
+    "name": "Okhla",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 190261105,
+  "center": {
+    "lat": 28.5361785,
+    "lon": 77.1525992
+  },
+  "nodes": [
+    2008570349,
+    2008570347,
+    2008570357,
+    2008570362,
+    2008570349
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 190261107,
+  "center": {
+    "lat": 28.5289879,
+    "lon": 77.1472489
+  },
+  "nodes": [
+    2008570259,
+    2008570266,
+    2008570281,
+    2008570273,
+    2008570259
+  ],
+  "tags": {
+    "building": "yes",
+    "name": "D 7 Substation",
+    "operator": "BSES Rajdhani",
+    "power": "substation",
+    "substation": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 190261115,
+  "center": {
+    "lat": 28.5152835,
+    "lon": 77.2835433
+  },
+  "nodes": [
+    2008570056,
+    2008570040,
+    2008570028,
+    2008570045,
+    2008570052,
+    2008570054,
+    2008570056
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190261116,
+  "center": {
+    "lat": 28.5398930,
+    "lon": 77.1412532
+  },
+  "nodes": [
+    2008570411,
+    2008570431,
+    2669677149,
+    2008570465,
+    2008570454,
+    2008570470,
+    2008570458,
+    2008570411
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Vasant Kunj",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 190261120,
+  "center": {
+    "lat": 28.5142449,
+    "lon": 77.1626393
+  },
+  "nodes": [
+    2008570024,
+    12814103425,
+    12814104373,
+    4361919521,
+    2008570008,
+    2008570020,
+    2008570039,
+    2008570043,
+    2008570031,
+    2008570033,
+    2008570024
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Mehrauli Substation",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000;66000"
+  }
+},
+{
+  "type": "way",
+  "id": 190278397,
+  "center": {
+    "lat": 28.5072181,
+    "lon": 77.1741307
+  },
+  "nodes": [
+    2008755823,
+    2008755827,
+    2008755835,
+    2008755825,
+    2008755823
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Delhi Metro Rail Corporation Chhatarpur RSS",
+    "power": "substation",
+    "substation": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190307574,
+  "center": {
+    "lat": 28.5468577,
+    "lon": 77.1623566
+  },
+  "nodes": [
+    2009111891,
+    2009111883,
+    2009111882,
+    2009111887,
+    2009111891
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 190333710,
+  "center": {
+    "lat": 28.5256634,
+    "lon": 77.1668376
+  },
+  "nodes": [
+    12945201984,
+    12945201983,
+    2009502666,
+    2009502733,
+    12945201984
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 211116640,
+  "center": {
+    "lat": 28.6081046,
+    "lon": 77.0502429
+  },
+  "nodes": [
+    2211225725,
+    2211225726,
+    2211225731,
+    2211225730,
+    2211225734,
+    2211225728,
+    2211225721,
+    2211225725
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 211144281,
+  "center": {
+    "lat": 28.6258579,
+    "lon": 77.2873444
+  },
+  "nodes": [
+    11740561018,
+    2211538220,
+    11148213620,
+    2211538224,
+    2211538228,
+    2211538226,
+    11740561018
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 232651623,
+  "center": {
+    "lat": 28.5955039,
+    "lon": 77.3294618
+  },
+  "nodes": [
+    2409913792,
+    2409913794,
+    2409913791,
+    2409913788,
+    2409913792
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 247861059,
+  "center": {
+    "lat": 28.5346324,
+    "lon": 76.9366030
+  },
+  "nodes": [
+    2547190646,
+    2547190645,
+    2547190641,
+    2547190638,
+    2547190643,
+    9882470366,
+    2547190662,
+    2547190663,
+    2547190665,
+    2547190664,
+    2547190674,
+    2547190672,
+    2547190677,
+    2547190678,
+    2547190673,
+    2547190670,
+    2547190671,
+    2547190676,
+    2547190675,
+    2547190668,
+    2547190669,
+    9882470367,
+    2547190655,
+    2547190660,
+    2547190654,
+    2547190657,
+    2547190658,
+    2547190653,
+    2547190652,
+    2547190650,
+    2547190647,
+    2547190646
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Jhatikara Substation",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "765000;400000"
+  }
+},
+{
+  "type": "way",
+  "id": 247861065,
+  "center": {
+    "lat": 28.6182258,
+    "lon": 77.2761510
+  },
+  "nodes": [
+    2547190724,
+    2547190726,
+    2547190725,
+    2547190723,
+    2547190724
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 247861068,
+  "center": {
+    "lat": 28.6705370,
+    "lon": 77.0466737
+  },
+  "nodes": [
+    2547190730,
+    2547190729,
+    2547190727,
+    2547190728,
+    2547190730
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 247861071,
+  "center": {
+    "lat": 28.4260931,
+    "lon": 77.0701371
+  },
+  "nodes": [
+    2547190220,
+    2547190250,
+    2547190248,
+    2547190246,
+    2547190244,
+    10869019603,
+    2547190220
+  ],
+  "tags": {
+    "addr:street": "Sector 51",
+    "barrier": "wall",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 247861085,
+  "center": {
+    "lat": 28.6842669,
+    "lon": 77.0236765
+  },
+  "nodes": [
+    2547190736,
+    2547190735,
+    2547190732,
+    2547190731,
+    2547190733,
+    2547190734,
+    2547190736
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 262090094,
+  "center": {
+    "lat": 28.5265543,
+    "lon": 77.2556757
+  },
+  "nodes": [
+    2677369539,
+    2677369547,
+    2677215086,
+    2677369594,
+    2677369539
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 263597735,
+  "center": {
+    "lat": 28.6599475,
+    "lon": 77.0027869
+  },
+  "nodes": [
+    2692234629,
+    2692234643,
+    2692234649,
+    2692234631,
+    2692234663,
+    2692234629
+  ],
+  "tags": {
+    "designation": "66 kv",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 263598794,
+  "center": {
+    "lat": 28.6615823,
+    "lon": 77.0100389
+  },
+  "nodes": [
+    2692243361,
+    2692234662,
+    2692243353,
+    2692243364,
+    2692243361
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 263819668,
+  "center": {
+    "lat": 28.6097676,
+    "lon": 77.0993578
+  },
+  "nodes": [
+    2694691194,
+    2694691191,
+    2694691181,
+    2694691203,
+    2694691194
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 264722109,
+  "center": {
+    "lat": 28.5948102,
+    "lon": 77.0353609
+  },
+  "nodes": [
+    2703762012,
+    2197028848,
+    2197028843,
+    2703761995,
+    2703762012
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 265866413,
+  "center": {
+    "lat": 28.6530060,
+    "lon": 77.2671582
+  },
+  "nodes": [
+    2714782509,
+    2714782511,
+    2714782514,
+    2714782513,
+    2714782509
+  ],
+  "tags": {
+    "name": "Geeta Colony",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 266074792,
+  "center": {
+    "lat": 28.5431417,
+    "lon": 77.2910444
+  },
+  "nodes": [
+    2716596114,
+    2716596211,
+    2443932934,
+    2716596123,
+    2716596190,
+    2716596114
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 266080873,
+  "center": {
+    "lat": 28.5419001,
+    "lon": 77.2605077
+  },
+  "nodes": [
+    2716786530,
+    2716786500,
+    2716786496,
+    2716786489,
+    2716786492,
+    2716786530
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 266082823,
+  "center": {
+    "lat": 28.5328185,
+    "lon": 77.2412614
+  },
+  "nodes": [
+    2716796089,
+    1041070164,
+    2716796100,
+    2716796080,
+    2716796085,
+    2716796089
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 269084985,
+  "center": {
+    "lat": 28.7349679,
+    "lon": 76.8639930
+  },
+  "nodes": [
+    2743677391,
+    2743677384,
+    2743677367,
+    2743677381,
+    2743677391
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 269084987,
+  "center": {
+    "lat": 28.7445547,
+    "lon": 76.8799016
+  },
+  "nodes": [
+    2743677628,
+    2743677625,
+    2743677648,
+    2743677669,
+    2743677672,
+    2743677628
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 269084988,
+  "center": {
+    "lat": 28.7361223,
+    "lon": 76.8431101
+  },
+  "nodes": [
+    2743677478,
+    2743677471,
+    2743677468,
+    2743677466,
+    2743677456,
+    2743677463,
+    2743677478
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 277860556,
+  "center": {
+    "lat": 28.6684945,
+    "lon": 77.3228270
+  },
+  "nodes": [
+    2823075384,
+    2823075381,
+    2823075611,
+    2823075618,
+    2823075384
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 281984544,
+  "center": {
+    "lat": 28.6175565,
+    "lon": 77.2144852
+  },
+  "nodes": [
+    2859436274,
+    2859436275,
+    2859436276,
+    2859436277,
+    2859436274
+  ],
+  "tags": {
+    "building": "yes",
+    "name": "Electric Sub Station",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 284758454,
+  "center": {
+    "lat": 28.5033037,
+    "lon": 77.2054483
+  },
+  "nodes": [
+    2883305555,
+    2884641155,
+    2884641157,
+    2884641169,
+    2884641170,
+    2884641162,
+    2884641158,
+    2884641160,
+    2884641159,
+    2884641161,
+    2884641163,
+    2884641166,
+    2884641167,
+    2884641165,
+    2883305558,
+    11061930826,
+    2883305555
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 296222975,
+  "center": {
+    "lat": 28.6189640,
+    "lon": 77.2502548
+  },
+  "nodes": [
+    3000141640,
+    3000141638,
+    3000141636,
+    4229086514,
+    4229086509,
+    4229086512,
+    4229086515,
+    3000141637,
+    3000141639,
+    3000141640
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 296542553,
+  "center": {
+    "lat": 28.8234927,
+    "lon": 77.2658336
+  },
+  "nodes": [
+    3003369728,
+    3003369729,
+    3003369734,
+    3003369738,
+    3003369740,
+    3003369743,
+    3003369745,
+    3003369746,
+    3003369747,
+    3003369748,
+    3003369749,
+    3003369750,
+    3003369742,
+    3003369741,
+    3003369737,
+    3003369736,
+    3003369735,
+    3003369733,
+    3003369732,
+    3003369731,
+    3003369730,
+    3003369727,
+    3003369728
+  ],
+  "tags": {
+    "name": "Mandaula",
+    "power": "substation",
+    "voltage": "400000;220000"
+  }
+},
+{
+  "type": "way",
+  "id": 296571992,
+  "center": {
+    "lat": 28.7120683,
+    "lon": 77.3253012
+  },
+  "nodes": [
+    3003665459,
+    3003665466,
+    3003665468,
+    2705204280,
+    3003665470,
+    3003665469,
+    3003665465,
+    3003665464,
+    3003665462,
+    3003665461,
+    3003665460,
+    3003665459
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Harsh Vihar Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "400000"
+  }
+},
+{
+  "type": "way",
+  "id": 296733619,
+  "center": {
+    "lat": 28.7802584,
+    "lon": 77.2668436
+  },
+  "nodes": [
+    3005426663,
+    3005426664,
+    3005426656,
+    3005426653,
+    3005426663
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 297874320,
+  "center": {
+    "lat": 28.7365343,
+    "lon": 77.2967792
+  },
+  "nodes": [
+    3017753987,
+    3017753988,
+    3017753989,
+    3017753990,
+    3017753991,
+    3017753992,
+    3017753987
+  ],
+  "tags": {
+    "name": "Naipura Bijli Ghar",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 312138194,
+  "center": {
+    "lat": 28.7642859,
+    "lon": 77.0977440
+  },
+  "nodes": [
+    3179734388,
+    3179734387,
+    3179734384,
+    3179734385,
+    3179734388
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 314638636,
+  "center": {
+    "lat": 28.6980479,
+    "lon": 76.8806646
+  },
+  "nodes": [
+    3206829887,
+    3206829886,
+    3206829889,
+    3206829892,
+    3206829891,
+    3206829890,
+    3206829887
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 343503827,
+  "center": {
+    "lat": 28.6084689,
+    "lon": 77.0032523
+  },
+  "nodes": [
+    3503380277,
+    2265732260,
+    3503380279,
+    3503380278,
+    3503380277
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 343503828,
+  "center": {
+    "lat": 28.5827507,
+    "lon": 77.0355602
+  },
+  "nodes": [
+    2197075607,
+    9295863356,
+    9295863353,
+    2197075514,
+    2197075530,
+    2197075507,
+    2197075607
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 349973876,
+  "center": {
+    "lat": 28.7214637,
+    "lon": 77.1247018
+  },
+  "nodes": [
+    3557515446,
+    3557515448,
+    3557515445,
+    3557515440,
+    3557515446
+  ],
+  "tags": {
+    "power": "substation",
+    "substation": "NDPL_Sec13_Sub_Station"
+  }
+},
+{
+  "type": "way",
+  "id": 351081649,
+  "center": {
+    "lat": 28.6076546,
+    "lon": 77.0408507
+  },
+  "nodes": [
+    3567971977,
+    3567971982,
+    3567971968,
+    3567971967,
+    3567971977
+  ],
+  "tags": {
+    "building": "service",
+    "name": "Main Electric Substation",
+    "operator": "NSUT",
+    "power": "substation",
+    "start_date": "1999-04-26"
+  }
+},
+{
+  "type": "way",
+  "id": 352446795,
+  "center": {
+    "lat": 28.5934658,
+    "lon": 77.0467393
+  },
+  "nodes": [
+    3582445879,
+    3582445877,
+    3582445872,
+    3582445876,
+    3582445879
+  ],
+  "tags": {
+    "building": "yes",
+    "location": "indoor",
+    "name": "Pocket 5 Substation",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 357499751,
+  "center": {
+    "lat": 28.6513663,
+    "lon": 77.3302932
+  },
+  "nodes": [
+    3627280667,
+    3627280665,
+    3627280666,
+    3627280668,
+    3627280667
+  ],
+  "tags": {
+    "name": "Bhushan Steel",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 357499797,
+  "center": {
+    "lat": 28.6695117,
+    "lon": 77.2330865
+  },
+  "nodes": [
+    3627280674,
+    3627280675,
+    3627280680,
+    3627280678,
+    3627280677,
+    3627280676,
+    3627280674
+  ],
+  "tags": {
+    "name": "Kashmere Gate Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 358642602,
+  "center": {
+    "lat": 28.7574482,
+    "lon": 77.0955369
+  },
+  "nodes": [
+    3635432256,
+    3635432255,
+    3635432257,
+    3635432258,
+    3635432256
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 379883517,
+  "center": {
+    "lat": 28.5416505,
+    "lon": 77.2356487
+  },
+  "nodes": [
+    3832323226,
+    3832323228,
+    6020921038,
+    3832323221,
+    3832323222,
+    3832323223,
+    3832323226
+  ],
+  "tags": {
+    "name": "Masjid Moth",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 423229313,
+  "center": {
+    "lat": 28.6184906,
+    "lon": 77.2517517
+  },
+  "nodes": [
+    4229086510,
+    4229086506,
+    4229086507,
+    4229086511,
+    4229086510
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 423229315,
+  "center": {
+    "lat": 28.6143578,
+    "lon": 77.2519650
+  },
+  "nodes": [
+    4229086499,
+    4229086497,
+    4229086496,
+    4229086498,
+    4229086499
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 423229316,
+  "center": {
+    "lat": 28.6171722,
+    "lon": 77.2514925
+  },
+  "nodes": [
+    4229086502,
+    4229086501,
+    4229086503,
+    4229086505,
+    4229086502
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 458301236,
+  "center": {
+    "lat": 28.5873408,
+    "lon": 77.2666864
+  },
+  "nodes": [
+    4543297905,
+    4543297906,
+    4543297901,
+    4543297902,
+    4543297897,
+    4543298014,
+    4543297896,
+    4543297895,
+    4543298013,
+    4543297899,
+    4543297900,
+    4543297898,
+    4543297903,
+    4543297904,
+    4543297905
+  ],
+  "tags": {
+    "name": "Maharanibagh",
+    "operator": "Power Grid Corporation of India Ltd",
+    "operator:wikidata": "Q3400886",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "400000;220000"
+  }
+},
+{
+  "type": "way",
+  "id": 473617053,
+  "center": {
+    "lat": 28.5788125,
+    "lon": 77.2600052
+  },
+  "nodes": [
+    4676940470,
+    4676940471,
+    4676940473,
+    4676940472,
+    4676940470
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 473621178,
+  "center": {
+    "lat": 28.5145658,
+    "lon": 77.0879473
+  },
+  "nodes": [
+    4676970050,
+    4676970048,
+    4676970046,
+    4676970045,
+    4676970049,
+    4676970050
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 514032296,
+  "center": {
+    "lat": 28.8262657,
+    "lon": 77.0871856
+  },
+  "nodes": [
+    5023053044,
+    5023053045,
+    5023053047,
+    5023053049,
+    5023053052,
+    5023053056,
+    5023053053,
+    5023053051,
+    5023053048,
+    5023053046,
+    5023053044
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 519440483,
+  "center": {
+    "lat": 28.7252440,
+    "lon": 77.2041535
+  },
+  "nodes": [
+    5065101671,
+    5065101656,
+    5065101400,
+    5065101639,
+    5065101671
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 519440484,
+  "center": {
+    "lat": 28.7276272,
+    "lon": 77.1896324
+  },
+  "nodes": [
+    5065101729,
+    5065101724,
+    5065101703,
+    5065101706,
+    5065101729
+  ],
+  "tags": {
+    "name": "Delhi Metro Rail Corporation Mukundpur RSS",
+    "power": "substation",
+    "substation": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 663490627,
+  "center": {
+    "lat": 28.5989026,
+    "lon": 77.0733347
+  },
+  "nodes": [
+    6210289441,
+    6210289440,
+    6210289439,
+    6210289438,
+    6210289441
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 668018787,
+  "center": {
+    "lat": 28.5185503,
+    "lon": 77.2161270
+  },
+  "nodes": [
+    6255341245,
+    6255341243,
+    6255341244,
+    6452429329,
+    6255341246,
+    6255341247,
+    6255341242,
+    6255341248,
+    6255341249,
+    6255341245
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 686857047,
+  "center": {
+    "lat": 28.8185929,
+    "lon": 77.2820015
+  },
+  "nodes": [
+    6438433540,
+    6438433539,
+    6438433808,
+    6438433807,
+    6438433540
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 689282351,
+  "center": {
+    "lat": 28.5929430,
+    "lon": 77.1655998
+  },
+  "nodes": [
+    6466212030,
+    4811281401,
+    2714309236,
+    6084384993,
+    2714309225,
+    2714309226,
+    2714309040,
+    2714309047,
+    2714309114,
+    2714309116,
+    2714309168,
+    6466212028,
+    12816033218,
+    6466212030
+  ],
+  "tags": {
+    "name": "Delhi Metro Rail Corporation Dhaula Kuan RSS",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 717929778,
+  "center": {
+    "lat": 28.4646880,
+    "lon": 77.3001743
+  },
+  "nodes": [
+    6742450441,
+    6313529302,
+    6742450447,
+    6742450442,
+    6742450441
+  ],
+  "tags": {
+    "building": "yes",
+    "building:levels": "1",
+    "name": "Electric Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 733233454,
+  "center": {
+    "lat": 28.5493222,
+    "lon": 77.2634292
+  },
+  "nodes": [
+    6866376673,
+    6866376669,
+    6866376678,
+    6866376672,
+    6866376677,
+    6866376673
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 750198322,
+  "center": {
+    "lat": 28.6760280,
+    "lon": 77.2789666
+  },
+  "nodes": [
+    7014721929,
+    7014721930,
+    7014721931,
+    7014721932,
+    7014721929
+  ],
+  "tags": {
+    "name": "Dwarkapuri Substation",
+    "power": "substation",
+    "voltage": "33000"
+  }
+},
+{
+  "type": "way",
+  "id": 802289913,
+  "center": {
+    "lat": 28.4366628,
+    "lon": 77.3041558
+  },
+  "nodes": [
+    7504513226,
+    7504513225,
+    7504513224,
+    7504513223,
+    7504513226
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 870335641,
+  "center": {
+    "lat": 28.6025128,
+    "lon": 77.2909179
+  },
+  "nodes": [
+    8108126434,
+    8108126433,
+    8108126432,
+    8108126431,
+    8108126434
+  ],
+  "tags": {
+    "location": "indoor",
+    "operator": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 870335648,
+  "center": {
+    "lat": 28.6046893,
+    "lon": 77.2908934
+  },
+  "nodes": [
+    8108126476,
+    8108126475,
+    8108126474,
+    8108126473,
+    8108126476
+  ],
+  "tags": {
+    "operator": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 919824624,
+  "center": {
+    "lat": 28.7714384,
+    "lon": 76.8660053
+  },
+  "nodes": [
+    8541845889,
+    8541845888,
+    8541845887,
+    8541845886,
+    8541845885,
+    8541845889
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 922757333,
+  "center": {
+    "lat": 28.5795568,
+    "lon": 77.0430489
+  },
+  "nodes": [
+    8566010463,
+    9295863350,
+    9295863352,
+    8566010462,
+    8566010461,
+    8566010460,
+    8566010463
+  ],
+  "tags": {
+    "alt_name": "Pappankalan-III",
+    "barrier": "wall",
+    "name": "Dwarka-III Sector-19 Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 936399464,
+  "center": {
+    "lat": 28.6263986,
+    "lon": 77.1978915
+  },
+  "nodes": [
+    8676806041,
+    13478193947,
+    8676806042,
+    13478193939,
+    8676806043,
+    13478193932,
+    13478193941,
+    8676806044,
+    8676806041
+  ],
+  "tags": {
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 952398072,
+  "center": {
+    "lat": 28.6134321,
+    "lon": 77.0367188
+  },
+  "nodes": [
+    8815115608,
+    8815115609,
+    8815115610,
+    8815115611,
+    8815115608
+  ],
+  "tags": {
+    "building": "service",
+    "name": "Electric Substation",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 952398096,
+  "center": {
+    "lat": 28.6084980,
+    "lon": 77.0373795
+  },
+  "nodes": [
+    8815115864,
+    8815115865,
+    8815115872,
+    8815115873,
+    8815115866,
+    8815115867,
+    8815115864
+  ],
+  "tags": {
+    "building": "service",
+    "name": "Electric Substation",
+    "operator": "NSUT",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 952398106,
+  "center": {
+    "lat": 28.6115327,
+    "lon": 77.0381242
+  },
+  "nodes": [
+    8815115903,
+    8815115904,
+    8815115907,
+    8815115908,
+    8815115905,
+    8815115906,
+    8815115903
+  ],
+  "tags": {
+    "building": "yes",
+    "name": "Electric Substation",
+    "operator": "NSUT",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 952516500,
+  "center": {
+    "lat": 28.6094016,
+    "lon": 77.0683404
+  },
+  "nodes": [
+    8816098402,
+    8816098403,
+    8816098404,
+    8816098405,
+    8816098406,
+    8816098407,
+    8816098402
+  ],
+  "tags": {
+    "description": "81, Uttam Vihar, Block F, Uttam Nagar, Bindapur, New Delhi, Delhi 110059",
+    "name": "Power House , DDA Flats Bindapur",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 952787109,
+  "center": {
+    "lat": 28.6077388,
+    "lon": 77.0360187
+  },
+  "nodes": [
+    8818863671,
+    8818863672,
+    8818863673,
+    8818863674,
+    8818863671
+  ],
+  "tags": {
+    "building": "service",
+    "name": "Electric Substation",
+    "operator": "NSUT",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1001143963,
+  "center": {
+    "lat": 28.5987037,
+    "lon": 77.0590395
+  },
+  "nodes": [
+    9241010765,
+    9241010764,
+    9241010763,
+    9241010762,
+    9241010761,
+    9241010760,
+    9241010759,
+    9241010758,
+    9241010765
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "Dwarka Sec-5 Substation",
+    "operator": "Delhi Transco Limited",
+    "power": "substation",
+    "substation": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 1004155563,
+  "center": {
+    "lat": 28.7351300,
+    "lon": 77.3191783
+  },
+  "nodes": [
+    9265169189,
+    9265169188,
+    9265169187,
+    9265169186,
+    9265169189
+  ],
+  "tags": {
+    "name": "Tilamoth",
+    "power": "substation",
+    "voltage": "132000"
+  }
+},
+{
+  "type": "way",
+  "id": 1007603952,
+  "center": {
+    "lat": 28.5828983,
+    "lon": 77.0354624
+  },
+  "nodes": [
+    9295863356,
+    9295863355,
+    9295863354,
+    9295863353,
+    9295863356
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1015272529,
+  "center": {
+    "lat": 28.6857472,
+    "lon": 76.9444951
+  },
+  "nodes": [
+    9365680934,
+    9365680935,
+    9365680936,
+    9365680937,
+    9365680934
+  ],
+  "tags": {
+    "name": "Delhi Metro Rail Corporation Bahadurgarh RSS",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1044787679,
+  "center": {
+    "lat": 28.5151255,
+    "lon": 77.2446105
+  },
+  "nodes": [
+    9613382236,
+    9613382235,
+    9613382234,
+    9613382233,
+    9613382236
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 1044787680,
+  "center": {
+    "lat": 28.5064388,
+    "lon": 77.2620479
+  },
+  "nodes": [
+    9613382256,
+    9613382255,
+    9613382254,
+    9613382253,
+    9613382252,
+    9613382251,
+    9613382250,
+    9613382249,
+    9613382248,
+    9613382256
+  ],
+  "tags": {
+    "name": "Tughlakabad",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "400000;220000"
+  }
+},
+{
+  "type": "way",
+  "id": 1056310628,
+  "center": {
+    "lat": 28.4107648,
+    "lon": 76.9544428
+  },
+  "nodes": [
+    9706019567,
+    9706019568,
+    9706019569,
+    9706019570,
+    9706019571,
+    9706019572,
+    9706019573,
+    9706019574,
+    9706019575,
+    9706019576,
+    9706019577,
+    9706019578,
+    9706019579,
+    9706019567
+  ],
+  "tags": {
+    "name": "GIS Substation HVPNL Sector-85 Gurugram",
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "voltage": "220000"
+  }
+},
+{
+  "type": "way",
+  "id": 1076792388,
+  "center": {
+    "lat": 28.5140940,
+    "lon": 77.0271286
+  },
+  "nodes": [
+    9874017630,
+    9874017631,
+    9874017632,
+    9874017633,
+    9874017630
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1158469001,
+  "center": {
+    "lat": 28.4900614,
+    "lon": 77.0892263
+  },
+  "nodes": [
+    10773529532,
+    10773529533,
+    10773529534,
+    10773529535,
+    10773529532
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation",
+    "source": "local knowledge"
+  }
+},
+{
+  "type": "way",
+  "id": 1158469002,
+  "center": {
+    "lat": 28.4895777,
+    "lon": 77.0908819
+  },
+  "nodes": [
+    10773529536,
+    10773529537,
+    10773529538,
+    10773529539,
+    10773529540,
+    10773529541,
+    10773529542,
+    10773529536
+  ],
+  "tags": {
+    "note": "Contributors are requested to not edit the \"operator\" and \"operator:en\" tags. (2024/06/01)",
+    "operator": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "operator:en": "Dakshin Haryana Bijli Vitran Nigam Limited (DHBVN)",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1174995913,
+  "center": {
+    "lat": 28.7506892,
+    "lon": 77.1701078
+  },
+  "nodes": [
+    11064985258,
+    11064985243,
+    11064985233,
+    10917844171,
+    11064985224,
+    11064985213
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1182453426,
+  "center": {
+    "lat": 28.7115767,
+    "lon": 77.1755199
+  },
+  "nodes": [
+    10980523092,
+    10980523094,
+    10980550519,
+    10980523076,
+    10980523083,
+    10980550536,
+    10980550532,
+    10980523092
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "33KV Grid Substation Azadpur",
+    "power": "substation",
+    "voltage": "33000"
+  }
+},
+{
+  "type": "way",
+  "id": 1184034282,
+  "center": {
+    "lat": 28.5423158,
+    "lon": 77.3049436
+  },
+  "nodes": [
+    10995549257,
+    10995549258,
+    10997314031,
+    10995549259,
+    10995549260,
+    10995549257
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1184222740,
+  "center": {
+    "lat": 28.5193427,
+    "lon": 77.2970897
+  },
+  "nodes": [
+    10997352783,
+    10997352784,
+    10997352785,
+    10997352786,
+    10997352783
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1184452742,
+  "center": {
+    "lat": 28.4926755,
+    "lon": 77.1538635
+  },
+  "nodes": [
+    11001586493,
+    11001586494,
+    11001586495,
+    11001586496,
+    11001586493
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1187328579,
+  "center": {
+    "lat": 28.6234531,
+    "lon": 77.2652312
+  },
+  "nodes": [
+    11025752316,
+    11025752317,
+    11025752318,
+    11025752319,
+    11025752316
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1191834179,
+  "center": {
+    "lat": 28.7511391,
+    "lon": 77.1706837
+  },
+  "nodes": [
+    11064985213,
+    11064985224,
+    10917844170,
+    11067159842,
+    10917844169,
+    10917844166,
+    11064985213
+  ],
+  "tags": {
+    "barrier": "wall",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1208154258,
+  "center": {
+    "lat": 28.6431483,
+    "lon": 77.1048098
+  },
+  "nodes": [
+    11194793555,
+    11194793554,
+    11194793553,
+    11194793552,
+    11194793551,
+    11194793550,
+    11194793555
+  ],
+  "tags": {
+    "name": "Bhijli Ghar",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 1275250765,
+  "center": {
+    "lat": 28.5945456,
+    "lon": 77.1206500
+  },
+  "nodes": [
+    11841093554,
+    11841093551,
+    11841093560,
+    11841104180,
+    11841093554
+  ],
+  "tags": {
+    "location": "outdoor",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1277996866,
+  "center": {
+    "lat": 28.5902567,
+    "lon": 77.1198075
+  },
+  "nodes": [
+    11864125627,
+    11954096440,
+    11954096458,
+    11954096445,
+    11864125632,
+    11864125623,
+    11864125631,
+    11954096437,
+    11864125627
+  ],
+  "tags": {
+    "alt_name": "Old Base Hospital",
+    "name": "Kendriya Vidyalaya",
+    "operator": "Military",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1279278440,
+  "center": {
+    "lat": 28.6224799,
+    "lon": 77.1957089
+  },
+  "nodes": [
+    11876008793,
+    11875967168,
+    11875967158,
+    11876008809,
+    11876008793
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1279278455,
+  "center": {
+    "lat": 28.6226171,
+    "lon": 77.1956435
+  },
+  "nodes": [
+    11875967162,
+    11876008857,
+    11876008772,
+    11876008840,
+    11876008776,
+    11876008871,
+    11876008813,
+    11876008835,
+    11876008774,
+    11876008869,
+    11875967162
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1280797875,
+  "center": {
+    "lat": 28.5967269,
+    "lon": 77.1346388
+  },
+  "nodes": [
+    11888474723,
+    11888438847,
+    11888474719,
+    11888474691,
+    11888474724,
+    11888474692,
+    11888438848,
+    11888474723
+  ],
+  "tags": {
+    "name": "Gopinath Market Substation",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1286576103,
+  "center": {
+    "lat": 28.5974460,
+    "lon": 77.1239043
+  },
+  "nodes": [
+    11933083738,
+    11933083750,
+    11933083732,
+    11933083742,
+    11933083738
+  ],
+  "tags": {
+    "operator": "New Delhi Power Limited",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1288672259,
+  "center": {
+    "lat": 28.5925763,
+    "lon": 77.1202309
+  },
+  "nodes": [
+    11955856406,
+    11950079640,
+    11950079650,
+    11955856413,
+    11955856406
+  ],
+  "tags": {
+    "power": "substation",
+    "substation": "converter"
+  }
+},
+{
+  "type": "way",
+  "id": 1288867465,
+  "center": {
+    "lat": 28.6506625,
+    "lon": 77.0890519
+  },
+  "nodes": [
+    2962267430,
+    11951524687,
+    11951524702,
+    11951524715,
+    2962267430
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1289814874,
+  "center": {
+    "lat": 28.6460874,
+    "lon": 77.2019555
+  },
+  "nodes": [
+    11959737933,
+    11959737931,
+    11959737934,
+    11959737932,
+    11959737933
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1290639140,
+  "center": {
+    "lat": 28.5900866,
+    "lon": 77.1199467
+  },
+  "nodes": [
+    11966383922,
+    11966383935,
+    11966383931,
+    11966383907,
+    11966383922
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1294685221,
+  "center": {
+    "lat": 28.6190992,
+    "lon": 77.2887688
+  },
+  "nodes": [
+    11956344854,
+    11956344848,
+    11956344849,
+    7155468153,
+    11998490347,
+    11956344854
+  ],
+  "tags": {
+    "barrier": "wall",
+    "name": "IP Extension Grid Sub Station",
+    "operator": "BSES Yamuna Power Limited",
+    "power": "substation",
+    "voltage": "33000"
+  }
+},
+{
+  "type": "way",
+  "id": 1295552483,
+  "center": {
+    "lat": 28.6090612,
+    "lon": 77.1084115
+  },
+  "nodes": [
+    12005093766,
+    12005132580,
+    12005132570,
+    12005132576,
+    12005132579,
+    12005132581,
+    12005093766
+  ],
+  "tags": {
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1298506147,
+  "center": {
+    "lat": 28.5755339,
+    "lon": 77.1973746
+  },
+  "nodes": [
+    12028902972,
+    12028883556,
+    12028883566,
+    12028902975,
+    12028902972
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1300891890,
+  "center": {
+    "lat": 28.6462000,
+    "lon": 77.1903836
+  },
+  "nodes": [
+    12049161357,
+    12049161360,
+    12049161365,
+    12049161359,
+    12049161356,
+    12049161357
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1301026307,
+  "center": {
+    "lat": 28.6450795,
+    "lon": 77.1903370
+  },
+  "nodes": [
+    12050465274,
+    12050465275,
+    12050465272,
+    12050465271,
+    12050465274
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1307673203,
+  "center": {
+    "lat": 28.6950716,
+    "lon": 77.2129125
+  },
+  "nodes": [
+    12109899052,
+    12109899042,
+    12109899034,
+    12109899021,
+    12109899052
+  ],
+  "tags": {
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1316627353,
+  "center": {
+    "lat": 28.6260982,
+    "lon": 77.2118820
+  },
+  "nodes": [
+    12185793036,
+    12185793067,
+    12185793084,
+    12185793037,
+    12185793036
+  ],
+  "tags": {
+    "addr:housenumber": "257",
+    "addr:street": "Jai Singh Road",
+    "building": "office",
+    "building:colour": "brown",
+    "building:levels": "2",
+    "building:use": "office",
+    "power": "substation",
+    "roof:shape": "flat"
+  }
+},
+{
+  "type": "way",
+  "id": 1319232027,
+  "center": {
+    "lat": 28.5680847,
+    "lon": 77.2464165
+  },
+  "nodes": [
+    6776599608,
+    12208805220,
+    12208805219,
+    12208805221,
+    6776599608
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1331914380,
+  "center": {
+    "lat": 28.6678993,
+    "lon": 77.2247486
+  },
+  "nodes": [
+    12323350580,
+    12323364664,
+    12323350586,
+    9162635034,
+    12323350580
+  ],
+  "tags": {
+    "location": "surface",
+    "name": "Maharaja Agrasen Park",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1340504320,
+  "center": {
+    "lat": 28.7136472,
+    "lon": 77.0610597
+  },
+  "nodes": [
+    12399788473,
+    12399788478,
+    12399788475,
+    12399788474,
+    12399788473
+  ],
+  "tags": {
+    "name": "grid substation building and battery testing lab",
+    "operator": "Tata Power Delhi Distribution Limited",
+    "power": "substation",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 1354558634,
+  "center": {
+    "lat": 28.6239403,
+    "lon": 77.2033414
+  },
+  "nodes": [
+    3546110493,
+    3610639466,
+    3610639465,
+    3546110517,
+    3546110510,
+    3546110286,
+    3546110493
+  ],
+  "tags": {
+    "location": "indoor",
+    "name": "Doctor Bishamber Dass Marg Substation",
+    "operator": "New Delhi Municipal Corporation",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1354912080,
+  "center": {
+    "lat": 28.5925887,
+    "lon": 77.0425097
+  },
+  "nodes": [
+    12538994825,
+    12538994812,
+    12538994814,
+    12538994817,
+    12538994825
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1355048076,
+  "center": {
+    "lat": 28.4989488,
+    "lon": 76.9758766
+  },
+  "nodes": [
+    12540358223,
+    12540358224,
+    12540358225,
+    12540358226,
+    12540358227,
+    12540358228,
+    12540358223
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1382535517,
+  "center": {
+    "lat": 28.5534112,
+    "lon": 77.2424137
+  },
+  "nodes": [
+    12800085277,
+    12800085276,
+    4967278267,
+    12800085278,
+    12800085277
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1382552736,
+  "center": {
+    "lat": 28.5530396,
+    "lon": 77.2300616
+  },
+  "nodes": [
+    12800251234,
+    12800251228,
+    12800251231,
+    12800251232,
+    12800251234
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1388569374,
+  "center": {
+    "lat": 28.6740677,
+    "lon": 77.2750020
+  },
+  "nodes": [
+    12853542453,
+    12853542450,
+    12853542444,
+    12853542457,
+    12853542453
+  ],
+  "tags": {
+    "name": "State Bank of India Welcome",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1388932902,
+  "center": {
+    "lat": 28.5364889,
+    "lon": 77.2016452
+  },
+  "nodes": [
+    12856907834,
+    12856907804,
+    12856902998,
+    12856907812,
+    12856907834
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1389333780,
+  "center": {
+    "lat": 28.6464398,
+    "lon": 77.1917332
+  },
+  "nodes": [
+    12861019833,
+    12861019835,
+    12861019834,
+    12861019836,
+    12861019833
+  ],
+  "tags": {
+    "location": "surface",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1389342823,
+  "center": {
+    "lat": 28.6723055,
+    "lon": 77.2486818
+  },
+  "nodes": [
+    5974574447,
+    5974574446,
+    5974574445,
+    5974574448,
+    5974574447
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1389342824,
+  "center": {
+    "lat": 28.6716639,
+    "lon": 77.2518716
+  },
+  "nodes": [
+    5974574444,
+    5974574443,
+    5974574442,
+    5974574441,
+    5974574444
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1390025126,
+  "center": {
+    "lat": 28.5926329,
+    "lon": 77.1758411
+  },
+  "nodes": [
+    12866435309,
+    12866435320,
+    12866435321,
+    12866435322,
+    12866435309
+  ],
+  "tags": {
+    "name": "Bapu Dham Electric Sub Station",
+    "operator": "New Delhi Municipal Council",
+    "power": "substation",
+    "substation": "minor_distribution",
+    "voltage": "66000"
+  }
+},
+{
+  "type": "way",
+  "id": 1413486207,
+  "center": {
+    "lat": 28.6690749,
+    "lon": 77.2265541
+  },
+  "nodes": [
+    12989703259,
+    12989703247,
+    12989703264,
+    12989703265,
+    12989703261,
+    12989703266,
+    12989703251,
+    12989703248,
+    12989703262,
+    12989703245,
+    12989703259
+  ],
+  "tags": {
+    "location": "indoor",
+    "name": "Kashmere Gate Traction Feeding Post",
+    "operator": "Delhi Metro Rail Corporation",
+    "operator:wikidata": "Q1029339",
+    "power": "substation",
+    "substation": "traction",
+    "voltage": "25000"
+  }
+},
+{
+  "type": "way",
+  "id": 1413618601,
+  "center": {
+    "lat": 28.8437438,
+    "lon": 77.1072554
+  },
+  "nodes": [
+    1282712497,
+    1282712964,
+    1282711854,
+    1282713663,
+    1282712497
+  ],
+  "tags": {
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1417729106,
+  "center": {
+    "lat": 28.5680833,
+    "lon": 77.3243474
+  },
+  "nodes": [
+    13028399726,
+    13028399719,
+    13028399725,
+    13028399722,
+    13028399726
+  ],
+  "tags": {
+    "location": "surface",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1417729107,
+  "center": {
+    "lat": 28.5681180,
+    "lon": 77.3243070
+  },
+  "nodes": [
+    13028399720,
+    13028399715,
+    13028399711,
+    13028399721,
+    13028399720
+  ],
+  "tags": {
+    "location": "surface",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1417729109,
+  "center": {
+    "lat": 28.5683318,
+    "lon": 77.3239997
+  },
+  "nodes": [
+    13028399713,
+    13028399723,
+    13028399714,
+    13028399717,
+    13028399713
+  ],
+  "tags": {
+    "location": "surface",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1417729169,
+  "center": {
+    "lat": 28.5681544,
+    "lon": 77.3242652
+  },
+  "nodes": [
+    13028391782,
+    13028391780,
+    13028391783,
+    13028391781,
+    13028391782
+  ],
+  "tags": {
+    "location": "surface",
+    "power": "substation",
+    "substation": "distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1419926443,
+  "center": {
+    "lat": 28.6925784,
+    "lon": 77.2070066
+  },
+  "nodes": [
+    12925468004,
+    13047906127,
+    13047906128,
+    12925461396,
+    12925461399,
+    12925468004
+  ],
+  "tags": {
+    "location": "indoor",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "330000"
+  }
+},
+{
+  "type": "way",
+  "id": 1426163115,
+  "center": {
+    "lat": 28.6828482,
+    "lon": 77.2070634
+  },
+  "nodes": [
+    13109915095,
+    13110036002,
+    13109915098,
+    13109915097,
+    13109915095
+  ],
+  "tags": {
+    "location": "outdoor",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "990000"
+  }
+},
+{
+  "type": "way",
+  "id": 1426169743,
+  "center": {
+    "lat": 28.6803066,
+    "lon": 77.2028794
+  },
+  "nodes": [
+    13110089289,
+    13110089288,
+    13110089287,
+    13110089284,
+    13110089289
+  ],
+  "tags": {
+    "location": "outdoor",
+    "operator": "TPDDL",
+    "power": "substation",
+    "substation": "distribution",
+    "voltage": "110000"
+  }
+},
+{
+  "type": "way",
+  "id": 1429708858,
+  "center": {
+    "lat": 28.5477323,
+    "lon": 77.2164959
+  },
+  "nodes": [
+    13142420516,
+    13142420514,
+    13142420519,
+    13142420515,
+    13142420516
+  ],
+  "tags": {
+    "location": "indoor",
+    "operator": "BSES",
+    "power": "substation",
+    "ref": "26234"
+  }
+},
+{
+  "type": "way",
+  "id": 1433735088,
+  "center": {
+    "lat": 28.4752213,
+    "lon": 77.0979583
+  },
+  "nodes": [
+    13176599894,
+    13176599893,
+    13176599895,
+    13176599894
+  ],
+  "tags": {
+    "frequency": "50",
+    "power": "substation",
+    "voltage": "500000"
+  }
+},
+{
+  "type": "way",
+  "id": 1451357495,
+  "center": {
+    "lat": 28.5805642,
+    "lon": 77.0169979
+  },
+  "nodes": [
+    13311019017,
+    13311019016,
+    13311019015,
+    13311019014,
+    13311019017
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1460493834,
+  "center": {
+    "lat": 28.6483745,
+    "lon": 77.2079868
+  },
+  "nodes": [
+    13395069772,
+    13395069773,
+    13395069774,
+    13395069775,
+    13395069772
+  ],
+  "tags": {
+    "operator": "BSES Yamuna",
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1465628342,
+  "center": {
+    "lat": 28.6486959,
+    "lon": 77.2257927
+  },
+  "nodes": [
+    13442688070,
+    13442688063,
+    13442688069,
+    13442688064,
+    13442688070
+  ],
+  "tags": {
+    "building": "yes",
+    "building:levels": "4",
+    "name": "Hauz Qazi Substation",
+    "operator": "DSEB",
+    "power": "substation",
+    "roof:shape": "flat",
+    "start_date": "1953"
+  }
+},
+{
+  "type": "way",
+  "id": 1471900631,
+  "center": {
+    "lat": 28.6181069,
+    "lon": 77.0766610
+  },
+  "nodes": [
+    13506103193,
+    13506103189,
+    13506103196,
+    13506103194,
+    13506103193
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1474325002,
+  "center": {
+    "lat": 28.8230038,
+    "lon": 76.9853995
+  },
+  "nodes": [
+    13525602635,
+    13525602636,
+    13525602637,
+    13525602638,
+    13525602639,
+    13525602640,
+    13525602641,
+    13525602642,
+    13525602643,
+    13525602644,
+    13525602645,
+    13525602635
+  ],
+  "tags": {
+    "name": "Narela",
+    "power": "substation",
+    "substation": "transmission",
+    "voltage": "765000;400000"
+  }
+},
+{
+  "type": "way",
+  "id": 1479881906,
+  "center": {
+    "lat": 28.5727857,
+    "lon": 77.2101556
+  },
+  "nodes": [
+    13574374636,
+    13574374637,
+    13574374638,
+    13574374639,
+    13574374640,
+    13574374641,
+    13574374642,
+    13574374643,
+    13574374636
+  ],
+  "tags": {
+    "name": "Electric Substation",
+    "power": "substation",
+    "substation": "minor_distribution"
+  }
+},
+{
+  "type": "way",
+  "id": 1482443306,
+  "center": {
+    "lat": 28.6950078,
+    "lon": 77.2198542
+  },
+  "nodes": [
+    13594703563,
+    13594703519,
+    13594703556,
+    13594703567,
+    13594703563
+  ],
+  "tags": {
+    "power": "substation"
+  }
+},
+{
+  "type": "way",
+  "id": 1482806385,
+  "center": {
+    "lat": 28.6872923,
+    "lon": 77.2137731
+  },
+  "nodes": [
+    13597506008,
+    13597462680,
+    13597506017,
+    13597506010,
+    13597506008
+  ],
+  "tags": {
+    "location": "outdoor",
+    "man_made": "street_cabinet",
+    "name": "Chemistry Lab New Building M.C. Room",
+    "power": "substation",
+    "street_cabinet": "power"
+  }
+}
+
+  ]
+}

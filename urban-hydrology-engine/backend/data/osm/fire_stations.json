@@ -1,0 +1,658 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.10 2d4cfc48",
+  "osm3s": {
+    "timestamp_osm_base": "2026-02-28T05:47:14Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 332066858,
+  "lat": 28.4637070,
+  "lon": 77.0729645,
+  "tags": {
+    "amenity": "fire_station",
+    "check_date": "2025-02-23",
+    "name": "Sushant Lok Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 372717372,
+  "lat": 28.5728012,
+  "lon": 77.1669817,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 1114871812,
+  "lat": 28.5685669,
+  "lon": 77.1843122,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 2165822097,
+  "lat": 28.6470756,
+  "lon": 77.1812066,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 2683027313,
+  "lat": 28.6623205,
+  "lon": 77.0796272,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 4438230893,
+  "lat": 28.5973177,
+  "lon": 77.0640235,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Sector 6 Fire Station",
+    "name:en": "Sector 6 Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 5136715532,
+  "lat": 28.6026440,
+  "lon": 77.1903646,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station Chanakyapuri",
+    "phone": "+91-11-2611-2266"
+  }
+},
+{
+  "type": "node",
+  "id": 5483331672,
+  "lat": 28.6214349,
+  "lon": 77.2076446,
+  "tags": {
+    "addr:city": "New Delhi",
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 6225480221,
+  "lat": 28.6329962,
+  "lon": 77.1390034,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station Naraina",
+    "takeaway": "yes"
+  }
+},
+{
+  "type": "node",
+  "id": 6539125899,
+  "lat": 28.6594760,
+  "lon": 77.2160970,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 10807128721,
+  "lat": 28.7374150,
+  "lon": 77.1539231,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 11308955288,
+  "lat": 28.6518215,
+  "lon": 77.2336802,
+  "tags": {
+    "amenity": "fire_station",
+    "check_date": "2023-11-03"
+  }
+},
+{
+  "type": "node",
+  "id": 11691641330,
+  "lat": 28.7361567,
+  "lon": 77.2974570,
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "node",
+  "id": 11696932831,
+  "lat": 28.6861712,
+  "lon": 77.2859055,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "FIRE STATION"
+  }
+},
+{
+  "type": "node",
+  "id": 12495396871,
+  "lat": 28.6982368,
+  "lon": 77.2049529,
+  "tags": {
+    "amenity": "fire_station",
+    "check_date": "2025-01-12",
+    "name": "Fire Brigade Station",
+    "wheelchair": "no"
+  }
+},
+{
+  "type": "node",
+  "id": 12596618844,
+  "lat": 28.6618110,
+  "lon": 77.2967067,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "CBD Shahdara Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 13072373294,
+  "lat": 28.6172307,
+  "lon": 77.3091716,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Delhi Fire Service ,Kalyanvas Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 13110127586,
+  "lat": 28.6850059,
+  "lon": 77.2029077,
+  "tags": {
+    "amenity": "fire_station",
+    "check_date": "2025-09-01",
+    "name": "Roop Nagar Fire Station",
+    "name:en": "Roop Nagar Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 13455393955,
+  "lat": 28.6222902,
+  "lon": 77.1101364,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Hari Nagar Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 13472788004,
+  "lat": 28.6815114,
+  "lon": 77.1478054,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Keshavpuram Fire Station"
+  }
+},
+{
+  "type": "node",
+  "id": 13506157296,
+  "lat": 28.6212148,
+  "lon": 77.0911143,
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Janakpuri Fire Station"
+  }
+},
+{
+  "type": "way",
+  "id": 78595558,
+  "center": {
+    "lat": 28.7068948,
+    "lon": 77.1285273
+  },
+  "nodes": [
+    922124456,
+    922124502,
+    922124553,
+    11445750979,
+    11445750972,
+    922124453,
+    922124456
+  ],
+  "tags": {
+    "addr:full": "Sector 14, Rohini, Delhi - 110085",
+    "amenity": "fire_station",
+    "barrier": "fence",
+    "contact:phone": "+91-11-2756-2535;+91-11-2755-2155",
+    "name": "Fire Safety Management Academy",
+    "name:hi": "अग्नि सुरक्षा प्रबंधन अकादमी",
+    "operator": "Delhi Fire Service",
+    "operator:hi": "दिल्ली अग्निशामन सेवा"
+  }
+},
+{
+  "type": "way",
+  "id": 152007422,
+  "center": {
+    "lat": 28.4960350,
+    "lon": 77.0639300
+  },
+  "nodes": [
+    1648443754,
+    1648443755,
+    1648443744,
+    1648443741,
+    1648443754
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 158040926,
+  "center": {
+    "lat": 28.6406989,
+    "lon": 77.1757645
+  },
+  "nodes": [
+    1702835926,
+    1702835924,
+    1702835914,
+    1702835922,
+    1702835911,
+    1702835913,
+    1702835917,
+    1702835939,
+    1702835942,
+    1702835926
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station Shankar Road"
+  }
+},
+{
+  "type": "way",
+  "id": 217457954,
+  "center": {
+    "lat": 28.6122600,
+    "lon": 76.9767657
+  },
+  "nodes": [
+    2267216012,
+    2267216015,
+    2246301513,
+    2246301517,
+    2267216018,
+    2267216012
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 259024075,
+  "center": {
+    "lat": 28.6745618,
+    "lon": 77.2841318
+  },
+  "nodes": [
+    2643459796,
+    2643459799,
+    2643459815,
+    2643459836,
+    2643459796
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "barrier": "wall"
+  }
+},
+{
+  "type": "way",
+  "id": 262517138,
+  "center": {
+    "lat": 28.6592266,
+    "lon": 77.1439439
+  },
+  "nodes": [
+    2681845836,
+    11449181870,
+    2681845830,
+    2681845815,
+    2681845819,
+    2681845836
+  ],
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "way",
+  "id": 283776526,
+  "center": {
+    "lat": 28.6204983,
+    "lon": 77.3368143
+  },
+  "nodes": [
+    2876046280,
+    2876046279,
+    2876046282,
+    2876046284,
+    2876046281,
+    2876046283,
+    2876046280
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "barrier": "wall"
+  }
+},
+{
+  "type": "way",
+  "id": 350581161,
+  "center": {
+    "lat": 28.6690476,
+    "lon": 77.1002648
+  },
+  "nodes": [
+    3563311161,
+    3563311160,
+    3563311148,
+    3563311151,
+    3563311161
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes"
+  }
+},
+{
+  "type": "way",
+  "id": 351561090,
+  "center": {
+    "lat": 28.6320120,
+    "lon": 77.2233562
+  },
+  "nodes": [
+    3573712376,
+    3573712371,
+    3573788430,
+    3573788433,
+    3573788429,
+    3573712365,
+    3573712363,
+    3573712367,
+    3573712376
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes",
+    "name": "Barakhamba Road Fire Station"
+  }
+},
+{
+  "type": "way",
+  "id": 414134628,
+  "center": {
+    "lat": 28.5482432,
+    "lon": 77.0947618
+  },
+  "nodes": [
+    6297789748,
+    4153191762,
+    4153191760,
+    4153191761,
+    6297789748
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes",
+    "building:levels": "3",
+    "name": "Fire Station 1",
+    "roof:shape": "flat"
+  }
+},
+{
+  "type": "way",
+  "id": 696345396,
+  "center": {
+    "lat": 28.7003913,
+    "lon": 77.2910981
+  },
+  "nodes": [
+    6539195568,
+    6539195569,
+    6539195570,
+    6539195571,
+    6539195572,
+    6539195573,
+    6539195574,
+    6539195575,
+    6539195576,
+    6539195577,
+    6539195578,
+    6539195568
+  ],
+  "tags": {
+    "addr:city": "Gokulpuri",
+    "addr:housenumber": "Fire Station Gokulpuri",
+    "addr:street": "Loni Road",
+    "amenity": "fire_station",
+    "building": "yes",
+    "name": "Fire Station Gokulpuri"
+  }
+},
+{
+  "type": "way",
+  "id": 999345671,
+  "center": {
+    "lat": 28.6251767,
+    "lon": 77.3072490
+  },
+  "nodes": [
+    9225948557,
+    9225948556,
+    9225948555,
+    11955747049,
+    9225948554,
+    9225948557
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "source": "knowledge"
+  }
+},
+{
+  "type": "way",
+  "id": 1065558131,
+  "center": {
+    "lat": 28.6170791,
+    "lon": 77.3092307
+  },
+  "nodes": [
+    9785748196,
+    9785748195,
+    9785748194,
+    9785748193,
+    9785748196
+  ],
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "way",
+  "id": 1136674909,
+  "center": {
+    "lat": 28.7341557,
+    "lon": 77.1749690
+  },
+  "nodes": [
+    10596006009,
+    10596006017,
+    10595976677,
+    10595976681,
+    10596006009
+  ],
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "way",
+  "id": 1170518400,
+  "center": {
+    "lat": 28.6853898,
+    "lon": 77.3151568
+  },
+  "nodes": [
+    10880654495,
+    9843810333,
+    10880654496,
+    9843810324,
+    10880654497,
+    10880654498,
+    10880654499,
+    10880654500,
+    10880654495
+  ],
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "way",
+  "id": 1236877577,
+  "center": {
+    "lat": 28.7310072,
+    "lon": 77.1208549
+  },
+  "nodes": [
+    11486389540,
+    11486389552,
+    11486389543,
+    11486389541,
+    11486389540
+  ],
+  "tags": {
+    "amenity": "fire_station"
+  }
+},
+{
+  "type": "way",
+  "id": 1381376816,
+  "center": {
+    "lat": 28.5863325,
+    "lon": 77.2133126
+  },
+  "nodes": [
+    12788053431,
+    12788053428,
+    12788053427,
+    12788053434,
+    12788053429,
+    12788053430,
+    12788053437,
+    12788053431
+  ],
+  "tags": {
+    "addr:country": "IN",
+    "addr:place": "Jor Bagh",
+    "addr:postcode": "110003",
+    "addr:state": "DL",
+    "alt_name": "Jor Bagh Fire Station",
+    "amenity": "fire_station",
+    "name": "Safdarjung Fire Station",
+    "phone": "+91 11 2461 1111"
+  }
+},
+{
+  "type": "way",
+  "id": 1426212239,
+  "center": {
+    "lat": 28.5492505,
+    "lon": 77.2567323
+  },
+  "nodes": [
+    13110441799,
+    13110449512,
+    13110449517,
+    13110449503,
+    13110449520,
+    13110441799
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "name": "Fire Station Nehru Place",
+    "name:hi": "दमकल केंद्र नेहरू प्लेस",
+    "phone": "+91-101-644-5230"
+  }
+},
+{
+  "type": "way",
+  "id": 1429449939,
+  "center": {
+    "lat": 28.5665693,
+    "lon": 77.0987799
+  },
+  "nodes": [
+    13140439182,
+    13140439183,
+    13140439184,
+    13140439185,
+    13140439199,
+    13140439200,
+    13140439203,
+    13140439204,
+    13140439205,
+    13140439202,
+    13140439201,
+    13140439198,
+    13140439186,
+    13140439191,
+    13140439192,
+    13140439197,
+    13140439196,
+    13140439194,
+    13140439195,
+    13140439193,
+    13140439190,
+    13140439187,
+    13140439206,
+    13140439208,
+    13140439209,
+    13140439207,
+    13140439188,
+    13140439189,
+    13140439182
+  ],
+  "tags": {
+    "amenity": "fire_station",
+    "building": "yes",
+    "name": "Indira Gandhi International Airport Fire Station"
+  }
+}
+
+  ]
+}

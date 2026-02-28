@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Urban Hydrology Engine | War Room</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0a1628;color:#c8d6e5;overflow:hidden;height:100vh}
+
+  /* ── STATUS BAR ──────────────────────────────────────────────── */
+  #status-bar{
+    background:linear-gradient(90deg,#0d1f3c,#162d50);
+    padding:10px 24px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:2px solid #00c9ff33;height:52px;
+  }
+  #status-bar .title{font-size:17px;font-weight:700;color:#00c9ff;letter-spacing:.5px}
+  #status-bar .metrics{display:flex;gap:24px;font-size:13px;color:#8899aa}
+  #status-bar .metrics span{color:#e0e6ed}
+  #m-pumps{font-size:16px;font-weight:700;color:#00c9ff !important}
+
+  /* ── MAIN GRID ───────────────────────────────────────────────── */
+  #main{display:flex;height:calc(100vh - 52px - 52px)}
+  #map-container{flex:0 0 65%;position:relative}
+  #map{width:100%;height:100%;background:#0d1f3c}
+  #console-panel{
+    flex:0 0 35%;background:#0d1b2e;border-left:1px solid #1a2d44;
+    display:flex;flex-direction:column;
+  }
+  #console-header{
+    padding:10px 16px;font-size:13px;font-weight:600;color:#00c9ff;
+    border-bottom:1px solid #1a2d44;text-transform:uppercase;letter-spacing:1px;
+  }
+  #console-log{
+    flex:1;overflow-y:auto;padding:8px 12px;font-family:'Cascadia Code','Fira Code',monospace;
+    font-size:12px;line-height:1.6;
+  }
+  #console-log::-webkit-scrollbar{width:6px}
+  #console-log::-webkit-scrollbar-thumb{background:#1a2d44;border-radius:3px}
+  .log-entry{padding:2px 0;border-bottom:1px solid #0a1628}
+  .log-safe{color:#2dc653}
+  .log-triggered{color:#f4a259}
+  .log-critical{color:#e63946}
+  .log-system{color:#00c9ff}
+  .log-error{color:#ff6b6b}
+
+  /* ── CONTROL BAR ─────────────────────────────────────────────── */
+  #control-bar{
+    background:linear-gradient(90deg,#0d1f3c,#162d50);
+    padding:10px 24px;display:flex;align-items:center;gap:12px;
+    border-top:2px solid #00c9ff33;height:52px;
+  }
+  .btn{
+    padding:8px 20px;border:1px solid;border-radius:6px;
+    font-size:13px;font-weight:600;cursor:pointer;
+    transition:all .15s;text-transform:uppercase;letter-spacing:.5px;
+    font-family:inherit;
+  }
+  .btn:active{transform:scale(.96)}
+  .btn:disabled{opacity:.5;cursor:wait}
+  .btn-cycle{background:#00c9ff22;color:#00c9ff;border-color:#00c9ff55}
+  .btn-cycle:hover:not(:disabled){background:#00c9ff44}
+  .btn-storm{background:#e6394622;color:#e63946;border-color:#e6394655}
+  .btn-storm:hover:not(:disabled){background:#e6394644}
+  .btn-reset{background:#55555522;color:#888;border-color:#55555555}
+  .btn-reset:hover:not(:disabled){background:#55555544;color:#aaa}
+  .btn-spinner{display:none;width:14px;height:14px;border:2px solid transparent;
+    border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;
+    margin-left:6px;vertical-align:middle}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ── LEAFLET OVERRIDES ───────────────────────────────────────── */
+  .leaflet-popup-content-wrapper{background:#162d50;color:#c8d6e5;border:1px solid #00c9ff44;border-radius:8px}
+  .leaflet-popup-tip{background:#162d50}
+  .leaflet-popup-content{font-size:13px;line-height:1.5}
+  .popup-ward{font-weight:700;color:#00c9ff;font-size:14px;margin-bottom:4px}
+  .popup-score{font-size:22px;font-weight:800;margin:4px 0}
+  .popup-score.safe{color:#2dc653}
+  .popup-score.warn{color:#f4a259}
+  .popup-score.danger{color:#e63946}
+  .popup-status{font-size:12px;color:#8899aa;margin-bottom:4px}
+  .popup-msg{font-size:11px;color:#c8d6e5;font-style:italic}
+
+  /* ── HISTORY PANEL ───────────────────────────────────────────── */
+  .btn-history{background:#6c5ce722;color:#6c5ce7;border-color:#6c5ce755}
+  .btn-history:hover:not(:disabled){background:#6c5ce744}
+  .btn-history.active{background:#6c5ce766;border-color:#6c5ce7}
+
+  #history-panel{
+    position:fixed;bottom:52px;left:0;right:0;
+    height:0;overflow:hidden;
+    background:linear-gradient(180deg,#0d1f3cee,#0a1628fa);
+    border-top:2px solid #6c5ce744;
+    transition:height .35s cubic-bezier(.4,0,.2,1);
+    z-index:1000;display:flex;flex-direction:column;
+  }
+  #history-panel.open{height:55vh}
+
+  #history-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 24px;border-bottom:1px solid #1a2d44;flex-shrink:0;
+  }
+  #history-header .h-title{font-size:15px;font-weight:700;color:#6c5ce7;letter-spacing:.5px}
+  #history-header .h-controls{display:flex;gap:8px;align-items:center}
+  .h-toggle{
+    padding:4px 14px;border:1px solid #6c5ce744;border-radius:4px;
+    background:transparent;color:#8899aa;font-size:12px;cursor:pointer;
+    font-family:inherit;transition:all .15s;
+  }
+  .h-toggle.active{background:#6c5ce733;color:#6c5ce7;border-color:#6c5ce7}
+  .h-toggle:hover{border-color:#6c5ce7}
+
+  #history-body{
+    display:flex;flex:1;overflow:hidden;padding:12px 24px;gap:24px;
+  }
+  #history-chart-wrap{flex:0 0 62%;position:relative;min-height:0}
+  #history-chart-wrap canvas{width:100%!important;height:100%!important}
+  #history-sidebar{
+    flex:0 0 36%;display:flex;flex-direction:column;gap:12px;overflow-y:auto;
+  }
+  #history-sidebar::-webkit-scrollbar{width:5px}
+  #history-sidebar::-webkit-scrollbar-thumb{background:#1a2d44;border-radius:3px}
+
+  .h-summary-card{
+    background:#162d5088;border:1px solid #1a2d44;border-radius:8px;padding:12px 16px;
+  }
+  .h-summary-card .h-label{font-size:11px;color:#6c5ce7;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+  .h-summary-card .h-value{font-size:20px;font-weight:700;color:#e0e6ed}
+  .h-summary-card .h-sub{font-size:11px;color:#8899aa;margin-top:2px}
+
+  .h-summary-row{display:flex;gap:10px}
+  .h-summary-row .h-summary-card{flex:1}
+
+  #worst-wards-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:4px}
+  #worst-wards-table th{
+    text-align:left;padding:4px 8px;color:#6c5ce7;font-weight:600;
+    border-bottom:1px solid #1a2d44;font-size:11px;text-transform:uppercase;
+  }
+  #worst-wards-table td{padding:4px 8px;border-bottom:1px solid #0a1628}
+  #worst-wards-table tr{cursor:pointer;transition:background .15s}
+  #worst-wards-table tr:hover{background:#6c5ce711}
+  .ww-critical{color:#e63946;font-weight:600}
+  .ww-zone{color:#8899aa;font-size:11px}
+
+  /* ── INFRASTRUCTURE TOGGLE ───────────────────────────────────── */
+  .btn-infra{background:#ff634722;color:#ff6347;border-color:#ff634755}
+  .btn-infra:hover:not(:disabled){background:#ff634744}
+  .btn-infra.active{background:#ff634766;border-color:#ff6347}
+
+  #infra-legend{
+    position:absolute;bottom:16px;left:16px;z-index:800;
+    background:#0d1f3cee;border:1px solid #1a2d44;border-radius:8px;
+    padding:10px 14px;font-size:12px;line-height:1.8;
+    display:none;
+  }
+  #infra-legend.visible{display:block}
+  .legend-row{display:flex;align-items:center;gap:8px}
+  .legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  /* ── ELEVATION TOGGLE ────────────────────────────────────────── */
+  .btn-elev{background:#2166ac22;color:#74add1;border-color:#2166ac55}
+  .btn-elev:hover:not(:disabled){background:#2166ac44}
+  .btn-elev.active{background:#2166ac66;border-color:#74add1}
+
+  #elev-legend{
+    position:absolute;bottom:16px;left:16px;z-index:801;
+    background:#0d1f3cee;border:1px solid #1a2d44;border-radius:8px;
+    padding:10px 14px;font-size:12px;line-height:1.8;
+    display:none;
+  }
+  #elev-legend.visible{display:block}
+  .popup-terrain{font-size:12px;color:#74add1;margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div id="status-bar">
+  <div class="title">&#9729; Urban Hydrology Engine &nbsp;|&nbsp; War Room</div>
+  <div class="metrics">
+    <span id="m-weather" style="color:#8899aa">☁ Loading weather...</span>&emsp;
+    Last cycle: <span id="m-time">—</span>&emsp;
+    Triggered: <span id="m-triggered">0</span>&emsp;
+    Pumps dispatched: <span id="m-pumps">0</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="infra-legend">
+      <div class="legend-row"><span class="legend-dot" style="background:#e63946"></span> <span id="leg-hosp">Hospital (—)</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#f4a259"></span> <span id="leg-sub">Substation (—)</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#ff8c00"></span> <span id="leg-fire">Fire Station (—)</span></div>
+    </div>
+    <div id="elev-legend">
+      <div style="font-weight:700;margin-bottom:4px;color:#00c9ff">🏔️ Terrain Class</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#2166ac"></span> Floodplain (1.0×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#74add1"></span> Flat (1.3×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#fee090"></span> Moderate (1.7×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#f46d43"></span> Steep (2.2×)</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#a50026"></span> Ridge (3.5×)</div>
+    </div>
+  </div>
+  <div id="console-panel">
+    <div id="console-header">&#9881; Dispatch Console</div>
+    <div id="console-log"></div>
+  </div>
+</div>
+
+<!-- CONTROL BAR -->
+<div id="control-bar">
+  <button class="btn btn-cycle" id="btn-cycle" onclick="runCycle()">
+    &#9654; Run Cycle <span class="btn-spinner" id="sp-cycle"></span>
+  </button>
+  <button class="btn btn-storm" id="btn-storm" onclick="simulateCloudburst()">
+    &#9889; Simulate Cloudburst <span class="btn-spinner" id="sp-storm"></span>
+  </button>
+  <button class="btn btn-reset" id="btn-reset" onclick="resetCity()">
+    &#8635; Reset City <span class="btn-spinner" id="sp-reset"></span>
+  </button>
+  <span style="flex:1"></span>
+  <button class="btn btn-infra" id="btn-infra" onclick="toggleInfrastructure()">
+    &#127973; Infrastructure
+  </button>
+  <button class="btn btn-elev" id="btn-elev" onclick="toggleElevation()">
+    &#127956;&#65039; Elevation
+  </button>
+  <button class="btn btn-history" id="btn-history" onclick="toggleHistory()">
+    &#128202; History
+  </button>
+</div>
+
+<!-- HISTORY PANEL -->
+<div id="history-panel">
+  <div id="history-header">
+    <div class="h-title">&#128202; Historical Monsoon Dashboard</div>
+    <div class="h-controls">
+      <select id="season-select" onchange="onSeasonChange(this.value)" style="
+        background:#0d1f3c;color:#00c9ff;border:1px solid #1a2d44;border-radius:6px;
+        padding:4px 10px;font-size:12px;cursor:pointer;outline:none;
+      ">
+        <option value="2024">Monsoon 2024 (Jun–Sep)</option>
+        <option value="recent">Last 30 days</option>
+      </select>
+    </div>
+  </div>
+  <div id="data-source-badge" style="
+    padding:4px 14px;font-size:11px;display:flex;align-items:center;gap:6px;
+    background:#0d1f3c;border-bottom:1px solid #1a2d44;
+  ">
+    <span id="badge-icon">✅</span>
+    <span id="badge-text">Real rainfall data — Open-Meteo / Delhi 2024</span>
+  </div>
+  <div id="history-body">
+    <div id="history-chart-wrap">
+      <canvas id="historyChart"></canvas>
+    </div>
+    <div id="history-sidebar">
+      <div class="h-summary-row">
+        <div class="h-summary-card">
+          <div class="h-label">Peak Day</div>
+          <div class="h-value" id="hs-peak-day">—</div>
+          <div class="h-sub" id="hs-peak-detail"></div>
+        </div>
+        <div class="h-summary-card">
+          <div class="h-label">Avg Daily Triggered</div>
+          <div class="h-value" id="hs-avg-trig">—</div>
+        </div>
+      </div>
+      <div class="h-summary-row">
+        <div class="h-summary-card">
+          <div class="h-label">Total Dispatches</div>
+          <div class="h-value" id="hs-total-disp">—</div>
+          <div class="h-sub" id="hs-total-crit"></div>
+        </div>
+        <div class="h-summary-card">
+          <div class="h-label">Most Affected Zone</div>
+          <div class="h-value" id="hs-zone">—</div>
+          <div class="h-sub" id="hs-zone-count"></div>
+        </div>
+      </div>
+      <div class="h-summary-card" style="flex:1;overflow-y:auto">
+        <div class="h-label">Worst Wards</div>
+        <table id="worst-wards-table">
+          <thead><tr><th>#</th><th>Ward</th><th>Triggers</th><th>Critical</th><th>Avg Score</th></tr></thead>
+          <tbody id="worst-wards-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════
+  // CONFIG
+  // ═══════════════════════════════════════════════════════════════
+  const API_KEY = 'hydro-mvp-secret-2026';
+  const AUTH_HEADERS = { 'Content-Type': 'application/json', 'X-API-Key': API_KEY };
+  const POST_AUTH = { 'X-API-Key': API_KEY };
+
+  // ═══════════════════════════════════════════════════════════════
+  // MAP INIT
+  // ═══════════════════════════════════════════════════════════════
+  const map = L.map('map', {
+    center: [28.65, 77.25],
+    zoom: 12,
+    zoomControl: true,
+    attributionControl: false,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  let wardLayer = null;
+  let hotspotLayer = null;
+
+  // pg_tileserv tiles proxied through backend (same origin = no CORS)
+  const TILE_URL = '/tiles';
+
+  const COLORS = {
+    green:  '#2dc653',
+    yellow: '#f4a259',
+    red:    '#e63946',
+    critical: '#8b0000',
+    grey:   '#555555',
+  };
+
+  function wardFillColor(props) {
+    if (props.color === 'grey') return COLORS.grey;
+    if (props.ws_score !== null && props.ws_score < 0) return COLORS.critical;
+    return COLORS[props.color] || COLORS.grey;
+  }
+
+  function hotspotColor(cap) {
+    if (cap >= 60) return COLORS.green;
+    if (cap >= 30) return COLORS.yellow;
+    return COLORS.red;
+  }
+
+  function scoreClass(ws) {
+    if (ws === null || ws === undefined) return 'safe';
+    if (ws >= 70) return 'safe';
+    if (ws >= 0) return 'warn';
+    return 'danger';
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // MAP REFRESH
+  // ═══════════════════════════════════════════════════════════════
+  async function refreshMap() {
+    try {
+      const resp = await fetch('/map/state');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      // Remove old ward layer
+      if (wardLayer) map.removeLayer(wardLayer);
+
+      // Ward polygons
+      wardLayer = L.geoJSON(data.features, {
+        style: (feature) => ({
+          fillColor: wardFillColor(feature.properties),
+          fillOpacity: 0.5,
+          color: '#00c9ff',
+          weight: 1,
+          opacity: 0.6,
+        }),
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          const cls = scoreClass(p.ws_score);
+          const sc = (p.ws_score !== null && p.ws_score < 0)
+            ? 'CRITICAL ⚠️'
+            : (p.ws_score !== null ? p.ws_score.toFixed(1) : '—');
+          const terrainLine = p.terrain_class
+            ? `<div class="popup-terrain">🏔️ ${p.terrain_class} slope (${p.terrain_runoff_t}× runoff) | Elev: ${p.mean_elevation}m</div>`
+            : '';
+          layer.bindPopup(`
+            <div class="popup-ward">${p.ward_name}</div>
+            <div class="popup-score ${cls}">${sc}</div>
+            <div class="popup-status">Status: ${p.status}</div>
+            <div class="popup-msg">${p.dispatch_message || 'No dispatch data'}</div>
+            ${terrainLine}
+          `);
+        },
+      }).addTo(map);
+
+      // Hotspot vector tiles from pg_tileserv (cache-bust to pick up capacity changes)
+      if (hotspotLayer) map.removeLayer(hotspotLayer);
+      const cacheBust = Date.now();
+      hotspotLayer = L.vectorGrid.protobuf(
+        `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
+        {
+          vectorTileLayerStyles: {
+            hotspots: function(properties) {
+              const cap = properties.capacity_c != null ? properties.capacity_c : 80;
+              return {
+                weight: 0,
+                fillColor: hotspotColor(cap),
+                fillOpacity: 0.55,
+                fill: true,
+                radius: 3,
+              };
+            }
+          },
+          maxZoom: 19,
+          interactive: false,  // no click events — keeps it fast
+        }
+      ).addTo(map);
+
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // CONSOLE
+  // ═══════════════════════════════════════════════════════════════
+  const consoleEl = document.getElementById('console-log');
+  let logCount = 0;
+
+  function logConsole(msg, type = 'system') {
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = `log-entry log-${type}`;
+    entry.textContent = `[${ts}] ${msg}`;
+    consoleEl.prepend(entry);
+    logCount++;
+    // Keep max 50
+    while (consoleEl.children.length > 50) {
+      consoleEl.removeChild(consoleEl.lastChild);
+    }
+  }
+
+  function clearConsole() {
+    consoleEl.innerHTML = '';
+    logCount = 0;
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // BUTTONS
+  // ═══════════════════════════════════════════════════════════════
+  function setButtons(disabled) {
+    document.getElementById('btn-cycle').disabled = disabled;
+    document.getElementById('btn-storm').disabled = disabled;
+    document.getElementById('btn-reset').disabled = disabled;
+  }
+
+  function showSpinner(id, show) {
+    document.getElementById(id).style.display = show ? 'inline-block' : 'none';
+  }
+
+  // ── RUN CYCLE ─────────────────────────────────────────────────
+  async function runCycle() {
+    setButtons(true);
+    showSpinner('sp-cycle', true);
+    logConsole('Running scoring cycle...', 'system');
+
+    try {
+      const resp = await fetch('/run/cycle', { method: 'POST', headers: POST_AUTH });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      // Update status bar
+      document.getElementById('m-time').textContent = new Date().toTimeString().slice(0, 8);
+      document.getElementById('m-triggered').textContent = data.wards_triggered;
+
+      // Calculate total pumps from dispatch messages
+      let totalPumps = 0;
+      for (const d of data.dispatches) {
+        const m = d.dispatch_message.match(/(\d+) pumps/);
+        if (m) totalPumps += parseInt(m[1]);
+      }
+      document.getElementById('m-pumps').textContent = totalPumps;
+
+      // Log dispatches
+      for (const d of data.dispatches) {
+        const ws = d.ws_score;
+        const type = ws < 0 ? 'critical' : 'triggered';
+        const m = d.dispatch_message.match(/(\d+) pumps to (\d+) locations/);
+        const pumps = m ? m[1] : '?';
+        const locs = m ? m[2] : '?';
+        const prefix = ws < 0 ? '⚠ CRITICAL | ' : '';
+        logConsole(`${prefix}${d.ward_name} | PMRS ${ws.toFixed(1)} | ${pumps} pumps → ${locs} locations`, type);
+      }
+      logConsole(`Cycle complete — ${data.wards_triggered} triggered, ${data.safe_wards} safe`, 'system');
+
+      await refreshMap();
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-cycle', false);
+      setButtons(false);
+    }
+  }
+
+  // ── SIMULATE CLOUDBURST ───────────────────────────────────────
+  async function simulateCloudburst() {
+    setButtons(true);
+    showSpinner('sp-storm', true);
+    logConsole('⛈ Simulating cloudburst...', 'system');
+
+    try {
+      // 0. Fetch city bounds + rain polygon dynamically
+      const boundsResp = await fetch('/city/bounds');
+      if (!boundsResp.ok) throw new Error(`Bounds GET HTTP ${boundsResp.status}`);
+      const bounds = await boundsResp.json();
+
+      // 1. Rain polygon covering ~40% of city (from backend)
+      const rainResp = await fetch('/ingest/rain', {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({
+          geojson_polygon: bounds.rain_polygon,
+          intensity_r: 8.5
+        })
+      });
+      if (!rainResp.ok) throw new Error(`Rain POST HTTP ${rainResp.status}`);
+      const rainData = await rainResp.json();
+      logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
+
+      // 2. 30 sensor events — capacity drops (use random IDs from 1..hotspot_count)
+      logConsole('Degrading drainage capacity...', 'system');
+      const maxHid = bounds.hotspot_count || 5000;
+      for (let i = 0; i < 30; i++) {
+        const hid = 1 + Math.floor(Math.random() * maxHid);
+        const delta = -(5 + Math.random() * 10);
+        await fetch('/ingest/sensor', {
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          body: JSON.stringify({ hotspot_id: hid, delta_capacity: parseFloat(delta.toFixed(2)) })
+        });
+      }
+      logConsole('30 sensor degradation events pushed', 'triggered');
+
+      // 3. Auto-run cycle
+      logConsole('Auto-triggering scoring cycle...', 'system');
+      await runCycle();
+
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-storm', false);
+      setButtons(false);
+    }
+  }
+
+  // ── RESET CITY ────────────────────────────────────────────────
+  async function resetCity() {
+    if (!confirm('Reset all city data? This clears rain events, sensor events, and dispatch history.')) return;
+
+    setButtons(true);
+    showSpinner('sp-reset', true);
+
+    try {
+      const resp = await fetch('/reset', { method: 'POST', headers: POST_AUTH });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+      clearConsole();
+      logConsole('City reset to baseline — all wards nominal', 'system');
+
+      document.getElementById('m-time').textContent = '—';
+      document.getElementById('m-triggered').textContent = '0';
+      document.getElementById('m-pumps').textContent = '0';
+
+      await refreshMap();
+    } catch (err) {
+      logConsole(`API Error: ${err.message}`, 'error');
+    } finally {
+      showSpinner('sp-reset', false);
+      setButtons(false);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // WEATHER STATUS + AUTO-REFRESH
+  // ═══════════════════════════════════════════════════════════════
+  let lastKnownCycleAt = null;
+
+  async function refreshWeatherStatus() {
+    try {
+      const resp = await fetch('/weather/status');
+      if (!resp.ok) return;
+      const w = await resp.json();
+      const el = document.getElementById('m-weather');
+      const ts = w.last_checked ? w.last_checked.slice(11, 16) : '—';
+      if (w.is_raining) {
+        el.style.color = '#00c9ff';
+        el.textContent = `🌧 ${w.condition} | ${w.intensity_r}mm/hr | OWM: ${ts}`;
+      } else {
+        el.style.color = '#8899aa';
+        el.textContent = `☀️ ${w.condition || 'No precipitation'} | OWM: ${ts}`;
+      }
+    } catch (_) {}
+  }
+
+  async function pollCycleLatest() {
+    try {
+      const resp = await fetch('/cycle/latest');
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (!data.last_cycle_at) return;
+      if (lastKnownCycleAt && data.last_cycle_at !== lastKnownCycleAt) {
+        // New auto-triggered cycle detected
+        logConsole('🌧 Auto-cycle detected (live weather trigger) — refreshing map...', 'system');
+        await refreshMap();
+        await refreshWeatherStatus();
+      }
+      lastKnownCycleAt = data.last_cycle_at;
+    } catch (_) {}
+  }
+
+  // Poll every 30 seconds
+  setInterval(pollCycleLatest, 30000);
+  // Refresh weather every 60 seconds
+  setInterval(refreshWeatherStatus, 60000);
+
+  // ═══════════════════════════════════════════════════════════════
+  // INIT
+  // ═══════════════════════════════════════════════════════════════
+  (async () => {
+    logConsole('War Room initialised — loading map data...', 'system');
+
+    // Auto-center map on real ward data
+    try {
+      const bResp = await fetch('/city/bounds');
+      if (bResp.ok) {
+        const b = await bResp.json();
+        map.setView(b.center, 11);
+        logConsole(`City centered: ${b.center[0].toFixed(4)}, ${b.center[1].toFixed(4)}`, 'system');
+      }
+    } catch (_) {}
+
+    await refreshMap();
+    await refreshWeatherStatus();
+
+    // Seed the lastKnownCycleAt so first poll doesn't false-trigger
+    try {
+      const cResp = await fetch('/cycle/latest');
+      if (cResp.ok) {
+        const cd = await cResp.json();
+        lastKnownCycleAt = cd.last_cycle_at;
+      }
+    } catch (_) {}
+
+    logConsole('Map loaded. Ready for operations.', 'system');
+  })();
+
+  // ═══════════════════════════════════════════════════════════════
+  // INFRASTRUCTURE LAYER
+  // ═══════════════════════════════════════════════════════════════
+  let infraLayer = null;
+  let infraVisible = false;
+
+  const INFRA_COLORS = {
+    hospital: '#e63946',
+    substation: '#f4a259',
+    fire_station: '#ff8c00',
+  };
+  const INFRA_RADIUS = {
+    hospital: 6,
+    substation: 5,
+    fire_station: 5,
+  };
+  const INFRA_ICONS = {
+    hospital: '🏥',
+    substation: '⚡',
+    fire_station: '🚒',
+  };
+
+  async function toggleInfrastructure() {
+    const btn = document.getElementById('btn-infra');
+    const legend = document.getElementById('infra-legend');
+
+    if (infraVisible) {
+      // Turn OFF
+      if (infraLayer) { map.removeLayer(infraLayer); infraLayer = null; }
+      btn.classList.remove('active');
+      legend.classList.remove('visible');
+      infraVisible = false;
+      return;
+    }
+
+    // Turn ON — fetch data
+    btn.classList.add('active');
+    try {
+      const resp = await fetch('/map/infrastructure');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      // Update legend counts
+      const counts = data.counts || {};
+      document.getElementById('leg-hosp').textContent = `Hospital (${counts.hospital || 0})`;
+      document.getElementById('leg-sub').textContent = `Substation (${counts.substation || 0})`;
+      document.getElementById('leg-fire').textContent = `Fire Station (${counts.fire_station || 0})`;
+
+      infraLayer = L.geoJSON(data.features, {
+        pointToLayer: (feature, latlng) => {
+          const ft = feature.properties.facility_type;
+          return L.circleMarker(latlng, {
+            radius: INFRA_RADIUS[ft] || 5,
+            fillColor: INFRA_COLORS[ft] || '#fff',
+            fillOpacity: 0.7,
+            color: '#fff',
+            weight: 0.5,
+            opacity: 0.8,
+          });
+        },
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          const icon = INFRA_ICONS[p.facility_type] || '';
+          const typeLabel = p.facility_type.replace('_', ' ');
+          layer.bindPopup(`
+            <div style="font-size:14px;font-weight:700;color:#00c9ff">${icon} ${p.name}</div>
+            <div style="font-size:12px;color:#8899aa;text-transform:capitalize">${typeLabel}</div>
+          `);
+        },
+      }).addTo(map);
+
+      legend.classList.add('visible');
+      infraVisible = true;
+      logConsole(`Infrastructure layer: ${data.features.length} facilities loaded`, 'system');
+    } catch (err) {
+      btn.classList.remove('active');
+      logConsole(`Infrastructure load error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // ELEVATION LAYER
+  // ═══════════════════════════════════════════════════════════════
+  let elevLayer = null;
+  let elevVisible = false;
+
+  async function toggleElevation() {
+    const btn = document.getElementById('btn-elev');
+    const legend = document.getElementById('elev-legend');
+
+    if (elevVisible) {
+      if (elevLayer) { map.removeLayer(elevLayer); elevLayer = null; }
+      btn.classList.remove('active');
+      legend.classList.remove('visible');
+      elevVisible = false;
+      return;
+    }
+
+    btn.classList.add('active');
+    try {
+      const resp = await fetch('/map/elevation');
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      elevLayer = L.geoJSON(data.features, {
+        style: (feature) => ({
+          fillColor: feature.properties.color || '#555',
+          fillOpacity: 0.55,
+          color: '#00c9ff',
+          weight: 1,
+          opacity: 0.5,
+        }),
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          layer.bindPopup(`
+            <div style="font-size:14px;font-weight:700;color:#00c9ff">🏔️ ${p.ward_name}</div>
+            <div style="font-size:12px;color:#ccd6e0">
+              Terrain: <b>${p.terrain_class}</b> (${p.runoff_t}× runoff)<br>
+              Mean elevation: ${p.mean_elevation}m | Slope: ${p.mean_slope}°<br>
+              Relief: ${p.elevation_range}m
+            </div>
+          `);
+        },
+      }).addTo(map);
+
+      legend.classList.add('visible');
+      elevVisible = true;
+
+      const tc = data.terrain_counts || {};
+      const countStr = Object.entries(tc).map(([k,v]) => `${k}: ${v}`).join(', ');
+      logConsole(`Elevation layer: ${data.features.length} wards | ${countStr}`, 'system');
+    } catch (err) {
+      btn.classList.remove('active');
+      logConsole(`Elevation load error: ${err.message}`, 'error');
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // HISTORY PANEL
+  // ═══════════════════════════════════════════════════════════════
+  let historyChart = null;
+  let historySeason = '2024'; // default to real data
+  let historyCache = {};
+  let historyCacheTs = {};
+  const HISTORY_CACHE_MS = 60000;
+
+  // Major 2024 monsoon events for chart annotations
+  const MONSOON_EVENTS_2024 = [
+    { date: '2024-09-12', label: '⛈️ Cloudburst 100.9mm', color: '#e63946' },
+    { date: '2024-07-31', label: '🌧️ Heavy 97.6mm', color: '#f4a259' },
+    { date: '2024-09-13', label: '🌧️ Heavy 54.6mm', color: '#f4a259' },
+  ];
+
+  function toggleHistory() {
+    const panel = document.getElementById('history-panel');
+    const btn = document.getElementById('btn-history');
+    const isOpen = panel.classList.toggle('open');
+    btn.classList.toggle('active', isOpen);
+    if (isOpen) loadHistory();
+  }
+
+  function onSeasonChange(val) {
+    historySeason = val;
+    historyCache = {};
+    historyCacheTs = {};
+    updateBadge();
+    loadHistory();
+  }
+
+  function updateBadge() {
+    const icon = document.getElementById('badge-icon');
+    const text = document.getElementById('badge-text');
+    if (historySeason === '2024') {
+      icon.textContent = '✅';
+      text.textContent = 'Real rainfall data — Open-Meteo / Delhi 2024';
+      text.style.color = '#2dc653';
+    } else {
+      icon.textContent = '🔬';
+      text.textContent = 'Simulated test cycles';
+      text.style.color = '#8899aa';
+    }
+  }
+
+  async function loadHistory() {
+    const now = Date.now();
+    const cacheKey = historySeason;
+
+    if (historyCache[cacheKey] && (now - historyCacheTs[cacheKey]) < HISTORY_CACHE_MS) {
+      renderHistory(historyCache[cacheKey]);
+      return;
+    }
+
+    try {
+      let qs;
+      if (historySeason === '2024') {
+        qs = 'days=122&year=2024';
+      } else {
+        qs = 'days=30';
+      }
+
+      const [timelineResp, worstResp, summaryResp] = await Promise.all([
+        fetch(`/history/timeline?${qs}`),
+        fetch(`/history/worst-wards?${qs}&limit=10`),
+        fetch(`/history/summary?${qs}`),
+      ]);
+
+      if (!timelineResp.ok || !worstResp.ok || !summaryResp.ok) {
+        throw new Error('History API error');
+      }
+
+      const data = {
+        timeline: await timelineResp.json(),
+        worst: await worstResp.json(),
+        summary: await summaryResp.json(),
+      };
+
+      historyCache[cacheKey] = data;
+      historyCacheTs[cacheKey] = now;
+      renderHistory(data);
+    } catch (err) {
+      logConsole(`History load error: ${err.message}`, 'error');
+    }
+  }
+
+  function renderHistory(data) {
+    renderChart(data.timeline);
+    renderSummary(data.summary);
+    renderWorstWards(data.worst);
+  }
+
+  function renderChart(timelineData) {
+    const tl = timelineData.timeline || [];
+    const rawDates = tl.map(d => d.date); // ISO date strings for annotation matching
+    const labels = tl.map(d => {
+      const dt = new Date(d.date);
+      return dt.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+    });
+    const criticalData = tl.map(d => d.critical);
+    const dispatchedData = tl.map(d => d.dispatched);
+    const safeData = tl.map(d => d.safe);
+
+    // Build event annotations for 2024 view
+    const annotations = {};
+    if (historySeason === '2024') {
+      MONSOON_EVENTS_2024.forEach((evt, i) => {
+        const idx = rawDates.indexOf(evt.date);
+        if (idx >= 0) {
+          annotations[`event${i}`] = {
+            type: 'line',
+            xMin: idx,
+            xMax: idx,
+            borderColor: evt.color,
+            borderWidth: 2,
+            borderDash: [4, 4],
+            label: {
+              display: true,
+              content: evt.label,
+              position: 'start',
+              backgroundColor: '#162d50ee',
+              color: evt.color,
+              font: { size: 10, weight: 'bold' },
+              padding: 4,
+            },
+          };
+        }
+      });
+    }
+
+    const ctx = document.getElementById('historyChart').getContext('2d');
+
+    if (historyChart) historyChart.destroy();
+
+    historyChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Critical',
+            data: criticalData,
+            backgroundColor: '#e6394699',
+            borderColor: '#e63946',
+            borderWidth: 1,
+          },
+          {
+            label: 'Dispatched',
+            data: dispatchedData,
+            backgroundColor: '#f4a25999',
+            borderColor: '#f4a259',
+            borderWidth: 1,
+          },
+          {
+            label: 'Safe',
+            data: safeData,
+            backgroundColor: '#2dc65366',
+            borderColor: '#2dc653',
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { color: '#8899aa', font: { size: 11 }, boxWidth: 12, padding: 12 },
+          },
+          tooltip: {
+            backgroundColor: '#162d50ee',
+            titleColor: '#6c5ce7',
+            bodyColor: '#c8d6e5',
+            borderColor: '#6c5ce744',
+            borderWidth: 1,
+            callbacks: {
+              afterBody(items) {
+                const idx = items[0].dataIndex;
+                const day = tl[idx];
+                return day ? `Intensity: ${day.intensity_label}` : '';
+              }
+            }
+          },
+          annotation: { annotations },
+        },
+        scales: {
+          x: {
+            stacked: true,
+            ticks: { color: '#556677', font: { size: 10 }, maxRotation: 45 },
+            grid: { color: '#1a2d4433' },
+          },
+          y: {
+            stacked: true,
+            ticks: { color: '#556677', font: { size: 10 } },
+            grid: { color: '#1a2d4433' },
+            title: { display: true, text: 'Ward Count', color: '#556677', font: { size: 11 } },
+          },
+        },
+      },
+    });
+  }
+
+  function renderSummary(s) {
+    document.getElementById('hs-peak-day').textContent = s.peak_day
+      ? new Date(s.peak_day).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })
+      : '—';
+    document.getElementById('hs-peak-detail').textContent = s.peak_day
+      ? `${s.peak_day_triggered} wards triggered`
+      : '';
+    document.getElementById('hs-avg-trig').textContent = s.avg_daily_triggered ?? '—';
+    document.getElementById('hs-total-disp').textContent = s.total_dispatches?.toLocaleString() ?? '—';
+    document.getElementById('hs-total-crit').textContent = s.total_critical
+      ? `${s.total_critical.toLocaleString()} critical`
+      : '';
+    document.getElementById('hs-zone').textContent = s.most_affected_zone || '—';
+    document.getElementById('hs-zone-count').textContent = s.most_affected_zone_count
+      ? `${s.most_affected_zone_count.toLocaleString()} triggers`
+      : '';
+  }
+
+  function renderWorstWards(worstData) {
+    const tbody = document.getElementById('worst-wards-body');
+    tbody.innerHTML = '';
+    const wards = worstData.wards || [];
+    wards.forEach((w, i) => {
+      const tr = document.createElement('tr');
+      tr.onclick = () => map.setView([w.lat, w.lng], 14);
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${w.ward_name} <span class="ww-zone">${w.zone_name || ''}</span></td>
+        <td>${w.trigger_count}</td>
+        <td class="ww-critical">${w.critical_count}</td>
+        <td>${w.avg_score ?? '—'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+</script>
+</body>
+</html>

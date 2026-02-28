@@ -1,0 +1,31 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System dependencies for GDAL, PostGIS client, etc.
+RUN apt-get update && apt-get install -y \
+    libpq-dev gcc g++ \
+    libgdal-dev gdal-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CPLUS_INCLUDE_PATH=/usr/include/gdal
+ENV C_INCLUDE_PATH=/usr/include/gdal
+
+# Python deps
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir numpy==1.26.4 \
+    && pip install --no-cache-dir GDAL==$(gdal-config --version) \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY backend/ .
+COPY frontend/ /app/frontend/
+
+# Copy data directory (ward geojson, osm data, etc.)
+COPY backend/data/ /app/data/
+
+# Render assigns PORT dynamically
+ENV PORT=10000
+EXPOSE ${PORT}
+
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT}

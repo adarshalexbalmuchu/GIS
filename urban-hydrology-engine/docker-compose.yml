@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: hydro
+      POSTGRES_PASSWORD: hydro123
+      POSTGRES_DB: hydrology
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://hydro:hydro123@db:5432/hydrology
+      OWM_API_KEY: ${OWM_API_KEY:-}
+      API_SECRET_KEY: ${API_SECRET_KEY:-hydro-mvp-secret-2026}
+      CITY_LAT: "28.65"
+      CITY_LON: "77.22"
+      RAIN_POLL_INTERVAL_SECONDS: "600"
+      RAIN_COVERAGE_DEGREES: "0.15"
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - ./frontend:/app/frontend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  tileserv:
+    image: pramsey/pg_tileserv:latest
+    environment:
+      DATABASE_URL: postgresql://hydro:hydro123@db:5432/hydrology
+    expose:
+      - "7800"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  pgdata:
