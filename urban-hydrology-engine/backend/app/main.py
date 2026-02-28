@@ -98,9 +98,14 @@ async def on_startup():
             await asyncio.sleep(2)
 
     # Auto-seed if database is empty (first deploy on Render etc.)
+    # Run in a background thread so uvicorn binds the port immediately
+    # and Render's health check doesn't time out.
     try:
         from app.auto_seed import auto_seed_if_empty
-        await asyncio.to_thread(auto_seed_if_empty)
+        import threading
+        seed_thread = threading.Thread(target=auto_seed_if_empty, daemon=True)
+        seed_thread.start()
+        print("[startup] Auto-seed check launched in background thread")
     except Exception as exc:
         print(f"Auto-seed check failed (non-fatal): {exc}")
 
