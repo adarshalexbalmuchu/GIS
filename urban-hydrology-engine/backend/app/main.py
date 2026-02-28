@@ -97,6 +97,13 @@ async def on_startup():
                 raise
             await asyncio.sleep(2)
 
+    # Auto-seed if database is empty (first deploy on Render etc.)
+    try:
+        from app.auto_seed import auto_seed_if_empty
+        await asyncio.to_thread(auto_seed_if_empty)
+    except Exception as exc:
+        print(f"Auto-seed check failed (non-fatal): {exc}")
+
     # Start weather polling
     interval = int(os.getenv("RAIN_POLL_INTERVAL_SECONDS", "600"))
     scheduler.add_job(weather_poll_job, "interval", seconds=interval,
