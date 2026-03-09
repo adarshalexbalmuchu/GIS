@@ -126,6 +126,42 @@ def _ward_color(ws_score: float | None) -> str:
     return "red"
 
 
+# ---------------------------------------------------------------------------
+# GET /map/hotspots — GeoJSON hotspot centroids for current viewport
+# bbox=minLon,minLat,maxLon,maxLat  (optional, defaults to full Delhi)
+# ---------------------------------------------------------------------------
+
+@router.get("/map/hotspots")
+async def map_hotspots(
+    minx: float = Query(76.8,  description="West longitude"),
+    miny: float = Query(28.4,  description="South latitude"),
+    maxx: float = Query(77.4,  description="East longitude"),
+    maxy: float = Query(28.9,  description="North latitude"),
+):
+    """Return hotspot centroids as GeoJSON filtered to the given bounding box."""
+    async with engine.connect() as conn:
+        rows = await conn.execute(text("""
+            SELECT
+                ST_X(ST_Centroid(geom)) AS lon,
+                ST_Y(ST_Centroid(geom)) AS lat,
+                capacity_c
+            FROM hotspots
+            WHERE geom && ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
+            LIMIT 4000
+        """), {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy})
+
+        features = [
+            {
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
+                "properties": {"capacity_c": round(r["capacity_c"], 1)},
+            }
+            for r in rows.mappings().fetchall()
+        ]
+
+    return {"type": "FeatureCollection", "features": features}
+
+
 @router.get("/city/bounds")
 async def city_bounds():
     """Return bounding box of all wards + a central rain polygon (~40% area)."""

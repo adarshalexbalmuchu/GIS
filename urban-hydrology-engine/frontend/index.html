@@ -1566,7 +1566,37 @@
   let wardLayer = null;
   let hotspotLayer = null;
 
-  const TILE_URL = '/tiles';
+  function hotspotColor(cap) {
+    if (cap >= 60) return '#16a34a';
+    if (cap >= 30) return '#d97706';
+    return '#dc2626';
+  }
+
+  async function loadHotspots() {
+    if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
+    const b = map.getBounds();
+    const url = `/map/hotspots?minx=${b.getWest().toFixed(4)}&miny=${b.getSouth().toFixed(4)}&maxx=${b.getEast().toFixed(4)}&maxy=${b.getNorth().toFixed(4)}`;
+    try {
+      const data = await fetch(url).then(r => r.json());
+      if (!data.features || data.features.length === 0) return;
+      hotspotLayer = L.geoJSON(data, {
+        pointToLayer: function(feature, latlng) {
+          return L.circleMarker(latlng, {
+            radius: 3,
+            fillColor: hotspotColor(feature.properties.capacity_c),
+            color: 'none',
+            fillOpacity: 0.45,
+            interactive: false,
+          });
+        }
+      }).addTo(map);
+    } catch(e) { /* hotspots unavailable, skip silently */ }
+  }
+
+  map.on('moveend', function() {
+    if (map.getZoom() >= 12) loadHotspots();
+    else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
+  });
 
   const COLORS_LIGHT = {
     green:  '#dcfce7',
@@ -1925,37 +1955,8 @@
         },
       }).addTo(map);
 
-      if (hotspotLayer) map.removeLayer(hotspotLayer);
-      const cacheBust = Date.now();
-      let tileErrorCount = 0;
-      hotspotLayer = L.vectorGrid.protobuf(
-        `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
-        {
-          vectorTileLayerStyles: {
-            hotspots: function(properties) {
-              const cap = properties.capacity_c != null ? properties.capacity_c : 80;
-              return {
-                weight: 0,
-                fillColor: hotspotColor(cap),
-                fillOpacity: 0.3,
-                fill: true,
-                radius: 2,
-              };
-            }
-          },
-          maxZoom: 19,
-          interactive: false,
-        }
-      );
-      // Silently remove hotspot layer if tile server is unavailable
-      hotspotLayer.on('tileerror', function() {
-        tileErrorCount++;
-        if (tileErrorCount === 1 && map.hasLayer(hotspotLayer)) {
-          map.removeLayer(hotspotLayer);
-          hotspotLayer = null;
-        }
-      });
-      hotspotLayer.addTo(map);
+      // Load hotspots via GeoJSON endpoint (no pg_tileserv needed)
+      if (map.getZoom() >= 12) loadHotspots();
 
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
