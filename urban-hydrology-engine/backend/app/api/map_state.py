@@ -147,7 +147,7 @@ async def map_hotspots(
                 capacity_c
             FROM hotspots
             WHERE geom && ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
-            LIMIT 4000
+            LIMIT 8000
         """), {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy})
 
         features = [
