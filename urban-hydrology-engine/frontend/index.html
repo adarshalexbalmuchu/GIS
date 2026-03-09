@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Delhi Municipal Flood Intelligence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2300BCD4'/><text y='24' x='4' font-size='22'>🌊</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
@@ -1926,29 +1927,35 @@
 
       if (hotspotLayer) map.removeLayer(hotspotLayer);
       const cacheBust = Date.now();
-      // Check if tile server is available before adding vector grid layer
-      const testTile = await fetch(`${TILE_URL}/hotspots/8/183/106.pbf`).catch(() => ({ status: 502 }));
-      if (testTile.status !== 502 && testTile.status !== 503) {
-        hotspotLayer = L.vectorGrid.protobuf(
-          `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
-          {
-            vectorTileLayerStyles: {
-              hotspots: function(properties) {
-                const cap = properties.capacity_c != null ? properties.capacity_c : 80;
-                return {
-                  weight: 0,
-                  fillColor: hotspotColor(cap),
-                  fillOpacity: 0.3,
-                  fill: true,
-                  radius: 2,
-                };
-              }
-            },
-            maxZoom: 19,
-            interactive: false,
-          }
-        ).addTo(map);
-      }
+      let tileErrorCount = 0;
+      hotspotLayer = L.vectorGrid.protobuf(
+        `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
+        {
+          vectorTileLayerStyles: {
+            hotspots: function(properties) {
+              const cap = properties.capacity_c != null ? properties.capacity_c : 80;
+              return {
+                weight: 0,
+                fillColor: hotspotColor(cap),
+                fillOpacity: 0.3,
+                fill: true,
+                radius: 2,
+              };
+            }
+          },
+          maxZoom: 19,
+          interactive: false,
+        }
+      );
+      // Silently remove hotspot layer if tile server is unavailable
+      hotspotLayer.on('tileerror', function() {
+        tileErrorCount++;
+        if (tileErrorCount === 1 && map.hasLayer(hotspotLayer)) {
+          map.removeLayer(hotspotLayer);
+          hotspotLayer = null;
+        }
+      });
+      hotspotLayer.addTo(map);
 
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
