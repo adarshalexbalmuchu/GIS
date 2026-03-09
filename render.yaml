@@ -2,16 +2,15 @@
 # Render Blueprint — Urban Hydrology Engine
 # https://render.com/docs/blueprint-spec
 #
-# Deploy: Connect this repo on Render → detect render.yaml
+# Deploy:
+#   1. Create a free Supabase project at https://supabase.com
+#      (PostGIS is pre-enabled — no extra steps needed)
+#   2. In Supabase: Project Settings → Database → Connection String
+#      Copy the URI (use the "URI" tab, not the pooler)
+#   3. Connect this repo on Render → it detects render.yaml automatically
+#   4. In Render dashboard set DATABASE_URL to your Supabase URI
+#   5. Also set OWM_API_KEY (get a free key at openweathermap.org)
 # ──────────────────────────────────────────────────────
-
-databases:
-  - name: hydrology-db
-    plan: free            # free-tier PostgreSQL (90-day, 256 MB)
-    databaseName: hydrology
-    user: hydro
-    postgresMajorVersion: "15"
-    ipAllowList: []       # only internal connections
 
 services:
   # ── FastAPI backend + static frontend ────────────────
@@ -25,13 +24,12 @@ services:
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: hydrology-db
-          property: connectionString
+        sync: false          # Set to your Supabase connection URI in dashboard
+                             # Format: postgresql://postgres:[pass]@db.[ref].supabase.co:5432/postgres
       - key: OWM_API_KEY
-        sync: false                  # set manually in Render dashboard
+        sync: false          # Set manually in Render dashboard (openweathermap.org)
       - key: API_SECRET_KEY
-        generateValue: true          # auto-generate a secure secret
+        generateValue: true  # auto-generate a secure secret
       - key: CITY_LAT
         value: "28.65"
       - key: CITY_LON
@@ -41,7 +39,7 @@ services:
       - key: RAIN_COVERAGE_DEGREES
         value: "0.15"
       - key: TILESERV_URL
-        value: "http://tileserv:7800"   # updated below if running tileserv
+        value: ""            # Leave empty — pg_tileserv not used on free tier
       - key: PYTHON_VERSION
         value: "3.11.7"
 

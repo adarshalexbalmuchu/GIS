@@ -25,6 +25,10 @@ def _db_is_empty() -> bool:
     # Handle Render's postgres:// prefix
     import re
     url = re.sub(r"^postgres(ql)?://", "postgresql://", DATABASE_URL)
+    # Supabase and other remote hosts require SSL
+    _is_local = any(h in url for h in ("localhost", "127.0.0.1", "@db:"))
+    if not _is_local and "sslmode=" not in url:
+        url += "?sslmode=require" if "?" not in url else "&sslmode=require"
     try:
         conn = psycopg2.connect(url)
         cur = conn.cursor()
@@ -56,9 +60,12 @@ def run_seed():
     if scripts_dir not in sys.path:
         sys.path.insert(0, scripts_dir)
 
-    # Fix DATABASE_URL for psycopg2 (handle postgres:// from Render)
+    # Fix DATABASE_URL for psycopg2 (handle postgres:// from Render + add SSL for Supabase)
     import re
     fixed_url = re.sub(r"^postgres(ql)?://", "postgresql://", DATABASE_URL)
+    _is_local = any(h in fixed_url for h in ("localhost", "127.0.0.1", "@db:"))
+    if not _is_local and "sslmode=" not in fixed_url:
+        fixed_url += "?sslmode=require" if "?" not in fixed_url else "&sslmode=require"
     os.environ["DATABASE_URL"] = fixed_url
 
     steps = [

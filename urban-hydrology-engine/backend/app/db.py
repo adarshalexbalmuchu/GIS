@@ -43,7 +43,14 @@ ASYNC_DATABASE_URL = re.sub(
     r"^postgres(ql)?://", "postgresql+asyncpg://", DATABASE_URL
 )
 
-engine = create_async_engine(ASYNC_DATABASE_URL, echo=False, future=True)
+# Supabase (and other remote hosts) require SSL.
+# Skip SSL only for local Docker/dev connections.
+_is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
+_connect_args = {} if _is_local else {"ssl": "require"}
+
+engine = create_async_engine(
+    ASYNC_DATABASE_URL, echo=False, future=True, connect_args=_connect_args
+)
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
