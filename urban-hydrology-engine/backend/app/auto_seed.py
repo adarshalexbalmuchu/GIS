@@ -72,6 +72,7 @@ def run_seed():
         ("import_delhi_wards",        "Import 290 real Delhi ward boundaries + hotspots"),
         ("import_osm_infrastructure", "Import OSM hospitals, substations, fire stations"),
         ("update_hotspot_penalties",  "Calculate hotspot penalties from infrastructure proximity"),
+        ("seed_elevation_static",     "Seed ward elevation from pre-generated SRTM data"),
         ("seed_history",              "Seed 2024 monsoon dispatch history (122 days)"),
     ]
 

@@ -50,20 +50,21 @@ async def fetch_delhi_forecast() -> dict:
         return _cache["data"]
 
     # Fetch from Open-Meteo (free, no key required)
+    # Use precipitation (total) rather than rain-only so non-monsoon months work
     url = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={_LAT}&longitude={_LON}"
-        "&hourly=rain&timezone=Asia%2FKolkata"
+        "&hourly=precipitation&timezone=Asia%2FKolkata"
         "&forecast_days=2"
     )
 
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         payload = resp.json()
 
     hourly_times = payload.get("hourly", {}).get("time", [])
-    hourly_rain = payload.get("hourly", {}).get("rain", [])
+    hourly_rain  = payload.get("hourly", {}).get("precipitation", [])
 
     # Find current hour index
     current_hour_str = now.strftime("%Y-%m-%dT%H:00")

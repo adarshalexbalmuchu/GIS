@@ -29,7 +29,7 @@ services:
       - key: OWM_API_KEY
         sync: false          # Set manually in Render dashboard (openweathermap.org)
       - key: API_SECRET_KEY
-        generateValue: true  # auto-generate a secure secret
+        value: "hydro-mvp-secret-2026"   # fixed key — matches frontend hardcoded value
       - key: CITY_LAT
         value: "28.65"
       - key: CITY_LON
