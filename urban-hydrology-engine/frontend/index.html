@@ -1926,25 +1926,29 @@
 
       if (hotspotLayer) map.removeLayer(hotspotLayer);
       const cacheBust = Date.now();
-      hotspotLayer = L.vectorGrid.protobuf(
-        `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
-        {
-          vectorTileLayerStyles: {
-            hotspots: function(properties) {
-              const cap = properties.capacity_c != null ? properties.capacity_c : 80;
-              return {
-                weight: 0,
-                fillColor: hotspotColor(cap),
-                fillOpacity: 0.3,
-                fill: true,
-                radius: 2,
-              };
-            }
-          },
-          maxZoom: 19,
-          interactive: false,
-        }
-      ).addTo(map);
+      // Check if tile server is available before adding vector grid layer
+      const testTile = await fetch(`${TILE_URL}/hotspots/8/183/106.pbf`).catch(() => ({ status: 502 }));
+      if (testTile.status !== 502 && testTile.status !== 503) {
+        hotspotLayer = L.vectorGrid.protobuf(
+          `${TILE_URL}/hotspots/{z}/{x}/{y}.pbf?_cb=${cacheBust}`,
+          {
+            vectorTileLayerStyles: {
+              hotspots: function(properties) {
+                const cap = properties.capacity_c != null ? properties.capacity_c : 80;
+                return {
+                  weight: 0,
+                  fillColor: hotspotColor(cap),
+                  fillOpacity: 0.3,
+                  fill: true,
+                  radius: 2,
+                };
+              }
+            },
+            maxZoom: 19,
+            interactive: false,
+          }
+        ).addTo(map);
+      }
 
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
