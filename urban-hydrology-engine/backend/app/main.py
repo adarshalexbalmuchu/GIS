@@ -15,7 +15,7 @@ from sqlalchemy import text
 
 from app.db import init_db, engine, async_session
 from app.api.ingest import router as ingest_router, ingest_rain_internal
-from app.api.map_state import router as map_state_router, run_cycle_internal
+from app.api.map_state import router as map_state_router, run_cycle_internal, load_hotspot_cache
 from app.api.ward_detail import router as ward_detail_router
 from app.services.weather import fetch_delhi_rainfall
 from app.services.forecast import fetch_delhi_forecast
@@ -96,6 +96,12 @@ async def on_startup():
             if attempt == max_retries:
                 raise
             await asyncio.sleep(2)
+
+    # Pre-load hotspot centroids into memory (avoids per-request PostGIS calls)
+    try:
+        await load_hotspot_cache()
+    except Exception as exc:
+        print(f"Hotspot cache load failed (non-fatal): {exc}")
 
     # Auto-seed if database is empty (first deploy on Render etc.)
     # Run in a background thread so uvicorn binds the port immediately

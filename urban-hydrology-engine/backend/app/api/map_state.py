@@ -131,14 +131,18 @@ def _ward_color(ws_score: float | None) -> str:
 # bbox=minLon,minLat,maxLon,maxLat  (optional, defaults to full Delhi)
 # ---------------------------------------------------------------------------
 
-@router.get("/map/hotspots")
-async def map_hotspots(
-    minx: float = Query(76.8,  description="West longitude"),
-    miny: float = Query(28.4,  description="South latitude"),
-    maxx: float = Query(77.4,  description="East longitude"),
-    maxy: float = Query(28.9,  description="North latitude"),
-):
-    """Return hotspot centroids as GeoJSON filtered to the given bounding box."""
+# ---------------------------------------------------------------------------
+# In-memory hotspot cache — loaded once at startup, avoids repeated
+# PostGIS calls through the Supabase connection pooler
+# ---------------------------------------------------------------------------
+
+_hotspot_cache: list[dict] = []   # [{lon, lat, capacity_c}, ...]
+_cache_loaded = False
+
+
+async def load_hotspot_cache():
+    """Load all hotspot centroids into memory once at startup."""
+    global _hotspot_cache, _cache_loaded
     try:
         async with engine.connect() as conn:
             rows = await conn.execute(text("""
@@ -147,24 +151,53 @@ async def map_hotspots(
                     ST_Y(ST_Centroid(geom)) AS lat,
                     capacity_c
                 FROM hotspots
-                WHERE ST_Intersects(geom, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326))
-                LIMIT 8000
-            """), {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy})
-
-            features = [
-                {
-                    "type": "Feature",
-                    "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
-                    "properties": {"capacity_c": round(r["capacity_c"], 1)},
-                }
+                ORDER BY id
+            """))
+            _hotspot_cache = [
+                {"lon": r["lon"], "lat": r["lat"], "capacity_c": r["capacity_c"]}
                 for r in rows.mappings().fetchall()
                 if r["lon"] is not None and r["lat"] is not None
             ]
-
-        return {"type": "FeatureCollection", "features": features}
+            _cache_loaded = True
+            print(f"[hotspot_cache] Loaded {len(_hotspot_cache)} hotspot centroids into memory")
     except Exception as exc:
-        print(f"[map/hotspots] error: {exc}")
-        return {"type": "FeatureCollection", "features": []}
+        print(f"[hotspot_cache] Failed to load: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# GET /map/hotspots — served from in-memory cache, bbox filtered in Python
+# ---------------------------------------------------------------------------
+
+@router.get("/map/hotspots")
+async def map_hotspots(
+    minx: float = Query(76.8,  description="West longitude"),
+    miny: float = Query(28.4,  description="South latitude"),
+    maxx: float = Query(77.4,  description="East longitude"),
+    maxy: float = Query(28.9,  description="North latitude"),
+):
+    """Return hotspot centroids as GeoJSON filtered by bbox — served from memory."""
+    # Reload cache if empty (e.g. first request after seed)
+    if not _cache_loaded or len(_hotspot_cache) == 0:
+        await load_hotspot_cache()
+
+    features = [
+        {
+            "type": "Feature",
+            "geometry": {"type": "Point", "coordinates": [h["lon"], h["lat"]]},
+            "properties": {"capacity_c": round(h["capacity_c"], 1)},
+        }
+        for h in _hotspot_cache
+        if minx <= h["lon"] <= maxx and miny <= h["lat"] <= maxy
+    ][:8000]
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+@router.get("/map/hotspots/reload", include_in_schema=False)
+async def reload_hotspot_cache():
+    """Force reload hotspot cache from DB (called after run/cycle updates capacities)."""
+    await load_hotspot_cache()
+    return {"status": "ok", "count": len(_hotspot_cache)}
 
 
 @router.get("/city/bounds")
