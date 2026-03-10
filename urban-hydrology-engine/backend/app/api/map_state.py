@@ -139,27 +139,32 @@ async def map_hotspots(
     maxy: float = Query(28.9,  description="North latitude"),
 ):
     """Return hotspot centroids as GeoJSON filtered to the given bounding box."""
-    async with engine.connect() as conn:
-        rows = await conn.execute(text("""
-            SELECT
-                ST_X(ST_Centroid(geom)) AS lon,
-                ST_Y(ST_Centroid(geom)) AS lat,
-                capacity_c
-            FROM hotspots
-            WHERE geom && ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326)
-            LIMIT 8000
-        """), {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy})
+    try:
+        async with engine.connect() as conn:
+            rows = await conn.execute(text("""
+                SELECT
+                    ST_X(ST_Centroid(geom)) AS lon,
+                    ST_Y(ST_Centroid(geom)) AS lat,
+                    capacity_c
+                FROM hotspots
+                WHERE ST_Intersects(geom, ST_MakeEnvelope(:minx, :miny, :maxx, :maxy, 4326))
+                LIMIT 8000
+            """), {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy})
 
-        features = [
-            {
-                "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
-                "properties": {"capacity_c": round(r["capacity_c"], 1)},
-            }
-            for r in rows.mappings().fetchall()
-        ]
+            features = [
+                {
+                    "type": "Feature",
+                    "geometry": {"type": "Point", "coordinates": [r["lon"], r["lat"]]},
+                    "properties": {"capacity_c": round(r["capacity_c"], 1)},
+                }
+                for r in rows.mappings().fetchall()
+                if r["lon"] is not None and r["lat"] is not None
+            ]
 
-    return {"type": "FeatureCollection", "features": features}
+        return {"type": "FeatureCollection", "features": features}
+    except Exception as exc:
+        print(f"[map/hotspots] error: {exc}")
+        return {"type": "FeatureCollection", "features": []}
 
 
 @router.get("/city/bounds")
