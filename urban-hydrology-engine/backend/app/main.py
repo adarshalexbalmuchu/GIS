@@ -17,6 +17,10 @@ from app.db import init_db, engine, async_session
 from app.api.ingest import router as ingest_router, ingest_rain_internal
 from app.api.map_state import router as map_state_router, run_cycle_internal, load_hotspot_cache
 from app.api.ward_detail import router as ward_detail_router
+from app.api.readiness import router as readiness_router
+from app.api.backtest import router as backtest_router
+from app.api.floodline import router as floodline_router
+from app.api.export    import router as export_router
 from app.services.weather import fetch_delhi_rainfall
 from app.services.forecast import fetch_delhi_forecast
 from app.ws import manager as ws_manager
@@ -27,6 +31,10 @@ app = FastAPI(title="Urban Hydrology Engine")
 app.include_router(ingest_router)
 app.include_router(map_state_router)
 app.include_router(ward_detail_router)
+app.include_router(readiness_router)
+app.include_router(backtest_router)
+app.include_router(floodline_router)
+app.include_router(export_router)
 
 # Resolve frontend directory — works in Docker and local dev
 _FRONTEND_DIR = os.getenv("FRONTEND_DIR", "/app/frontend")
@@ -70,6 +78,20 @@ async def weather_poll_job():
                 "wards_triggered": cycle["wards_triggered"],
                 "safe_wards": cycle["safe_wards"],
             })
+
+            # Also broadcast fresh SSI
+            try:
+                from app.services.ssi import compute_ssi
+                async with engine.connect() as ssi_conn:
+                    ssi = await compute_ssi(ssi_conn)
+                await ws_manager.broadcast({
+                    "type":   "ssi_update",
+                    "ssi":    ssi["ssi"],
+                    "level":  ssi["level"],
+                    "colour": ssi["colour"],
+                })
+            except Exception:
+                pass
 
     except Exception as exc:
         print(f"[{datetime.now().isoformat()}] Poll error: {exc}")
@@ -135,8 +157,14 @@ async def on_startup():
     interval = int(os.getenv("RAIN_POLL_INTERVAL_SECONDS", "600"))
     scheduler.add_job(weather_poll_job, "interval", seconds=interval,
                       id="weather_poll", replace_existing=True)
+
+    # Hathnikund discharge scraper — every hour
+    scheduler.add_job(hathnikund_scrape_job, "interval", seconds=3600,
+                      id="hathnikund_scrape", replace_existing=True)
+
     scheduler.start()
     print(f"Weather polling started — every {interval}s")
+    print("Hathnikund scraper started — every 3600s")
 
     # Trigger initial weather fetch so status isn't stuck at 'unknown'
     try:
@@ -144,6 +172,13 @@ async def on_startup():
         print("Initial weather fetch completed")
     except Exception as exc:
         print(f"Initial weather fetch failed (non-fatal): {exc}")
+
+    # Initial Hathnikund scrape
+    try:
+        await hathnikund_scrape_job()
+        print("Initial Hathnikund scrape completed")
+    except Exception as exc:
+        print(f"Initial Hathnikund scrape failed (non-fatal): {exc}")
 
 
 @app.on_event("shutdown")
@@ -214,3 +249,48 @@ async def tile_proxy(layer: str, z: int, x: int, y: int):
         )
     except httpx.RequestError:
         return Response(content=b"", status_code=502)
+
+# ---------------------------------------------------------------------------
+# Yamuna / Hathnikund advance warning endpoint (DB-backed)
+# ---------------------------------------------------------------------------
+
+@app.get("/yamuna/status")
+async def yamuna_status():
+    """Real-time Hathnikund discharge + Delhi flood advance warning."""
+    from app.services.cwc_scraper import get_latest_reading
+    from app.services.yamuna import fetch_yamuna_status
+    try:
+        # Try DB-backed reading first (most recent scraped value)
+        async with engine.connect() as conn:
+            db_reading = await get_latest_reading(conn)
+        if db_reading:
+            return db_reading
+        # Fall back to live fetch if no DB readings yet
+        return await fetch_yamuna_status()
+    except Exception as exc:
+        return {"error": str(exc), "alert_level": "UNKNOWN"}
+
+
+async def hathnikund_scrape_job():
+    """Hourly Hathnikund discharge scrape job."""
+    try:
+        from app.services.cwc_scraper import scrape_and_store
+        async with engine.connect() as conn:
+            await scrape_and_store(conn)
+    except Exception as exc:
+        print(f"[{datetime.now().isoformat()}] Hathnikund scrape error: {exc}")
+
+# ---------------------------------------------------------------------------
+# SSI endpoint + cache invalidation on cycle runs
+# ---------------------------------------------------------------------------
+
+@app.get("/ssi")
+async def ssi_endpoint():
+    """System Saturation Index — real-time composite stress score."""
+    from app.services.ssi import compute_ssi
+    try:
+        async with engine.connect() as conn:
+            result = await compute_ssi(conn)
+        return result
+    except Exception as exc:
+        return {"error": str(exc), "ssi": 0, "level": "Unknown"}

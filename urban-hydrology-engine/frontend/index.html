@@ -512,6 +512,37 @@
 
   .ctrl-sep { width: 1px; height: 28px; background: var(--border); }
 
+  .ctrl-mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .ctrl-mode-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-sec);
+    background: transparent;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+  #control-bar .ctrl-mode-btn { background: transparent; color: var(--text-sec); }
+  .ctrl-mode-btn.active {
+    background: var(--navy);
+    color: #fff;
+  }
+  #control-bar .ctrl-mode-btn.active {
+    background: var(--navy, #1B2A4A);
+    color: #ffffff;
+    border-color: transparent;
+  }
+
   /* ═══════════════════════════════════════════════════════════════
      LEAFLET OVERRIDES
      ═══════════════════════════════════════════════════════════════ */
@@ -790,8 +821,14 @@
       gap: 5px;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x proximity;
     }
-    .btn { padding: 6px 10px; font-size: 11px; }
+    .btn {
+      padding: 6px 10px;
+      font-size: 11px;
+      min-height: 34px;
+      scroll-snap-align: start;
+    }
     .btn svg { width: 12px; height: 12px; }
     .ctrl-sep { height: 22px; }
     #history-panel.open { height: 50vh; height: 50dvh; }
@@ -814,7 +851,13 @@
     }
     #header .brand-text h1 { font-size: 12px; }
     #m-weather { display: none; }
-    .btn span:not(.btn-spinner) { /* hide button text on narrow screens */ }
+    .btn {
+      min-height: 36px;
+      padding: 6px 9px;
+    }
+    .btn span:not(.btn-spinner) { display: none; }
+    #drawer-fab { width: 52px; height: 52px; }
+    #side-panel { width: min(86vw, 320px); }
     #history-panel.open { height: 55vh; height: 55dvh; }
   }
 
@@ -1218,6 +1261,491 @@
     color: var(--text-dim);
     text-align: center;
   }
+
+  /* ═══════════════════════════════════════════════════════════════
+     READINESS PANEL
+     ═══════════════════════════════════════════════════════════════ */
+  #readiness-panel {
+    position: fixed; top: var(--header-h); left: 0;
+    width: 420px; height: calc(100vh - var(--header-h));
+    background: var(--bg-panel); border-right: 1px solid var(--border);
+    z-index: 900; display: flex; flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 20px rgba(0,0,0,.12);
+  }
+  #readiness-panel.open { transform: translateX(0); }
+  [data-theme="dark"] #readiness-panel { box-shadow: 4px 0 20px rgba(0,0,0,.5); }
+  #rp-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  #rp-header h2 { font-size: 13px; font-weight: 600; }
+  #rp-close { width:26px;height:26px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sec);font-size:16px;line-height:1; }
+  #rp-close:hover { background: var(--border); }
+  #rp-summary { padding: 12px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .rp-countdown { display:flex;align-items:baseline;gap:6px;margin-bottom:10px; }
+  .rp-countdown-num { font-size:32px;font-weight:700;line-height:1;color:var(--cyan);font-family:var(--mono); }
+  .rp-countdown-label { font-size:12px;color:var(--text-sec); }
+  .rp-band-row { display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
+  .rp-band-card { border-radius:8px;padding:8px 10px;text-align:center;border:1px solid transparent; }
+  .rp-band-card.red   { background:var(--red-bg);    border-color:var(--red);    }
+  .rp-band-card.amber { background:var(--yellow-bg); border-color:var(--yellow); }
+  .rp-band-card.green { background:var(--green-bg);  border-color:var(--green);  }
+  .rp-band-num { font-size:22px;font-weight:700;font-family:var(--mono);line-height:1; }
+  .rp-band-card.red   .rp-band-num { color:var(--red); }
+  .rp-band-card.amber .rp-band-num { color:var(--yellow); }
+  .rp-band-card.green .rp-band-num { color:var(--green); }
+  .rp-band-lbl { font-size:10px;color:var(--text-sec);margin-top:2px;text-transform:uppercase;letter-spacing:.04em; }
+  .rp-filter-row { display:flex;gap:5px;padding:10px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0; }
+  .rp-filter-pill { font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-sec);cursor:pointer;transition:all .12s; }
+  .rp-filter-pill:hover { border-color:var(--cyan);color:var(--text); }
+  .rp-filter-pill.active { background:var(--cyan);border-color:var(--cyan);color:#fff; }
+  .rp-filter-pill.active.ft-river    { background:#2563EB;border-color:#2563EB; }
+  .rp-filter-pill.active.ft-pluvial  { background:#D97706;border-color:#D97706; }
+  .rp-filter-pill.active.ft-backflow { background:#7C3AED;border-color:#7C3AED; }
+  .rp-filter-pill.active.ft-sustained{ background:#DC2626;border-color:#DC2626; }
+  .rp-search-wrap { padding:8px 18px;flex-shrink:0; }
+  #rp-search { width:100%;padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);outline:none; }
+  #rp-search:focus { border-color:var(--cyan); }
+  #rp-list { flex:1;overflow-y:auto;padding:6px 0; }
+  #rp-list::-webkit-scrollbar { width:4px; }
+  #rp-list::-webkit-scrollbar-thumb { background:var(--border);border-radius:4px; }
+  .rp-ward-row { display:flex;align-items:center;gap:10px;padding:7px 18px;cursor:pointer;border-left:3px solid transparent;transition:background .1s; }
+  .rp-ward-row:hover { background:var(--bg-card); }
+  .rp-ward-row.red    { border-left-color:var(--red);    }
+  .rp-ward-row.amber  { border-left-color:var(--yellow); }
+  .rp-ward-row.green  { border-left-color:var(--green);  }
+  .rp-ward-rank { font-size:10px;color:var(--text-dim);font-family:var(--mono);min-width:22px;text-align:right; }
+  .rp-ward-info { flex:1;min-width:0; }
+  .rp-ward-name { font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .rp-ward-meta { font-size:11px;color:var(--text-sec);margin-top:1px; }
+  .rp-ward-score { font-size:14px;font-weight:700;font-family:var(--mono);line-height:1; }
+  .rp-ward-row.red   .rp-ward-score { color:var(--red); }
+  .rp-ward-row.amber .rp-ward-score { color:var(--yellow); }
+  .rp-ward-row.green .rp-ward-score { color:var(--green); }
+  .rp-ward-band-lbl { font-size:10px;color:var(--text-dim); }
+  .rp-ft-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+  .rp-ft-dot.river    { background:#2563EB; }
+  .rp-ft-dot.pluvial  { background:#D97706; }
+  .rp-ft-dot.backflow { background:#7C3AED; }
+  .rp-ft-dot.sustained{ background:#DC2626; }
+  #ssi-section { padding:10px 18px;border-top:1px solid var(--border);flex-shrink:0; }
+  .ssi-label-row { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px; }
+  .ssi-title { font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.05em; }
+  .ssi-value { font-size:18px;font-weight:700;font-family:var(--mono); }
+  .ssi-track { height:10px;background:var(--border);border-radius:5px;overflow:hidden; }
+  .ssi-fill { height:10px;border-radius:5px;transition:width .5s; }
+  .ssi-zones { display:flex;justify-content:space-between;margin-top:3px; }
+  .ssi-zone-lbl { font-size:10px;color:var(--text-dim); }
+  #ft-layer-bar { position:absolute;bottom:80px;right:12px;z-index:800;display:flex;flex-direction:column;gap:5px; }
+  .ft-layer-btn { padding:5px 10px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);font-size:11px;font-weight:500;color:var(--text-sec);cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-sm);transition:all .12s;white-space:nowrap; }
+  .ft-layer-btn:hover { border-color:var(--cyan);color:var(--text); }
+  .ft-layer-btn.active { color:#fff;border-color:transparent; }
+  .ft-layer-btn.active.river    { background:#2563EB; }
+  .ft-layer-btn.active.pluvial  { background:#D97706; }
+  .ft-layer-btn.active.backflow { background:#7C3AED; }
+  .ft-layer-btn.active.sustained{ background:#DC2626; }
+  .ft-color-dot { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+  @media (max-width:640px) { #readiness-panel { width:100vw; } #ft-layer-bar { bottom:60px; } }
+
+  /* ═══════════════════════════════════════════════════════
+     BACKTEST PANEL
+     ═══════════════════════════════════════════════════════ */
+  #backtest-panel {
+    position: fixed; top: var(--header-h); right: 0;
+    width: 460px; height: calc(100vh - var(--header-h));
+    background: var(--bg-panel); border-left: 1px solid var(--border);
+    z-index: 900; display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(.4,0,.2,1);
+    box-shadow: -4px 0 20px rgba(0,0,0,.12);
+  }
+  #backtest-panel.open { transform: translateX(0); }
+  [data-theme="dark"] #backtest-panel { box-shadow: -4px 0 20px rgba(0,0,0,.5); }
+
+  #bt-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0; gap: 10px;
+  }
+  #bt-header h2 { font-size: 13px; font-weight: 600; flex: 1; }
+  .bt-run-btn {
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    background: var(--red); color: #fff; border: none; cursor: pointer;
+    transition: opacity .15s; white-space: nowrap;
+  }
+  .bt-run-btn:hover { opacity: .85; }
+  .bt-run-btn:disabled { opacity: .45; cursor: not-allowed; }
+  #bt-close { width:26px;height:26px;border-radius:6px;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-sec);font-size:16px;line-height:1; }
+  #bt-close:hover { background: var(--border); }
+
+  #bt-body { flex: 1; overflow-y: auto; padding: 0; }
+  #bt-body::-webkit-scrollbar { width: 4px; }
+  #bt-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* Score cards */
+  #bt-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .bt-metric { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .bt-metric-num { font-size: 24px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .bt-metric-lbl { font-size: 10px; color: var(--text-sec); margin-top: 3px; text-transform: uppercase; letter-spacing: .04em; }
+  .bt-metric.precision .bt-metric-num { color: var(--cyan); }
+  .bt-metric.recall    .bt-metric-num { color: var(--green); }
+  .bt-metric.f1        .bt-metric-num { color: var(--purple); }
+
+  /* confusion matrix */
+  #bt-confusion { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .bt-section-lbl { font-size: 11px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .bt-conf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .bt-conf-card { border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; }
+  .bt-conf-card.tp { background: var(--green-bg); border: 1px solid var(--green); }
+  .bt-conf-card.fp { background: var(--yellow-bg); border: 1px solid var(--yellow); }
+  .bt-conf-card.fn { background: var(--red-bg);    border: 1px solid var(--red);    }
+  .bt-conf-card.tn { background: var(--bg-card);   border: 1px solid var(--border); }
+  .bt-conf-n { font-size: 22px; font-weight: 700; font-family: var(--mono); min-width: 36px; }
+  .bt-conf-card.tp .bt-conf-n { color: var(--green);  }
+  .bt-conf-card.fp .bt-conf-n { color: var(--yellow); }
+  .bt-conf-card.fn .bt-conf-n { color: var(--red);    }
+  .bt-conf-card.tn .bt-conf-n { color: var(--text-sec); }
+  .bt-conf-desc { font-size: 11px; color: var(--text-sec); line-height: 1.4; }
+  .bt-conf-desc strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 1px; }
+
+  /* event timeline */
+  #bt-timeline { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .bt-event-row { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
+  .bt-event-row:last-child { border-bottom: none; }
+  .bt-event-date { font-size: 11px; font-family: var(--mono); color: var(--text-sec); min-width: 68px; margin-top: 2px; }
+  .bt-event-bar-wrap { flex: 1; }
+  .bt-event-label { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+  .bt-event-meta { font-size: 11px; color: var(--text-sec); }
+  .bt-event-bar-track { height: 6px; background: var(--border); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+  .bt-event-bar-fill { height: 6px; border-radius: 3px; }
+  .bt-event-peak { font-size: 10px; font-weight: 600; color: var(--red); background: var(--red-bg); padding: 1px 6px; border-radius: 3px; margin-left: 5px; }
+
+  /* ward results list */
+  #bt-wards-section { padding: 12px 18px 0; }
+  .bt-ward-filters { display: flex; gap: 5px; margin-bottom: 8px; flex-wrap: wrap; }
+  .bt-filter-btn { font-size: 11px; padding: 3px 9px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-sec); cursor: pointer; transition: all .12s; }
+  .bt-filter-btn.active { background: var(--cyan); border-color: var(--cyan); color: #fff; }
+  #bt-ward-list { padding-bottom: 16px; }
+  .bt-ward-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 0; border-bottom: 1px solid var(--border-light);
+    cursor: pointer;
+  }
+  .bt-ward-row:hover { background: var(--bg-card); border-radius: 4px; padding-left: 4px; }
+  .bt-match-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tp-dot { background: var(--green);  }
+  .fp-dot { background: var(--yellow); }
+  .fn-dot { background: var(--red);    }
+  .tn-dot { background: var(--text-dim); }
+  .bt-ward-name { font-size: 12px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bt-ward-tags { display: flex; gap: 4px; }
+  .bt-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; }
+  .bt-tag.ref  { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red); }
+  .bt-tag.pred { background: var(--cyan-dim); color: var(--cyan);  border: 1px solid var(--cyan); }
+  .bt-ward-score { font-size: 11px; font-family: var(--mono); color: var(--text-sec); min-width: 44px; text-align: right; }
+
+  /* status / empty states */
+  #bt-status { padding: 24px 18px; text-align: center; }
+  .bt-status-icon { font-size: 32px; margin-bottom: 10px; }
+  .bt-status-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .bt-status-sub { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
+
+  /* map overlay layer */
+  .bt-map-overlay-legend {
+    position: absolute; bottom: 80px; left: 56px; z-index: 800;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 11px;
+    display: none; gap: 8px; flex-direction: column;
+    box-shadow: var(--shadow-sm);
+  }
+  .bt-map-overlay-legend.visible { display: flex; }
+  .bt-legend-row { display: flex; align-items: center; gap: 6px; }
+  .bt-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+
+  /* Yamuna alert strip */
+  #yamuna-strip {
+    margin: 0; padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    flex-shrink: 0;
+  }
+  .yamuna-header { display: flex; align-items: center; justify-content: space-between; }
+  .yamuna-title { font-size: 11px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: .05em; }
+  .yamuna-alert-pill {
+    font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 12px;
+    letter-spacing: .04em;
+  }
+  .yamuna-data-row { display: flex; gap: 8px; }
+  .yamuna-stat { flex: 1; background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  .yamuna-stat-val { font-size: 13px; font-weight: 700; font-family: var(--mono); }
+  .yamuna-stat-lbl { font-size: 10px; color: var(--text-sec); margin-top: 1px; }
+  .yamuna-eta { font-size: 11px; color: var(--text-sec); }
+  .yamuna-eta strong { color: var(--text); }
+
+
+  /* Drill panel enrichments */
+  .drill-readiness-bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .drill-rs-label { font-size: 11px; color: var(--text-sec); min-width: 100px; }
+  .drill-rs-track { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .drill-rs-fill  { height: 8px; border-radius: 4px; transition: width .4s; }
+  .drill-rs-val   { font-size: 14px; font-weight: 700; font-family: var(--mono); min-width: 42px; text-align: right; }
+  .drill-ft-badge { font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; }
+  .drill-ft-badge.river     { background: #EFF6FF; color: #2563EB; border: 1px solid #2563EB; }
+  .drill-ft-badge.pluvial   { background: #FEF3C7; color: #D97706; border: 1px solid #D97706; }
+  .drill-ft-badge.backflow  { background: #F3E8FF; color: #7C3AED; border: 1px solid #7C3AED; }
+  .drill-ft-badge.sustained { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+  @media(prefers-color-scheme:dark){
+    .drill-ft-badge.river     { background:#1E3A5F;color:#93C5FD;border-color:#2563EB; }
+    .drill-ft-badge.pluvial   { background:#422006;color:#FCD34D;border-color:#D97706; }
+    .drill-ft-badge.backflow  { background:#2E1065;color:#C4B5FD;border-color:#7C3AED; }
+    .drill-ft-badge.sustained { background:#450A0A;color:#FCA5A5;border-color:#DC2626; }
+  }
+  .drill-bt-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px; border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .drill-bt-match { font-weight: 600; }
+  .drill-bt-match.tp { color: var(--green); }
+  .drill-bt-match.fp { color: var(--yellow); }
+  .drill-bt-match.fn { color: var(--red); }
+  .drill-bt-match.tn { color: var(--text-dim); }
+
+
+  /* Floodline layer button */
+  #ftb-floodline {
+    background: var(--bg-card); border: 1px solid #DC2626;
+    color: #DC2626; font-size: 11px; font-weight: 600;
+  }
+  #ftb-floodline.active { background: #DC2626; color: #fff; }
+
+  /* Countdown widget */
+  #countdown-widget {
+    position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+    z-index: 800; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 18px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--shadow-md); pointer-events: none;
+    transition: opacity .3s;
+  }
+  #countdown-widget.hidden { opacity: 0; }
+  .cd-unit { text-align: center; }
+  .cd-num  { font-size: 22px; font-weight: 700; font-family: var(--mono);
+             color: var(--cyan); line-height: 1; }
+  .cd-lbl  { font-size: 9px; color: var(--text-dim); text-transform: uppercase;
+             letter-spacing: .06em; margin-top: 1px; }
+  .cd-sep  { font-size: 20px; font-weight: 300; color: var(--text-dim);
+             margin-bottom: 6px; }
+  .cd-title { font-size: 11px; font-weight: 600; color: var(--text-sec);
+              white-space: nowrap; }
+  .cd-urgent { color: var(--red) !important; }
+
+  /* Floodline legend */
+  #floodline-legend {
+    position: absolute; bottom: 80px; right: 160px; z-index: 800;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; font-size: 11px;
+    display: none; flex-direction: column; gap: 5px;
+    box-shadow: var(--shadow-sm); min-width: 190px;
+  }
+  #floodline-legend.visible { display: flex; }
+  #floodline-legend .fl-title {
+    font-size: 11px; font-weight: 600; color: var(--text-sec);
+    text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px;
+  }
+  .fl-row { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .fl-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+  .fl-count  { margin-left: auto; font-family: var(--mono); font-size: 10px;
+               color: var(--text-dim); }
+
+
+  /* Ward search */
+  #ward-search-wrap {
+    position: absolute; top: 12px; right: 12px; z-index: 810;
+    display: flex; flex-direction: column; gap: 4px; width: 220px;
+  }
+  #ward-search {
+    width: 100%; padding: 7px 12px; font-size: 12px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); outline: none;
+    box-shadow: var(--shadow-sm); font-family: var(--font);
+  }
+  #ward-search:focus { border-color: var(--cyan); }
+  #ward-search-results {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; box-shadow: var(--shadow-md);
+    max-height: 220px; overflow-y: auto; display: none;
+  }
+  #ward-search-results.open { display: block; }
+  #ward-search-results::-webkit-scrollbar { width: 4px; }
+  #ward-search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .ws-result {
+    padding: 7px 12px; font-size: 12px; cursor: pointer;
+    border-bottom: 1px solid var(--border-light);
+    display: flex; align-items: center; gap: 8px;
+    transition: background .1s;
+  }
+  .ws-result:last-child { border-bottom: none; }
+  .ws-result:hover { background: var(--bg-panel); }
+  .ws-result-name { font-weight: 500; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ws-result-score { font-size: 11px; font-family: var(--mono);
+    padding: 1px 6px; border-radius: 4px; }
+  .ws-result-score.red    { background: var(--red-bg);    color: var(--red);    }
+  .ws-result-score.amber  { background: var(--yellow-bg); color: var(--yellow); }
+  .ws-result-score.green  { background: var(--green-bg);  color: var(--green);  }
+
+
+  .export-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; font-weight: 500; padding: 4px 10px;
+    border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text-sec);
+    cursor: pointer; text-decoration: none; transition: all .12s;
+  }
+  .export-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+  .export-btn svg   { flex-shrink: 0; }
+
+
+  /* ── Presentation mode ──────────────────────────────────────── */
+  body.present-mode #side-panel,
+  body.present-mode #control-bar,
+  body.present-mode #history-panel,
+  body.present-mode #readiness-panel,
+  body.present-mode #backtest-panel,
+  body.present-mode #ward-search-wrap,
+  body.present-mode #header .header-right,
+  body.present-mode #drawer-fab { display: none !important; }
+
+  body.present-mode #map { left: 0 !important; width: 100% !important; }
+  body.present-mode #countdown-widget { top: 12px; }
+  body.present-mode #ft-layer-bar { bottom: 12px; }
+  body.present-mode #floodline-legend { bottom: 20px; }
+
+  #present-btn {
+    position: fixed; top: 70px; left: 12px; z-index: 999;
+    padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    background: var(--navy, #1B2A4A); color: #fff; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    transition: opacity .2s;
+  }
+  body.present-mode #present-btn { background: rgba(0,0,0,.6); }
+  #present-btn:hover { opacity: .85; }
+
+  /* ── Ward comparison panel ──────────────────────────────────── */
+  #compare-panel {
+    position: fixed; top: var(--header-h); left: 0;
+    width: 680px; height: calc(100vh - var(--header-h));
+    background: var(--bg-panel); border-right: 1px solid var(--border);
+    z-index: 905; display: flex; flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    box-shadow: 4px 0 20px rgba(0,0,0,.15);
+  }
+  #compare-panel.open { transform: translateX(0); }
+  #cp-header {
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  }
+  #cp-header h2 { font-size: 13px; font-weight: 600; flex: 1; }
+  #cp-close {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-sec); font-size: 16px;
+  }
+  #cp-body {
+    flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; overflow-y: auto;
+  }
+  #cp-body::-webkit-scrollbar { width: 4px; }
+  #cp-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .cp-col {
+    padding: 14px 16px; border-right: 1px solid var(--border);
+  }
+  .cp-col:last-child { border-right: none; }
+  .cp-ward-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .cp-ward-zone  { font-size: 11px; color: var(--text-sec); margin-bottom: 12px; }
+  .cp-score-row  {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    padding: 10px 12px; border-radius: 8px; background: var(--bg-card);
+    border: 1px solid var(--border);
+  }
+  .cp-score-big  { font-size: 28px; font-weight: 700; font-family: var(--mono); line-height: 1; }
+  .cp-score-meta { font-size: 11px; color: var(--text-sec); }
+  .cp-metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 12px; }
+  .cp-metric {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 7px; padding: 8px 10px; text-align: center;
+  }
+  .cp-metric-val { font-size: 16px; font-weight: 700; font-family: var(--mono); }
+  .cp-metric-lbl { font-size: 10px; color: var(--text-sec); margin-top: 2px; }
+  .cp-section-lbl {
+    font-size: 10px; font-weight: 600; color: var(--text-sec);
+    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px;
+  }
+  .cp-action-list { list-style: none; }
+  .cp-action-list li {
+    font-size: 11px; color: var(--text-sec); padding: 4px 0 4px 14px;
+    position: relative; border-bottom: 1px solid var(--border-light); line-height: 1.4;
+  }
+  .cp-action-list li::before { content: '›'; position: absolute; left: 0; color: var(--text-dim); }
+  .cp-empty {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-dim); font-size: 12px; text-align: center; gap: 8px;
+  }
+  .cp-select-hint {
+    font-size: 11px; padding: 4px 10px; border-radius: 12px;
+    background: var(--cyan-dim, rgba(0,188,212,.1)); color: var(--cyan);
+    border: 1px solid var(--cyan); cursor: pointer;
+  }
+
+  /* ── Alert feed ──────────────────────────────────────────────── */
+  #alert-feed {
+    position: fixed; bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: min(520px, 90vw); z-index: 850;
+    pointer-events: none;
+  }
+  .alert-toast {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px; margin-bottom: 6px; border-radius: 10px;
+    border: 1px solid transparent; box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    animation: toastIn .3s ease; pointer-events: all;
+    backdrop-filter: blur(8px);
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; max-height: 80px; }
+    to   { opacity: 0; max-height: 0; padding: 0; margin: 0; }
+  }
+  .toast-dismissing { animation: toastOut .4s ease forwards; }
+  .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .toast-body { flex: 1; min-width: 0; }
+  .toast-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .toast-msg   { font-size: 11px; color: var(--text-sec); line-height: 1.4; }
+  .toast-time  { font-size: 10px; color: var(--text-dim); font-family: var(--mono); flex-shrink: 0; }
+  .toast-dismiss { font-size: 14px; color: var(--text-dim); cursor: pointer;
+                   flex-shrink: 0; padding: 0 2px; line-height: 1; }
+  .toast-dismiss:hover { color: var(--text); }
+  .toast-info     { background: var(--bg-card); border-color: var(--cyan); }
+  .toast-warn     { background: var(--yellow-bg); border-color: var(--yellow); }
+  .toast-critical { background: var(--red-bg);    border-color: var(--red);    }
+  .toast-success  { background: var(--green-bg);  border-color: var(--green);  }
+
+  @media (max-width: 640px) {
+    #compare-panel { width: 100vw; }
+    #cp-body { grid-template-columns: 1fr; }
+    .cp-col { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
 </style>
 </head>
 <body>
@@ -1247,6 +1775,10 @@
   </div>
   <div class="header-right">
     <span id="m-weather">Loading weather...</span>
+    <button id="btn-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
+    </button>
 
     <span id="header-clock">--:--</span>
   </div>
@@ -1257,7 +1789,50 @@
      ════════════════════════════════════════════════════════════════ -->
 <div id="main">
   <div id="map-container">
-    <div id="map"></div>
+    <div id="map">
+<!-- Flood type layer toggles on map -->
+
+<!-- Pre-monsoon countdown -->
+<div id="countdown-widget">
+  <div class="cd-title" id="cd-title">Pre-Monsoon Countdown</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-days">—</div><div class="cd-lbl">days</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-hours">—</div><div class="cd-lbl">hours</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-mins">—</div><div class="cd-lbl">mins</div></div>
+</div>
+
+<!-- Floodline legend -->
+<div id="floodline-legend">
+  <div class="fl-title">Yamuna Flood Zones</div>
+  <div class="fl-row"><div class="fl-swatch" style="background:#DC2626;opacity:.7"></div>
+    Zone 1 — Floodplain <span class="fl-count" id="fl-z1">—</span></div>
+  <div class="fl-row"><div class="fl-swatch" style="background:#D97706;opacity:.6"></div>
+    Zone 2 — Danger zone <span class="fl-count" id="fl-z2">—</span></div>
+  <div class="fl-row"><div class="fl-swatch" style="background:#CA8A04;opacity:.4"></div>
+    Zone 3 — Buffer <span class="fl-count" id="fl-z3">—</span></div>
+  <div class="fl-row"><div class="fl-swatch" style="background:#16A34A;opacity:.3"></div>
+    Zone 4 — Safe <span class="fl-count" id="fl-z4">—</span></div>
+  <div style="font-size:10px;color:var(--text-dim);margin-top:3px">NGT 2023 · SRTM 90m DEM</div>
+</div>
+
+<!-- Ward search -->
+<div id="ward-search-wrap">
+  <input id="ward-search" type="text" placeholder="🔍 Search ward…"
+         oninput="wardSearch(this.value)" onblur="setTimeout(()=>wardSearchClose(),200)"
+         onfocus="wardSearch(this.value)">
+  <div id="ward-search-results"></div>
+</div>
+
+<div id="ft-layer-bar">
+  <button class="ft-layer-btn river"    id="ftb-river"    onclick="toggleFtLayer('river')">   <span class="ft-color-dot" style="background:#2563EB"></span> River flood</button>
+  <button class="ft-layer-btn pluvial"  id="ftb-pluvial"  onclick="toggleFtLayer('pluvial')"> <span class="ft-color-dot" style="background:#D97706"></span> Pluvial</button>
+  <button class="ft-layer-btn backflow" id="ftb-backflow" onclick="toggleFtLayer('backflow')"><span class="ft-color-dot" style="background:#7C3AED"></span> Backflow</button>
+  <button class="ft-layer-btn" id="ftb-floodline" onclick="toggleFloodline()">
+    <span class="ft-color-dot" style="background:#DC2626"></span> Floodline zones</button>
+  <button class="ft-layer-btn sustained" id="ftb-sustained"onclick="toggleFtLayer('sustained')"><span class="ft-color-dot" style="background:#DC2626"></span> Sustained</button>
+</div>
+</div>
     <div class="map-skeleton" id="map-skeleton">
       <div class="map-skeleton-inner">
         Loading map data
@@ -1281,6 +1856,10 @@
       <div class="legend-row"><span class="legend-dot" style="background:#fee090"></span> Moderate (1.7×)</div>
       <div class="legend-row"><span class="legend-dot" style="background:#f46d43"></span> Steep (2.2×)</div>
       <div class="legend-row"><span class="legend-dot" style="background:#a50026"></span> Ridge (3.5×)</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+        <div style="width:12px;height:12px;border-radius:2px;background:#CBD5E1;border:1px solid #94A3B8;flex-shrink:0"></div>
+        <span style="font-size:11px">No data</span>
+      </div>
     </div>
   </div>
 
@@ -1311,6 +1890,28 @@
     </div>
 
     <!-- 6-Hour Forecast -->
+    <!-- Yamuna advance warning strip -->
+    <div id="yamuna-strip">
+      <div class="yamuna-header">
+        <span class="yamuna-title">🌊 Yamuna / Hathnikund</span>
+        <span class="yamuna-alert-pill" id="yamuna-pill" style="background:#DCFCE7;color:#16A34A">NORMAL</span>
+      </div>
+      <div class="yamuna-data-row">
+        <div class="yamuna-stat">
+          <div class="yamuna-stat-val" id="yamuna-discharge">—</div>
+          <div class="yamuna-stat-lbl">Discharge (cusecs)</div>
+        </div>
+        <div class="yamuna-stat">
+          <div class="yamuna-stat-val" id="yamuna-stage">—</div>
+          <div class="yamuna-stat-lbl">Pred. Delhi stage (m)</div>
+        </div>
+        <div class="yamuna-stat">
+          <div class="yamuna-stat-val" id="yamuna-eta-hrs">—</div>
+          <div class="yamuna-stat-lbl">ETA (hours)</div>
+        </div>
+      </div>
+      <div class="yamuna-eta" id="yamuna-eta-str">Loading Hathnikund data…</div>
+    </div>
     <div id="forecast-section">
       <div class="forecast-header">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
@@ -1344,6 +1945,11 @@
      CONTROL BAR
      ════════════════════════════════════════════════════════════════ -->
 <div id="control-bar">
+  <div id="ctrl-mode" class="ctrl-mode">
+    <button id="mode-ops" class="ctrl-mode-btn active" onclick="setControlMode('operations')">Operations</button>
+    <button id="mode-ana" class="ctrl-mode-btn" onclick="setControlMode('analysis')">Analysis</button>
+  </div>
+
   <button class="btn btn-primary" id="btn-cycle" onclick="runCycle()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Run Cycle <span class="btn-spinner" id="sp-cycle"></span>
   </button>
@@ -1365,6 +1971,14 @@
 
   <div class="ctrl-sep"></div>
 
+      <button class="btn btn-ghost" id="btn-backtest" onclick="toggleBacktest()" style="border:1px solid var(--red);color:var(--red);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    2023 Replay
+  </button>
+  <button class="btn btn-ghost" id="btn-readiness" onclick="toggleReadiness()" style="border:1px solid var(--cyan);color:var(--cyan);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Readiness
+  </button>
   <button class="btn btn-ghost btn-history" id="btn-history" onclick="toggleHistory()">
     History
   </button>
@@ -1438,6 +2052,143 @@
 <!-- ════════════════════════════════════════════════════════════════
      WARD DRILL-DOWN PANEL (slides from LEFT)
      ════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     READINESS PANEL
+     ════════════════════════════════════════════════════════════════ -->
+
+<!-- ════════════════════════════════════════════════════════════════
+     BACKTEST PANEL — 2023 Flood Replay
+     ════════════════════════════════════════════════════════════════ -->
+<div id="backtest-panel">
+  <div id="bt-header">
+    <h2>🔴 2023 Flood Replay — Model vs Reality</h2>
+    <button class="bt-run-btn" id="bt-run-btn" onclick="runBacktest()">▶ Run Replay</button>
+    <button id="bt-close" onclick="toggleBacktest()">✕</button>
+  </div>
+  <div id="bt-body">
+    <div id="bt-status">
+      <div class="bt-status-icon">🌊</div>
+      <div class="bt-status-title">July 2023 — Delhi's worst flood in 45 years</div>
+      <div class="bt-status-sub">
+        Yamuna peaked at <strong>208.66m</strong> on July 12.<br>
+        153mm fell in a single day. 27,000+ families displaced.<br><br>
+        Run the replay to see which wards our model flags as critical —
+        then compare against known flooded areas.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backtest map overlay legend -->
+<div class="bt-map-overlay-legend" id="bt-legend">
+  <div style="font-size:11px;font-weight:600;color:var(--text-sec);margin-bottom:2px;text-transform:uppercase;letter-spacing:.04em">2023 Backtest</div>
+  <div class="bt-legend-row"><div class="bt-legend-swatch" style="background:#16A34A"></div> True positive — model + reality</div>
+  <div class="bt-legend-row"><div class="bt-legend-swatch" style="background:#DC2626"></div> Missed — flooded, not flagged</div>
+  <div class="bt-legend-row"><div class="bt-legend-swatch" style="background:#D97706"></div> Over-predicted — flagged, not flooded</div>
+</div>
+
+
+<!-- Presentation mode button -->
+<button id="present-btn" onclick="togglePresentMode()" title="Toggle presentation mode">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  Present
+</button>
+
+<!-- Ward comparison panel -->
+<div id="compare-panel">
+  <div id="cp-header">
+    <h2>⚖ Ward Comparison</h2>
+    <span style="font-size:11px;color:var(--text-dim)" id="cp-hint">Click any ward on the map to add it</span>
+    <button id="cp-close" onclick="closeCompare()">✕</button>
+  </div>
+  <div id="cp-body">
+    <div class="cp-col" id="cp-left">
+      <div class="cp-empty">
+        <div>Select a ward</div>
+        <span class="cp-select-hint" onclick="closeCompare()">Click map to select</span>
+      </div>
+    </div>
+    <div class="cp-col" id="cp-right">
+      <div class="cp-empty">
+        <div>Select a second ward</div>
+        <div style="font-size:11px">Select first ward first</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alert feed -->
+<div id="alert-feed"></div>
+
+<div id="readiness-panel">
+  <div id="rp-header">
+    <h2>🌧 Pre-Monsoon Readiness — Delhi 290 Wards</h2>
+    <button id="rp-close" onclick="toggleReadiness()">✕</button>
+  </div>
+
+  <div id="rp-summary">
+    <div class="rp-countdown">
+      <span class="rp-countdown-num" id="rp-days">—</span>
+      <span class="rp-countdown-label">days until monsoon (June 15)</span>
+    </div>
+    <div class="rp-band-row">
+      <div class="rp-band-card red">
+        <div class="rp-band-num" id="rp-red">—</div>
+        <div class="rp-band-lbl">Critical</div>
+      </div>
+      <div class="rp-band-card amber">
+        <div class="rp-band-num" id="rp-amber">—</div>
+        <div class="rp-band-lbl">At Risk</div>
+      </div>
+      <div class="rp-band-card green">
+        <div class="rp-band-num" id="rp-green">—</div>
+        <div class="rp-band-lbl">Ready</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SSI gauge -->
+  <div id="ssi-section">
+    <div class="ssi-label-row">
+      <span class="ssi-title">System Saturation Index (SSI)</span>
+      <div style="display:flex;align-items:baseline;gap:6px">
+        <span id="ssi-level" style="font-size:11px;font-weight:500;color:var(--green)"></span>
+        <span class="ssi-value" id="ssi-val" style="color:var(--green)">—</span>
+      </div>
+    </div>
+    <div class="ssi-track"><div class="ssi-fill" id="ssi-fill" style="width:0%;background:var(--green)"></div></div>
+    <div class="ssi-zones">
+      <span class="ssi-zone-lbl">Normal</span>
+      <span class="ssi-zone-lbl">Watch (50)</span>
+      <span class="ssi-zone-lbl">Pre-position (75)</span>
+    </div>
+  </div>
+
+  <!-- flood type filter -->
+  <div class="rp-filter-row">
+    <button class="rp-filter-pill active" data-ft="all" onclick="rpFilter(this,'all')">All Types</button>
+    <button class="rp-filter-pill ft-river"    data-ft="river"    onclick="rpFilter(this,'river')">🔵 River</button>
+    <button class="rp-filter-pill ft-pluvial"  data-ft="pluvial"  onclick="rpFilter(this,'pluvial')">🟠 Pluvial</button>
+    <button class="rp-filter-pill ft-backflow" data-ft="backflow" onclick="rpFilter(this,'backflow')">🟣 Backflow</button>
+    <button class="rp-filter-pill ft-sustained"data-ft="sustained"onclick="rpFilter(this,'sustained')">🔴 Sustained</button>
+  </div>
+
+  <!-- search -->
+  <div class="rp-search-wrap">
+    <input id="rp-search" type="text" placeholder="Search ward name…" oninput="rpRender()">
+  </div>
+
+  <!-- ward list -->
+  <div id="rp-list"><div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">Loading…</div></div>
+  <div style="padding:10px 18px;border-top:1px solid var(--border);flex-shrink:0">
+    <a href="/export/summary" target="_blank" class="export-btn" style="width:100%;justify-content:center">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export full ward summary (print / PDF)
+    </a>
+  </div>
+</div>
+
 <div id="drill-panel">
   <div id="drill-header">
     <div style="flex:1;min-width:0">
@@ -1454,6 +2205,19 @@
   <div id="drill-body">
     <div class="drill-loading" id="drill-loading">Loading ward data</div>
     <div id="drill-content" style="display:none">
+      <!-- Readiness Score bar (populated by renderDrillDown) -->
+      <div class="drill-readiness-bar" id="drill-readiness-bar" style="display:none">
+        <span class="drill-rs-label">Readiness Score</span>
+        <div class="drill-rs-track"><div class="drill-rs-fill" id="drill-rs-fill"></div></div>
+        <span class="drill-rs-val" id="drill-rs-val">—</span>
+        <span class="drill-ft-badge" id="drill-ft-badge">—</span>
+      </div>
+      <!-- Backtest 2023 match row -->
+      <div class="drill-bt-row" id="drill-bt-row" style="display:none">
+        <span style="color:var(--text-sec);font-size:11px">2023 Replay:</span>
+        <span class="drill-bt-match" id="drill-bt-match">—</span>
+        <span style="color:var(--text-dim);font-size:11px" id="drill-bt-detail"></span>
+      </div>
       <!-- Stats Row (4 cards) -->
       <div class="drill-section">
         <div class="drill-section-title">Key Metrics</div>
@@ -1473,6 +2237,12 @@
       <div class="drill-section">
         <div class="drill-section-title">Summary</div>
         <div class="drill-summary" id="drill-summary"></div>
+        <div style="margin-top:10px">
+          <a id="drill-export-link" href="#" target="_blank" class="export-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export ward PDF
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -1538,6 +2308,20 @@
     localStorage.setItem('hydro-theme', next);
     applyThemeIcons();
     swapTiles();
+
+    // Re-render elevation layer with correct dark/light null colour
+    if (elevLayer) {
+      elevLayer.setStyle(function(feature) {
+        const hasData = feature.properties.color && feature.properties.color !== 'null';
+        const nullColor = isDark() ? '#475569' : '#CBD5E1';
+        return {
+          fillColor:   hasData ? feature.properties.color : nullColor,
+          fillOpacity: hasData ? 0.75 : 0.25,
+          color:       isDark() ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+          weight:      0.5,
+        };
+      });
+    }
   }
 
   // Restore saved theme
@@ -1582,10 +2366,10 @@
       hotspotLayer = L.geoJSON(data, {
         pointToLayer: function(feature, latlng) {
           return L.circleMarker(latlng, {
-            radius: 3,
+            radius: map.getZoom() >= 12 ? 3 : 2,
             fillColor: hotspotColor(feature.properties.capacity_c),
             color: 'none',
-            fillOpacity: 0.45,
+            fillOpacity: isDark() ? 0.65 : 0.45,
             interactive: false,
           });
         }
@@ -1594,7 +2378,7 @@
   }
 
   map.on('moveend', function() {
-    if (map.getZoom() >= 11) loadHotspots();
+    if (map.getZoom() >= 9) loadHotspots();
     else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
   });
 
@@ -1620,12 +2404,6 @@
     if (props.color === 'grey') return C.grey;
     if (props.ws_score !== null && props.ws_score < 0) return C.critical;
     return C[props.color] || C.grey;
-  }
-
-  function hotspotColor(cap) {
-    if (cap >= 60) return COLORS.green;
-    if (cap >= 30) return COLORS.yellow;
-    return COLORS.red;
   }
 
   function scoreClass(ws) {
@@ -1833,6 +2611,14 @@
       `Triggered <strong>${d.times_triggered_30d}</strong> times in last 30 days. ` +
       `Critical <strong>${d.times_critical_30d}</strong> times.<br>` +
       `Worst score: <strong>${worstDisplay}</strong> on ${worstDateStr}`;
+
+    // Enrich with readiness + backtest data
+    enrichDrillWithReadiness(d.ward_id);
+    enrichDrillWithBacktest(d.ward_id);
+
+    // Wire export link
+    const exportLink = document.getElementById('drill-export-link');
+    if (exportLink) exportLink.href = `/export/ward/${d.ward_id}`;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -1916,7 +2702,7 @@
         style: (feature) => ({
           fillColor: wardFillColor(feature.properties),
           fillOpacity: isDark() ? 0.5 : 0.6,
-          color: isDark() ? '#334155' : '#CBD5E1',
+          color: isDark() ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)',
           weight: 0.8,
           opacity: 0.5,
         }),
@@ -1968,6 +2754,21 @@
   // ═══════════════════════════════════════════════════════════════
   const consoleEl = document.getElementById('console-log');
   let logCount = 0;
+  let controlMode = 'operations';
+
+  function setControlMode(mode) {
+    controlMode = mode;
+    const isOps = mode === 'operations';
+    const opsBtn = document.getElementById('mode-ops');
+    const anaBtn = document.getElementById('mode-ana');
+    if (opsBtn) opsBtn.classList.toggle('active', isOps);
+    if (anaBtn) anaBtn.classList.toggle('active', !isOps);
+
+    document.querySelectorAll('[data-mode]').forEach((el) => {
+      const show = el.getAttribute('data-mode') === mode;
+      el.style.display = show ? '' : 'none';
+    });
+  }
 
   function logConsole(msg, type = 'system') {
     const now = new Date();
@@ -2065,6 +2866,10 @@
 
   // ── SIMULATE CLOUDBURST ───────────────────────────────────────
   async function simulateCloudburst() {
+    if (!confirm('Trigger a cloudburst simulation and auto-run dispatch cycle?')) {
+      return;
+    }
+
     setButtons(true);
     showSpinner('sp-storm', true);
     logConsole('Simulating cloudburst...', 'system');
@@ -2181,6 +2986,8 @@
         logConsole('Auto-cycle detected (live weather trigger) — refreshing map...', 'system');
         await refreshMap();
         await refreshWeatherStatus();
+    refreshYamuna();
+    refreshSSI();
       }
       lastKnownCycleAt = data.last_cycle_at;
     } catch (_) {}
@@ -2208,11 +3015,43 @@
     ws.onmessage = async (evt) => {
       try {
         const msg = JSON.parse(evt.data);
+
         if (msg.type === 'cycle') {
           logConsole(`Live push: ${msg.wards_triggered} wards triggered, ${msg.safe_wards} safe`, 'system');
           await refreshMap();
           await refreshWeatherStatus();
         }
+
+        else if (msg.type === 'backtest_progress') {
+          _btWsProgress(msg.msg, msg.pct || 0);
+        }
+
+        else if (msg.type === 'backtest_complete') {
+          logConsole(`2023 replay complete — precision ${msg.precision}%  recall ${msg.recall}%  F1 ${msg.f1_score}%`, 'system');
+          // Fetch full result and render
+          try {
+            const r = await fetch('/backtest/2023/result');
+            const d = await r.json();
+            if (!d.error) {
+              _btData = d;
+              renderBacktest(d);
+              applyBtMapOverlay(d);
+            }
+          } catch(_) {}
+          const btn = document.getElementById('bt-run-btn');
+          if (btn) { btn.disabled = false; btn.textContent = '▶ Re-run'; }
+        }
+
+        else if (msg.type === 'backtest_error') {
+          _btWsProgress('Error: ' + msg.msg, 0);
+          const btn = document.getElementById('bt-run-btn');
+          if (btn) { btn.disabled = false; btn.textContent = '▶ Re-run'; }
+        }
+
+        else if (msg.type === 'ssi_update') {
+          updateSSI(msg.ssi);
+        }
+
       } catch (_) {}
     };
 
@@ -2241,6 +3080,7 @@
       if (bResp.ok) {
         const b = await bResp.json();
         map.setView(b.center, 11);
+        loadHotspots();
         document.getElementById('m-wards-online').textContent = b.ward_count || 290;
         logConsole(`City centered: ${b.center[0].toFixed(4)}, ${b.center[1].toFixed(4)}`, 'system');
       }
@@ -2248,12 +3088,19 @@
 
     await refreshMap();
     await refreshWeatherStatus();
+    refreshYamuna();
+    refreshSSI();
 
     try {
       const cResp = await fetch('/cycle/latest');
       if (cResp.ok) {
         const cd = await cResp.json();
-        lastKnownCycleAt = cd.last_cycle_at;
+        if (cd.last_cycle_at) {
+          const t = new Date(cd.last_cycle_at);
+          const label = t.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+          document.getElementById('last-cycle-footer').textContent = 'Last cycle: ' + label;
+          lastKnownCycleAt = cd.last_cycle_at;
+        }
       }
     } catch (_) {}
 
@@ -2277,9 +3124,9 @@
     fire_station: '#2563EB',
   };
   const INFRA_RADIUS = {
-    hospital: 6,
-    substation: 5,
-    fire_station: 6,
+    hospital: 3,
+    substation: 4,
+    fire_station: 5,
   };
   const INFRA_ICONS = {
     hospital: '',
@@ -2313,10 +3160,12 @@
       infraLayer = L.geoJSON(data.features, {
         pointToLayer: (feature, latlng) => {
           const ft = feature.properties.facility_type;
+          const isHospital = ft === 'hospital';
           return L.circleMarker(latlng, {
             radius: INFRA_RADIUS[ft] || 5,
             fillColor: INFRA_COLORS[ft] || '#999',
-            fillOpacity: 0.8,
+            fillOpacity: isHospital ? 0.65 : 0.8,
+            stroke: false,
             color: '#fff',
             weight: 1,
             opacity: 0.9,
@@ -2372,18 +3221,22 @@
       const data = await resp.json();
 
       elevLayer = L.geoJSON(data.features, {
-        style: (feature) => ({
-          fillColor: feature.properties.color || '#94A3B8',
-          fillOpacity: 0.5,
-          color: '#1B2A4A',
-          weight: 1,
-          opacity: 0.3,
-        }),
+        style: function(feature) {
+          const hasData = feature.properties.color && feature.properties.color !== 'null';
+          const nullColor = isDark() ? '#475569' : '#CBD5E1';
+          return {
+            fillColor:   hasData ? feature.properties.color : nullColor,
+            fillOpacity: hasData ? 0.75 : 0.25,
+            color:       isDark() ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
+            weight:      0.5,
+          };
+        },
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
+          const displayName = (p.ward_name && p.ward_name.trim()) ? p.ward_name : ('Ward ' + p.ward_id);
           layer.bindPopup(`
             <div class="popup-header">
-              <div class="popup-ward">${p.ward_name}</div>
+              <div class="popup-ward">${displayName}</div>
               <div class="popup-ward-zone">Terrain Analysis</div>
             </div>
             <div class="popup-body">
@@ -2665,6 +3518,1100 @@
       tbody.appendChild(tr);
     });
   }
+
+  /* ════════════════════════════════════════════════════════════════
+     READINESS PANEL — data, rendering, SSI, flood-type layers
+     ════════════════════════════════════════════════════════════════ */
+
+  let _rpData = [];          // full ward list from /readiness/scores
+  let _rpFilter = 'all';     // active flood-type filter
+  let _ftActiveLayers = {};  // map highlight layers keyed by flood type
+  let _ftLayerActive = {};   // button state per flood type
+
+  // ── Open / close panel ─────────────────────────────────────────
+  function toggleReadiness() {
+    const panel = document.getElementById('readiness-panel');
+    const isOpen = panel.classList.toggle('open');
+    if (isOpen && _rpData.length === 0) loadReadiness();
+  }
+
+  // ── Fetch from backend ─────────────────────────────────────────
+  async function loadReadiness() {
+    try {
+      const resp = await fetch('/readiness/scores');
+      const json = await resp.json();
+      _rpData = json.wards || [];
+      const sum  = json.summary || {};
+
+      // countdown
+      document.getElementById('rp-days').textContent  = sum.days_to_monsoon ?? '—';
+      document.getElementById('rp-red').textContent   = sum.red_wards   ?? '—';
+      document.getElementById('rp-amber').textContent = sum.amber_wards ?? '—';
+      document.getElementById('rp-green').textContent = sum.green_wards ?? '—';
+
+      // Verify summary counts from actual ward data as fallback.
+      const redCount = _rpData.filter(w => w.band === 'red').length;
+      const amberCount = _rpData.filter(w => w.band === 'amber').length;
+      const greenCount = _rpData.filter(w => w.band === 'green').length;
+      document.getElementById('rp-red').textContent = redCount || sum.red_wards || '0';
+      document.getElementById('rp-amber').textContent = amberCount || sum.amber_wards || '0';
+      document.getElementById('rp-green').textContent = greenCount || sum.green_wards || '0';
+
+      // SSI — load from real /ssi endpoint (computed from DB)
+      refreshSSI();
+
+      rpRender();
+      applyFtMapHighlights();
+    } catch (e) {
+      document.getElementById('rp-list').innerHTML =
+        '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">Failed to load readiness data.</div>';
+    }
+  }
+
+  // ── SSI gauge ──────────────────────────────────────────────────
+  function updateSSI(val, level, colour) {
+    const fill  = document.getElementById('ssi-fill');
+    const label = document.getElementById('ssi-val');
+    if (!fill || !label) return;
+    fill.style.width      = val + '%';
+    const col = colour || (val >= 75 ? '#DC2626' : val >= 50 ? '#D97706' : val >= 30 ? '#CA8A04' : '#16A34A');
+    fill.style.background = col;
+    label.style.color     = col;
+    label.textContent     = val;
+    // Update level label if element exists
+    const lvlEl = document.getElementById('ssi-level');
+    if (lvlEl) { lvlEl.textContent = level || ''; lvlEl.style.color = col; }
+  }
+
+  async function refreshSSI() {
+    try {
+      const r = await fetch('/ssi');
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.error) return;
+      updateSSI(d.ssi, d.level, d.colour);
+    } catch(_) {}
+  }
+
+  // ── Filter pills ───────────────────────────────────────────────
+  function rpFilter(btn, ft) {
+    document.querySelectorAll('.rp-filter-pill').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    _rpFilter = ft;
+    rpRender();
+  }
+
+  // ── Render ward list ───────────────────────────────────────────
+  function rpRender() {
+    const query  = (document.getElementById('rp-search')?.value || '').toLowerCase();
+    const list   = document.getElementById('rp-list');
+    const FT_LABEL = { river:'River', pluvial:'Pluvial', backflow:'Backflow', sustained:'Sustained' };
+    const FT_EMOJI = { river:'🔵', pluvial:'🟠', backflow:'🟣', sustained:'🔴' };
+
+    let wards = _rpData;
+    if (_rpFilter !== 'all') wards = wards.filter(w => w.flood_type === _rpFilter);
+    if (query) wards = wards.filter(w => w.ward_name.toLowerCase().includes(query));
+
+    if (wards.length === 0) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">No wards match this filter.</div>';
+      return;
+    }
+
+    const rows = wards.map((w, i) => `
+      <div class="rp-ward-row ${w.band}" onclick="rpWardClick(${w.ward_id}, '${w.ward_name.replace(/'/g,"\\'")}')">
+        <span class="rp-ward-rank">${i + 1}</span>
+        <div class="rp-ft-dot ${w.flood_type}"></div>
+        <div class="rp-ward-info">
+          <div class="rp-ward-name">${w.ward_name}</div>
+          <div class="rp-ward-meta">${w.zone_name} · ${FT_EMOJI[w.flood_type] || ''} ${FT_LABEL[w.flood_type] || w.flood_type}</div>
+        </div>
+        <div class="rp-ward-score-wrap">
+          <div class="rp-ward-score">${w.readiness_score.toFixed(1)}</div>
+          <div class="rp-ward-band-lbl">${w.band_label}</div>
+        </div>
+      </div>
+    `).join('');
+
+    list.innerHTML = rows;
+  }
+
+  // ── Ward click — fly to ward on map + open drill panel ────────
+  function rpWardClick(wardId, wardName) {
+    // find ward in map layer and zoom
+    if (wardLayer) {
+      wardLayer.eachLayer(layer => {
+        if (layer.feature?.properties?.id === wardId ||
+            layer.feature?.properties?.ward_id === wardId) {
+          map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+          layer.openPopup();
+        }
+      });
+    }
+    // open drill panel
+    openDrillPanel(wardId, wardName);
+  }
+
+  // ── Flood type map highlights ──────────────────────────────────
+  const FT_COLORS = {
+    river:    '#2563EB',
+    pluvial:  '#D97706',
+    backflow: '#7C3AED',
+    sustained:'#DC2626',
+  };
+
+  function toggleFtLayer(ft) {
+    const btn = document.getElementById('ftb-' + ft);
+    const isActive = !_ftLayerActive[ft];
+    _ftLayerActive[ft] = isActive;
+    btn.classList.toggle('active', isActive);
+
+    // Remove existing layer for this type
+    if (_ftActiveLayers[ft]) { map.removeLayer(_ftActiveLayers[ft]); delete _ftActiveLayers[ft]; }
+    if (!isActive) return;
+
+    // Build GeoJSON from ward layer filtered by flood type
+    if (!wardLayer) return;
+    const ftData = { type: 'FeatureCollection', features: [] };
+    const wardFtMap = {};
+    _rpData.forEach(w => { wardFtMap[w.ward_id] = w.flood_type; });
+
+    wardLayer.eachLayer(layer => {
+      const props = layer.feature?.properties || {};
+      const wid = props.id || props.ward_id;
+      if (wardFtMap[wid] === ft) {
+        ftData.features.push(layer.feature);
+      }
+    });
+
+    if (ftData.features.length === 0) {
+      // Data not loaded yet — trigger readiness load first
+      if (_rpData.length === 0) {
+        loadReadiness().then(() => toggleFtLayer(ft));
+        return;
+      }
+    }
+
+    _ftActiveLayers[ft] = L.geoJSON(ftData, {
+      style: {
+        color:       FT_COLORS[ft],
+        weight:      2.5,
+        opacity:     0.9,
+        fillColor:   FT_COLORS[ft],
+        fillOpacity: 0.18,
+      },
+      interactive: false,
+    }).addTo(map);
+  }
+
+  // Load readiness data on map highlight if panel already has it
+  function applyFtMapHighlights() {
+    Object.keys(_ftLayerActive).forEach(ft => {
+      if (_ftLayerActive[ft]) {
+        if (_ftActiveLayers[ft]) { map.removeLayer(_ftActiveLayers[ft]); delete _ftActiveLayers[ft]; }
+        toggleFtLayer(ft);
+      }
+    });
+  }
+
+
+  /* ════════════════════════════════════════════════════════════════
+     BACKTEST — 2023 Flood Replay JS
+     ════════════════════════════════════════════════════════════════ */
+
+  let _btData       = null;
+  let _btFilter     = 'all';
+  let _btMapLayers  = {};
+
+  // ── Panel toggle ─────────────────────────────────────────────────
+  function toggleBacktest() {
+    document.getElementById('backtest-panel').classList.toggle('open');
+  }
+
+  // ── Run replay ───────────────────────────────────────────────────
+  // WS-driven progress state
+  let _btProgressInterval = null;
+
+  function _btWsProgress(msg, pct) {
+    const body = document.getElementById('bt-body');
+    if (!body) return;
+    let progEl = document.getElementById('bt-ws-progress');
+    if (!progEl) {
+      body.innerHTML = `
+        <div id="bt-status" style="padding:24px 18px">
+          <div class="bt-status-icon">⏳</div>
+          <div class="bt-status-title">Replaying July 2023…</div>
+          <div style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-sec);margin-bottom:5px">
+              <span id="bt-prog-msg">Starting…</span>
+              <span id="bt-prog-pct">0%</span>
+            </div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+              <div id="bt-ws-progress" style="height:6px;background:var(--cyan);border-radius:3px;width:0%;transition:width .4s"></div>
+            </div>
+            <div id="bt-prog-log" style="margin-top:12px;font-size:11px;color:var(--text-dim);font-family:var(--mono);max-height:120px;overflow-y:auto"></div>
+          </div>
+        </div>`;
+      progEl = document.getElementById('bt-ws-progress');
+    }
+    progEl.style.width = pct + '%';
+    const msgEl = document.getElementById('bt-prog-msg');
+    const pctEl = document.getElementById('bt-prog-pct');
+    const logEl = document.getElementById('bt-prog-log');
+    if (msgEl) msgEl.textContent = msg;
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (logEl) {
+      const line = document.createElement('div');
+      line.textContent = '› ' + msg;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+  }
+
+  async function runBacktest() {
+    const btn = document.getElementById('bt-run-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Starting…'; }
+
+    // Check if WS is alive — if not, fall back to polling
+    const wsAlive = ws && ws.readyState === WebSocket.OPEN;
+
+    try {
+      const runResp = await fetch('/backtest/2023', {
+        method: 'POST',
+        headers: { 'X-API-Key': API_KEY }
+      });
+      if (!runResp.ok) throw new Error(`HTTP ${runResp.status}`);
+      const jr = await runResp.json();
+      if (jr.status === 'running') {
+        _btWsProgress('Replay already in progress…', 10);
+      }
+
+      if (!wsAlive) {
+        // Fallback: poll /backtest/2023/status every 2s
+        _btWsProgress('Polling progress (no WebSocket)…', 5);
+        if (_btProgressInterval) clearInterval(_btProgressInterval);
+        _btProgressInterval = setInterval(async () => {
+          try {
+            const st = await fetch('/backtest/2023/status').then(r => r.json());
+            const pct = st.progress?.length ? Math.min(90, st.progress.length * 15) : 5;
+            const lastMsg = st.progress?.slice(-1)[0] || 'Running…';
+            _btWsProgress(lastMsg, pct);
+            if (st.status === 'complete') {
+              clearInterval(_btProgressInterval);
+              _btProgressInterval = null;
+              const res = await fetch('/backtest/2023/result').then(r => r.json());
+              if (!res.error) { _btData = res; renderBacktest(res); applyBtMapOverlay(res); }
+              if (btn) { btn.disabled = false; btn.textContent = '▶ Re-run'; }
+            } else if (st.status === 'error') {
+              clearInterval(_btProgressInterval);
+              _btWsProgress('Error: ' + (st.error || 'unknown'), 0);
+              if (btn) { btn.disabled = false; btn.textContent = '▶ Re-run'; }
+            }
+          } catch(_) {}
+        }, 2000);
+      }
+      // WS path: progress arrives via ws.onmessage → _btWsProgress → auto-renders on complete
+    } catch (e) {
+      const body = document.getElementById('bt-body');
+      if (body) body.innerHTML = `
+        <div id="bt-status">
+          <div class="bt-status-icon">⚠️</div>
+          <div class="bt-status-title">Replay failed</div>
+          <div class="bt-status-sub">${e.message}</div>
+        </div>`;
+      if (btn) { btn.disabled = false; btn.textContent = '▶ Re-run'; }
+    }
+  }
+
+  // ── Render full backtest results ─────────────────────────────────
+  function renderBacktest(d) {
+    const body = document.getElementById('bt-body');
+
+    const eventsHtml = (d.events || []).map(e => {
+      const pct = Math.min(100, (e.rain_mm / 160) * 100);
+      const barColor = e.rain_mm >= 100 ? '#DC2626'
+                     : e.rain_mm >= 50  ? '#D97706' : '#2563EB';
+      const peakBadge = e.peak ? `<span class="bt-event-peak">PEAK</span>` : '';
+      return `
+        <div class="bt-event-row">
+          <div class="bt-event-date">${e.date.slice(5)}</div>
+          <div class="bt-event-bar-wrap">
+            <div class="bt-event-label">${e.label}${peakBadge}</div>
+            <div class="bt-event-meta">
+              ${e.rain_mm}mm · Yamuna ${e.yamuna_m}m · ${e.wards_triggered} wards triggered
+            </div>
+            <div class="bt-event-bar-track">
+              <div class="bt-event-bar-fill" style="width:${pct}%;background:${barColor}"></div>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <!-- Precision / Recall / F1 -->
+      <div id="bt-metrics">
+        <div class="bt-metric precision">
+          <div class="bt-metric-num">${d.precision}%</div>
+          <div class="bt-metric-lbl">Precision</div>
+        </div>
+        <div class="bt-metric recall">
+          <div class="bt-metric-num">${d.recall}%</div>
+          <div class="bt-metric-lbl">Recall</div>
+        </div>
+        <div class="bt-metric f1">
+          <div class="bt-metric-num">${d.f1_score}%</div>
+          <div class="bt-metric-lbl">F1 Score</div>
+        </div>
+      </div>
+
+      <!-- Confusion matrix -->
+      <div id="bt-confusion">
+        <div class="bt-section-lbl">Confusion matrix</div>
+        <div class="bt-conf-grid">
+          <div class="bt-conf-card tp">
+            <div class="bt-conf-n">${d.true_positives}</div>
+            <div class="bt-conf-desc"><strong>True Positives</strong>Model flagged + actually flooded</div>
+          </div>
+          <div class="bt-conf-card fn">
+            <div class="bt-conf-n">${d.false_negatives}</div>
+            <div class="bt-conf-desc"><strong>Missed</strong>Flooded, not flagged by model</div>
+          </div>
+          <div class="bt-conf-card fp">
+            <div class="bt-conf-n">${d.false_positives}</div>
+            <div class="bt-conf-desc"><strong>Over-predicted</strong>Flagged but didn't flood</div>
+          </div>
+          <div class="bt-conf-card tn">
+            <div class="bt-conf-n">${d.true_negatives}</div>
+            <div class="bt-conf-desc"><strong>True Negatives</strong>Safe — model + reality agree</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event timeline -->
+      <div id="bt-timeline">
+        <div class="bt-section-lbl">Key 2023 events replayed</div>
+        ${eventsHtml}
+      </div>
+
+      <!-- Ward results -->
+      <div id="bt-wards-section">
+        <div class="bt-section-lbl">Ward-by-ward results</div>
+        <div class="bt-ward-filters">
+          <button class="bt-filter-btn active" onclick="btFilter(this,'all')">All (${d.total_wards})</button>
+          <button class="bt-filter-btn" onclick="btFilter(this,'true_positive')">✓ Correct (${d.true_positives})</button>
+          <button class="bt-filter-btn" onclick="btFilter(this,'false_negative')">⚠ Missed (${d.false_negatives})</button>
+          <button class="bt-filter-btn" onclick="btFilter(this,'false_positive')">~ Over-pred (${d.false_positives})</button>
+        </div>
+        <div id="bt-ward-list"></div>
+      </div>`;
+
+    _btFilter = 'all';
+    btRenderWards(d.wards);
+  }
+
+  // ── Filter ward list ─────────────────────────────────────────────
+  function btFilter(btn, filter) {
+    document.querySelectorAll('.bt-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    _btFilter = filter;
+    if (_btData) btRenderWards(_btData.wards);
+  }
+
+  function btRenderWards(wards) {
+    const list = document.getElementById('bt-ward-list');
+    if (!list) return;
+
+    let filtered = wards;
+    if (_btFilter !== 'all') filtered = wards.filter(w => w.match === _btFilter);
+
+    const DOT_CLASS  = { true_positive:'tp-dot', false_positive:'fp-dot',
+                         false_negative:'fn-dot', true_negative:'tn-dot' };
+
+    const rows = filtered.slice(0, 150).map(w => {
+      const refTag  = w.reference_flooded
+        ? `<span class="bt-tag ref">Ref</span>` : '';
+      const predTag = w.predicted_flooded
+        ? `<span class="bt-tag pred">Pred</span>` : '';
+      const score = w.worst_score <= -999 ? 'CRIT'
+                  : w.worst_score.toFixed(1);
+      return `
+        <div class="bt-ward-row" onclick="rpWardClick(${w.ward_id},'${w.ward_name.replace(/'/g,"\\'")}')">
+          <div class="bt-match-dot ${DOT_CLASS[w.match] || 'tn-dot'}"></div>
+          <div class="bt-ward-name">${w.ward_name}</div>
+          <div class="bt-ward-tags">${refTag}${predTag}</div>
+          <div class="bt-ward-score">${score}</div>
+        </div>`;
+    }).join('');
+
+    list.innerHTML = rows || '<div style="padding:12px;font-size:12px;color:var(--text-dim)">No wards in this category.</div>';
+  }
+
+  // ── Map overlay ──────────────────────────────────────────────────
+  function applyBtMapOverlay(data) {
+    // Remove old layers
+    Object.values(_btMapLayers).forEach(l => { try { map.removeLayer(l); } catch(_) {} });
+    _btMapLayers = {};
+
+    if (!wardLayer || !data.wards) return;
+
+    // Build lookup by ward_id → match type
+    const matchMap = {};
+    data.wards.forEach(w => { matchMap[w.ward_id] = w.match; });
+
+    const COLORS = {
+      true_positive:  '#16A34A',
+      false_negative: '#DC2626',
+      false_positive: '#D97706',
+    };
+
+    // Separate GeoJSON layers per match type (skip true_negative for clean map)
+    ['true_positive', 'false_negative', 'false_positive'].forEach(matchType => {
+      const features = [];
+      wardLayer.eachLayer(layer => {
+        const props = layer.feature?.properties || {};
+        const wid = props.ward_id || props.id;
+        if (matchMap[wid] === matchType) features.push(layer.feature);
+      });
+
+      if (features.length === 0) return;
+
+      _btMapLayers[matchType] = L.geoJSON(
+        { type: 'FeatureCollection', features },
+        {
+          style: {
+            color:       COLORS[matchType],
+            weight:      2,
+            opacity:     0.9,
+            fillColor:   COLORS[matchType],
+            fillOpacity: matchType === 'true_positive' ? 0.35 : 0.45,
+          },
+          interactive: false,
+        }
+      ).addTo(map);
+    });
+
+    // Show legend
+    document.getElementById('bt-legend').classList.add('visible');
+  }
+
+  // Remove overlay when panel closes
+  const _origToggleBt = window.toggleBacktest;
+  window.toggleBacktest = function() {
+    const panel = document.getElementById('backtest-panel');
+    const wasOpen = panel.classList.contains('open');
+    panel.classList.toggle('open');
+    if (wasOpen) {
+      // Panel closing — remove map overlay
+      Object.values(_btMapLayers).forEach(l => { try { map.removeLayer(l); } catch(_) {} });
+      _btMapLayers = {};
+      document.getElementById('bt-legend').classList.remove('visible');
+    }
+  };
+
+
+  /* ── Yamuna advance warning ─────────────────────────────── */
+  async function refreshYamuna() {
+    try {
+      const resp = await fetch('/yamuna/status');
+      const d    = await resp.json();
+
+      const pill = document.getElementById('yamuna-pill');
+      pill.textContent     = d.alert_level || 'UNKNOWN';
+      pill.style.background = (d.alert_colour || '#94A3B8') + '22';
+      pill.style.color      = d.alert_colour || '#94A3B8';
+      pill.style.border     = `1px solid ${d.alert_colour || '#94A3B8'}`;
+
+      document.getElementById('yamuna-discharge').textContent =
+        d.discharge_cusecs > 0
+          ? (d.discharge_cusecs / 1000).toFixed(1) + 'L'
+          : '—';
+      document.getElementById('yamuna-stage').textContent =
+        d.predicted_delhi_stage_m || '—';
+      document.getElementById('yamuna-eta-hrs').textContent =
+        d.travel_time_hours ? d.travel_time_hours + 'h' : '—';
+      document.getElementById('yamuna-eta-str').textContent =
+        d.is_live
+          ? `Live — ${d.source}. ETA: ${d.eta_delhi}`
+          : `Proxy estimate — ${d.note || d.source}`;
+
+    } catch (_) {
+      document.getElementById('yamuna-eta-str').textContent = 'Yamuna data unavailable';
+    }
+  }
+
+
+  /* Enrich drill panel with readiness + backtest data */
+  function enrichDrillWithReadiness(wardId) {
+    // Find ward in loaded readiness data
+    const w = _rpData.find(r => r.ward_id === wardId);
+    const bar   = document.getElementById('drill-readiness-bar');
+    const fill  = document.getElementById('drill-rs-fill');
+    const val   = document.getElementById('drill-rs-val');
+    const badge = document.getElementById('drill-ft-badge');
+
+    if (w) {
+      bar.style.display = 'flex';
+      const score = w.readiness_score;
+      const col   = score >= 65 ? '#16A34A' : score >= 40 ? '#D97706' : '#DC2626';
+      fill.style.width      = score + '%';
+      fill.style.background = col;
+      val.textContent       = score.toFixed(1);
+      val.style.color       = col;
+      badge.textContent     = (w.flood_type || '').toUpperCase();
+      badge.className       = 'drill-ft-badge ' + (w.flood_type || '');
+    } else {
+      bar.style.display = 'none';
+      // Lazy-load readiness if not yet fetched
+      if (_rpData.length === 0) {
+        fetch('/readiness/scores').then(r => r.json()).then(d => {
+          _rpData = d.wards || [];
+          enrichDrillWithReadiness(wardId);
+        }).catch(() => {});
+      }
+    }
+  }
+
+  function enrichDrillWithBacktest(wardId) {
+    const row    = document.getElementById('drill-bt-row');
+    const match  = document.getElementById('drill-bt-match');
+    const detail = document.getElementById('drill-bt-detail');
+
+    if (!_btData || !_btData.wards) {
+      row.style.display = 'none';
+      return;
+    }
+    const w = _btData.wards.find(r => r.ward_id === wardId);
+    if (!w) { row.style.display = 'none'; return; }
+
+    row.style.display = 'flex';
+    const LABELS = {
+      true_positive:  '✓ Correctly predicted as flooded',
+      false_negative: '⚠ Flooded — model missed this ward',
+      false_positive: '~ Model over-predicted — did not flood',
+      true_negative:  '— Not flooded (model + reality agree)',
+    };
+    const CLS = {
+      true_positive: 'tp', false_negative: 'fn',
+      false_positive: 'fp', true_negative: 'tn'
+    };
+    match.textContent = LABELS[w.match] || w.match;
+    match.className   = 'drill-bt-match ' + (CLS[w.match] || '');
+    detail.textContent = `triggered ${w.triggered_days}/6 event days · worst score: ${w.worst_score}`;
+  }
+
+
+  /* ── Floodline zone layer ────────────────────────────────────── */
+  let _floodlineLayer  = null;
+  let _floodlineActive = false;
+
+  async function toggleFloodline() {
+    const btn = document.getElementById('ftb-floodline');
+    _floodlineActive = !_floodlineActive;
+    btn.classList.toggle('active', _floodlineActive);
+
+    if (!_floodlineActive) {
+      if (_floodlineLayer) { map.removeLayer(_floodlineLayer); _floodlineLayer = null; }
+      document.getElementById('floodline-legend').classList.remove('visible');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/map/floodline');
+      const data = await resp.json();
+
+      if (_floodlineLayer) map.removeLayer(_floodlineLayer);
+
+      _floodlineLayer = L.geoJSON(data, {
+        style: feature => ({
+          color:       feature.properties.fill_color,
+          weight:      1.5,
+          opacity:     0.8,
+          fillColor:   feature.properties.fill_color,
+          fillOpacity: feature.properties.fill_opacity,
+        }),
+        onEachFeature: (feature, layer) => {
+          const p = feature.properties;
+          layer.bindPopup(`
+            <div style="min-width:200px">
+              <div style="font-weight:600;font-size:13px;margin-bottom:4px">${p.ward_name}</div>
+              <div style="font-size:12px;color:#666;margin-bottom:6px">${p.zone_name}</div>
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="background:${p.fill_color};color:#fff;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px">Zone ${p.flood_zone} — ${p.zone_label}</span>
+              </div>
+              <div style="font-size:11px;margin-bottom:4px">Elevation: <strong>${p.mean_elevation}m</strong></div>
+              <div style="font-size:11px;color:#888">${p.description}</div>
+            </div>
+          `);
+          layer.on('click', () => openDrillPanel(p.ward_id, p.ward_name));
+        }
+      }).addTo(map);
+
+      // Update legend counts
+      const meta = data.metadata || {};
+      document.getElementById('fl-z1').textContent = meta.floodplain_wards   || '—';
+      document.getElementById('fl-z2').textContent = meta.danger_zone_wards  || '—';
+      document.getElementById('fl-z3').textContent = meta.buffer_zone_wards  || '—';
+      document.getElementById('fl-z4').textContent = meta.safe_wards         || '—';
+      document.getElementById('floodline-legend').classList.add('visible');
+
+    } catch(e) {
+      console.error('[FLOODLINE]', e);
+      _floodlineActive = false;
+      btn.classList.remove('active');
+    }
+  }
+
+  /* ── Pre-monsoon countdown clock ────────────────────────────── */
+  function updateCountdown() {
+    const now     = new Date();
+    const year    = now.getMonth() >= 5 ? now.getFullYear() + 1 : now.getFullYear();
+    const target  = new Date(year, 5, 15, 0, 0, 0);  // June 15
+    const diff_ms = target - now;
+
+    if (diff_ms <= 0) {
+      document.getElementById('cd-title').textContent = '🌧 Monsoon Active';
+      ['cd-days','cd-hours','cd-mins'].forEach(id => {
+        document.getElementById(id).textContent = '00';
+        document.getElementById(id).classList.add('cd-urgent');
+      });
+      return;
+    }
+
+    const days  = Math.floor(diff_ms / 86400000);
+    const hours = Math.floor((diff_ms % 86400000) / 3600000);
+    const mins  = Math.floor((diff_ms % 3600000)  / 60000);
+
+    document.getElementById('cd-days').textContent  = String(days).padStart(2,'0');
+    document.getElementById('cd-hours').textContent = String(hours).padStart(2,'0');
+    document.getElementById('cd-mins').textContent  = String(mins).padStart(2,'0');
+
+    if (days < 30) {
+      document.getElementById('countdown-widget').querySelectorAll('.cd-num')
+        .forEach(el => el.classList.add('cd-urgent'));
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 60000);
+
+
+  /* ── Ward search ─────────────────────────────────────────────── */
+  let _wardSearchData = [];   // [{ward_id, ward_name, score, band, zone_name}]
+
+  async function _ensureWardSearchData() {
+    if (_wardSearchData.length > 0) return;
+    // Build from readiness data if available, else from map state features
+    if (_rpData.length > 0) {
+      _wardSearchData = _rpData.map(w => ({
+        ward_id:   w.ward_id,
+        ward_name: w.ward_name,
+        zone_name: w.zone_name,
+        score:     w.readiness_score,
+        band:      w.band,
+        flood_type: w.flood_type,
+      }));
+      return;
+    }
+    // Fallback: build from loaded ward GeoJSON layer
+    if (wardLayer) {
+      wardLayer.eachLayer(layer => {
+        const p = layer.feature?.properties || {};
+        const ws = p.ws_score;
+        const band = ws === null ? 'green' : ws < 0 ? 'red' : ws < 70 ? 'amber' : 'green';
+        _wardSearchData.push({
+          ward_id:   p.ward_id,
+          ward_name: p.ward_name || '—',
+          zone_name: p.zone_name || '',
+          score:     ws !== null ? Math.round(ws) : null,
+          band,
+        });
+      });
+    }
+  }
+
+  async function wardSearch(q) {
+    await _ensureWardSearchData();
+    const results = document.getElementById('ward-search-results');
+    if (!q || q.length < 2) { results.classList.remove('open'); return; }
+
+    const ql = q.toLowerCase();
+    const matches = _wardSearchData
+      .filter(w => w.ward_name.toLowerCase().includes(ql) ||
+                   (w.zone_name || '').toLowerCase().includes(ql))
+      .slice(0, 8);
+
+    if (matches.length === 0) { results.classList.remove('open'); return; }
+
+    results.innerHTML = matches.map(w => {
+      const scoreStr = w.score !== null ? w.score.toFixed(0) : '—';
+      return `
+        <div class="ws-result" onmousedown="wardSearchSelect(${w.ward_id}, '${(w.ward_name||'').replace(/'/g,"\\'")}')">
+          <div class="ws-result-name">${w.ward_name}<div style="font-size:10px;color:var(--text-dim)">${w.zone_name||''}</div></div>
+          <span class="ws-result-score ${w.band}">${scoreStr}</span>
+        </div>`;
+    }).join('');
+
+    results.classList.add('open');
+  }
+
+  function wardSearchClose() {
+    document.getElementById('ward-search-results')?.classList.remove('open');
+  }
+
+  function wardSearchSelect(wardId, wardName) {
+    document.getElementById('ward-search').value = wardName;
+    wardSearchClose();
+    // Zoom to ward on map
+    if (wardLayer) {
+      wardLayer.eachLayer(layer => {
+        const p = layer.feature?.properties || {};
+        if ((p.ward_id || p.id) === wardId) {
+          map.fitBounds(layer.getBounds(), { padding: [60, 60], maxZoom: 14 });
+          layer.openPopup();
+        }
+      });
+    }
+    // Open drill panel
+    openDrillPanel(wardId, wardName);
+    // Invalidate cache so next search re-reads fresh data
+    _wardSearchData = [];
+  }
+
+  // Clear search data cache when readiness data reloads
+  // Patch loadReadiness to also clear ward search cache on reload
+  const _origLoadReadiness = loadReadiness;
+  window._loadReadinessPatchApplied = true;
+  // Override via reassignment (works because original is function declaration)
+  const _patchedLoadReadiness = async function() {
+    _wardSearchData = [];
+    return _origLoadReadiness();
+  };
+  // Replace the global — any future calls to loadReadiness() will use the patched version
+  window.loadReadiness = _patchedLoadReadiness;
+
+
+  /* ════════════════════════════════════════════════════════════════
+     PRESENTATION MODE
+     ════════════════════════════════════════════════════════════════ */
+  let _presentMode = false;
+
+  function togglePresentMode() {
+    _presentMode = !_presentMode;
+    document.body.classList.toggle('present-mode', _presentMode);
+    const btn = document.getElementById('present-btn');
+    btn.innerHTML = _presentMode
+      ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Exit'
+      : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Present';
+    // Invalidate map size after panel shift
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  // Esc exits presentation mode
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && _presentMode) togglePresentMode();
+  });
+
+
+  /* ════════════════════════════════════════════════════════════════
+     WARD COMPARISON MODE
+     ════════════════════════════════════════════════════════════════ */
+  let _compareMode  = false;
+  let _compareWards = [];   // [{ward_id, ward_name}] — max 2
+  let _compareData  = {};   // ward_id → {readiness, detail}
+
+  const BAND_COLORS = { red: '#DC2626', amber: '#D97706', green: '#16A34A' };
+  const ACTION_ITEMS = {
+    red:   ['Desilt all ward drains before June 15','Verify all pump stations','Pre-position NDRF team and flood relief','Issue advance notice to low-lying residents','Confirm evacuation routes + shelter capacity'],
+    amber: ['Complete drain desilting within 3 weeks','Pump station inspection this week','Update ward flood contact list','Mark waterlogging-prone roads','Confirm medical facility preparedness'],
+    green: ['Routine monthly drain inspection','Verify sensor coverage','Ward flood contact list review'],
+  };
+
+  function toggleCompareMode() {
+    _compareMode = !_compareMode;
+    const panel = document.getElementById('compare-panel');
+    panel.classList.toggle('open', _compareMode);
+    if (!_compareMode) {
+      _compareWards = [];
+      _compareData  = {};
+      _renderCompare();
+    }
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  function closeCompare() {
+    _compareMode = false;
+    _compareWards = [];
+    _compareData  = {};
+    document.getElementById('compare-panel').classList.remove('open');
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  async function addWardToCompare(wardId, wardName) {
+    if (!_compareMode) return;
+
+    // Replace if same slot already filled, else fill next empty slot
+    if (_compareWards.length === 2) _compareWards = [];
+    if (_compareWards.some(w => w.ward_id === wardId)) return;
+    _compareWards.push({ ward_id: wardId, ward_name: wardName });
+
+    // Fetch data if not cached
+    if (!_compareData[wardId]) {
+      try {
+        const [rdResp, detResp] = await Promise.all([
+          fetch(`/readiness/ward/${wardId}`),
+          fetch(`/ward/${wardId}/detail`),
+        ]);
+        const rd  = rdResp.ok  ? await rdResp.json()  : null;
+        const det = detResp.ok ? await detResp.json() : null;
+        _compareData[wardId] = { readiness: rd, detail: det };
+      } catch(e) {
+        _compareData[wardId] = { readiness: null, detail: null };
+      }
+    }
+    _renderCompare();
+  }
+
+  function _renderCompare() {
+    const hint = document.getElementById('cp-hint');
+    if (hint) hint.textContent = _compareWards.length === 0
+      ? 'Click any ward on the map to add it'
+      : _compareWards.length === 1
+      ? `${_compareWards[0].ward_name} selected — click second ward`
+      : 'Comparing two wards';
+
+    ['left','right'].forEach((side, i) => {
+      const col = document.getElementById(`cp-${side}`);
+      if (!col) return;
+      const w = _compareWards[i];
+
+      if (!w) {
+        col.innerHTML = `<div class="cp-empty">
+          <div>${i === 0 ? 'Select a ward' : 'Select a second ward'}</div>
+          <div style="font-size:11px">${i === 0 ? 'Click map to select' : 'Select first ward first'}</div>
+        </div>`;
+        return;
+      }
+
+      const d = _compareData[w.ward_id] || {};
+      const rd  = d.readiness || {};
+      const det = d.detail    || {};
+      const band  = rd.band  || 'green';
+      const score = rd.readiness_score != null ? rd.readiness_score.toFixed(1) : '—';
+      const color = BAND_COLORS[band] || '#16A34A';
+      const ft    = rd.flood_type || '—';
+      const ni    = det.nearby_infrastructure || {};
+      const actions = (ACTION_ITEMS[band] || ACTION_ITEMS.green)
+        .map(a => `<li>${a}</li>`).join('');
+
+      col.innerHTML = `
+        <div class="cp-ward-title">${w.ward_name}</div>
+        <div class="cp-ward-zone">${rd.zone_name || det.zone_name || '—'}</div>
+        <div class="cp-score-row">
+          <div class="cp-score-big" style="color:${color}">${score}</div>
+          <div>
+            <div class="cp-score-meta" style="font-weight:600;color:${color}">${(rd.band_label||band).toUpperCase()}</div>
+            <div class="cp-score-meta">${ft.charAt(0).toUpperCase()+ft.slice(1)} flood type</div>
+          </div>
+        </div>
+        <div class="cp-metric-grid">
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.mean_elevation ? det.mean_elevation+'m' : '—'}</div>
+            <div class="cp-metric-lbl">Elevation</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.hotspot_count ?? '—'}</div>
+            <div class="cp-metric-lbl">Hotspots</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.times_triggered_30d ?? '—'}</div>
+            <div class="cp-metric-lbl">Triggered (30d)</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:${color}">${rd.trigger_rate_pct != null ? rd.trigger_rate_pct+'%' : '—'}</div>
+            <div class="cp-metric-lbl">Trigger rate</div>
+          </div>
+        </div>
+        <div class="cp-metric-grid">
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:#DC2626">${ni.hospitals??0}</div>
+            <div class="cp-metric-lbl">Hospitals</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:#2563EB">${ni.fire_stations??0}</div>
+            <div class="cp-metric-lbl">Fire stn</div>
+          </div>
+        </div>
+        <div class="cp-section-lbl">Pre-monsoon actions</div>
+        <ul class="cp-action-list">${actions}</ul>
+        <div style="margin-top:10px">
+          <a href="/export/ward/${w.ward_id}" target="_blank" class="export-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </a>
+        </div>`;
+    });
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     ALERT FEED — structured real-time toasts
+     ════════════════════════════════════════════════════════════════ */
+  const _alertHistory = [];
+  const _alertDedupMap = {};
+  const MAX_TOASTS    = 4;
+  const TOAST_TTL_MS  = 8000;
+  const ALERT_DEDUP_MS = 90000;
+
+  function showAlert(type, title, msg) {
+    // type: 'info' | 'warn' | 'critical' | 'success'
+    const feed = document.getElementById('alert-feed');
+    if (!feed) return;
+
+    const dedupKey = `${type}|${title}|${msg}`;
+    const nowMs = Date.now();
+    if (_alertDedupMap[dedupKey] && (nowMs - _alertDedupMap[dedupKey]) < ALERT_DEDUP_MS) {
+      return;
+    }
+    _alertDedupMap[dedupKey] = nowMs;
+
+    const now = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    const icons = { info: 'ℹ', warn: '⚠', critical: '🔴', success: '✓' };
+
+    const toast = document.createElement('div');
+    toast.className = `alert-toast toast-${type}`;
+    toast.innerHTML = `
+      <span class="toast-icon">${icons[type] || 'ℹ'}</span>
+      <div class="toast-body">
+        <div class="toast-title">${title}</div>
+        <div class="toast-msg">${msg}</div>
+      </div>
+      <span class="toast-time">${now}</span>
+      <span class="toast-dismiss" onclick="this.closest('.alert-toast').remove()">✕</span>`;
+
+    feed.appendChild(toast);
+    _alertHistory.push({ type, title, msg, time: now });
+
+    // Auto-dismiss after TTL
+    setTimeout(() => {
+      toast.classList.add('toast-dismissing');
+      setTimeout(() => toast.remove(), 400);
+    }, TOAST_TTL_MS);
+
+    // Cap visible toasts
+    const toasts = feed.querySelectorAll('.alert-toast');
+    if (toasts.length > MAX_TOASTS) toasts[0].remove();
+  }
+
+  // Wire alerts into existing events
+  // Patch runCycle to show alert on completion
+  const _origRunCycle = runCycle;
+  window.runCycle = async function() {
+    await _origRunCycle.apply(this, arguments);
+  };
+
+  // Patch simulateCloudburst to show alert
+  const _origSimulateCloudburst = simulateCloudburst;
+  window.simulateCloudburst = async function() {
+    showAlert('warn', 'Cloudburst simulation', 'Extreme rainfall event injected — scoring cycle triggered');
+    await _origSimulateCloudburst.apply(this, arguments);
+  };
+
+  // Show Yamuna alert when level is elevated
+  const _origRefreshYamuna = refreshYamuna;
+  window.refreshYamuna = async function() {
+    await _origRefreshYamuna.apply(this, arguments);
+    const pill = document.getElementById('yamuna-pill');
+    if (pill) {
+      const lvl = pill.textContent.trim();
+      if (lvl === 'DANGER' || lvl === 'EXTREME') {
+        showAlert('critical', 'Yamuna — ' + lvl, 'Hathnikund discharge exceeds threshold. Advance warning active.');
+      } else if (lvl === 'WATCH' || lvl === 'WARNING') {
+        showAlert('warn', 'Yamuna — ' + lvl, 'Elevated discharge at Hathnikund. Monitor closely.');
+      }
+    }
+  };
+
+  // WS: show toast on cycle push with triggered count
+  // Patch the existing ws.onmessage cycle handler via alert system
+  const _alertOnWsCycle = (msg) => {
+    if (msg.type !== 'cycle') return;
+    const t = msg.wards_triggered;
+    if (t > 50) showAlert('critical', `${t} wards triggered`, 'Critical rainfall event — pumps dispatched automatically');
+    else if (t > 10) showAlert('warn', `${t} wards triggered`, 'Elevated flood risk — pump dispatch initiated');
+    else if (t > 0)  showAlert('info',  `${t} wards triggered`, 'Minor rainfall event — monitoring active');
+  };
+
+  // Extend ws.onmessage to include alert toasts
+  const _origConnectWS = connectWS;
+  // connectWS runs once at init — patch after it sets ws.onmessage
+  setTimeout(() => {
+    if (typeof ws !== 'undefined' && ws) {
+      const existingHandler = ws.onmessage;
+      ws.onmessage = async (evt) => {
+        if (existingHandler) await existingHandler(evt);
+        try {
+          const msg = JSON.parse(evt.data);
+          _alertOnWsCycle(msg);
+        } catch(_) {}
+      };
+    }
+  }, 2000);
+
+
+  /* ════════════════════════════════════════════════════════════════
+     WIRE COMPARE MODE INTO MAP WARD CLICKS
+     ════════════════════════════════════════════════════════════════ */
+  // Add Compare button to control bar (done in JS to avoid HTML injection complexity)
+  document.addEventListener('DOMContentLoaded', () => {
+    // Compare button
+    const ctrlBar = document.getElementById('control-bar');
+    if (ctrlBar) {
+      const sep = document.createElement('div');
+      sep.className = 'ctrl-sep';
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-ghost';
+      btn.id = 'btn-compare';
+      btn.dataset.mode = 'analysis';
+      btn.style.cssText = 'border:1px solid var(--purple,#7C3AED);color:var(--purple,#7C3AED);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px';
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Compare`;
+      btn.onclick = () => {
+        toggleCompareMode();
+        btn.style.background = _compareMode ? 'var(--purple,#7C3AED)' : 'transparent';
+        btn.style.color      = _compareMode ? '#fff' : 'var(--purple,#7C3AED)';
+      };
+      // Insert before the flex spacer at the end
+      const spacer = ctrlBar.querySelector('span[style*="flex:1"]');
+      if (spacer) { ctrlBar.insertBefore(sep, spacer); ctrlBar.insertBefore(btn, spacer); }
+      else { ctrlBar.appendChild(sep); ctrlBar.appendChild(btn); }
+
+      setControlMode(controlMode);
+    }
+  });
+
+  // Tag control-bar actions by mode and apply initial filter.
+  (function initControlModes() {
+    const opIds = ['btn-cycle', 'btn-storm', 'btn-reset'];
+    const anIds = ['btn-infra', 'btn-elev', 'btn-backtest', 'btn-readiness', 'btn-history', 'btn-report'];
+    opIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('data-mode', 'operations');
+    });
+    anIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('data-mode', 'analysis');
+    });
+    setControlMode(controlMode);
+  })();
+
+  // Patch openDrillPanel to also feed compare mode
+  const _origOpenDrillPanel = openDrillPanel;
+  window.openDrillPanel = function(wardId, wardName) {
+    if (_compareMode) {
+      addWardToCompare(wardId, wardName);
+      // Don't open drill panel in compare mode
+      return;
+    }
+    _origOpenDrillPanel.apply(this, arguments);
+  };
+
 </script>
 </body>
 </html>

@@ -1,271 +1,166 @@
-# Urban Hydrology Engine
+# Urban Hydrology Engine — Delhi Flood Intelligence System
 
-**Real-time flood-risk scoring and pump-dispatch optimization for Delhi's 290 municipal wards.**
+Real-time flood-risk scoring, Pre-Monsoon Readiness Score, and pump-dispatch optimisation for Delhi's 290 municipal wards.
 
-Built with FastAPI, PostGIS, PuLP linear programming, and real 2024 monsoon data. A single-page Leaflet dashboard provides live ward-level risk maps, automated dispatch recommendations, and historical monsoon analytics.
-
----
-
-## Features
-
-| Feature | Description |
-|---|---|
-| **PMRS Scoring** | Per-ward flood risk scored via rainfall intensity, drainage capacity, infrastructure proximity, and terrain elevation |
-| **LP Dispatch** | PuLP linear program optimizes pump allocation across triggered wards every cycle |
-| **290 Real Wards** | Delhi ward boundaries from Datameet, with zone classification |
-| **32,826 Hotspots** | Flood-risk grid generated from ward geometries |
-| **1,235 Critical Infrastructure** | Hospitals, substations, fire stations from OpenStreetMap — proximity penalties in scoring |
-| **SRTM Elevation** | 90m DEM terrain classification (floodplain to ridge) with runoff multipliers |
-| **Real Monsoon Data** | 122 days of 2024 monsoon rainfall from Open-Meteo (922.9mm total) |
-| **Live Weather** | OpenWeatherMap polling with auto-triggered scoring cycles |
-| **Vector Tiles** | pg_tileserv serves hotspot layers as Mapbox Vector Tiles |
-| **Historical Analytics** | Stacked bar chart with event annotations, worst-ward rankings, season comparison |
+**Stack:** FastAPI · PostgreSQL/PostGIS (Supabase) · Leaflet.js · Chart.js  
+**Deployment:** Render (free tier) + Supabase (free tier) — **zero cost**  
+**Local dev:** Python + any terminal — **no Docker required**
 
 ---
 
-## Architecture
+## Zero to running — 5 minutes
+
+### Step 1 — Supabase (free, no credit card)
+
+1. Go to [supabase.com](https://supabase.com) → New project
+2. Wait ~2 minutes for provisioning
+3. **Project Settings → Database → URI tab** → copy the connection string:
+   ```
+   postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-REF].supabase.co:5432/postgres
+   ```
+   > Use the **URI** tab, NOT the "Connection pooling" tab
+
+### Step 2 — Render (free, no credit card)
+
+1. [render.com](https://render.com) → New → **Blueprint** → connect this repo
+2. Render detects `render.yaml` automatically
+3. Set two environment variables in the Render dashboard:
+   - `DATABASE_URL` → your Supabase URI from Step 1
+   - `OWM_API_KEY` → free key from [openweathermap.org](https://openweathermap.org/api) *(optional)*
+4. Deploy
+
+**First deploy takes ~5 minutes** — seeds 290 wards, 32,826 hotspots, and 122 days of monsoon history automatically. All subsequent deploys are instant.
+
+### Step 3 — Open the dashboard
 
 ```
-+------------------------------------------------------------------+
-|                        Browser (Leaflet.js)                       |
-|  +-----------+  +----------+  +----------+  +-----------------+  |
-|  | Ward Map  |  | Hotspots |  | Controls |  | History Panel   |  |
-|  | GeoJSON   |  | VT/PBF   |  | Console  |  | Chart.js        |  |
-|  +-----+-----+  +-----+----+  +-----+----+  +-------+---------+  |
-+---------+------------+--------------+----------------+------------+
-          |            |              |                |
-          v            v              v                v
-+-------------------------------------------------------------------+
-|                    FastAPI Backend (:8000)                         |
-|                                                                   |
-|  /map/state --- /run/cycle --- /history/* --- /weather/status      |
-|  /map/elevation  /ingest/rain    /map/infrastructure  /reset      |
-|                  /ingest/sensor  /city/bounds     /cycle/latest   |
-|                                                                   |
-|  +--------------+  +--------------+  +----------------+           |
-|  |  scoring.py  |  | dispatch_lp  |  |  weather.py    |           |
-|  |  PMRS algo   |  | PuLP LP      |  |  OWM + sched   |           |
-|  +------+-------+  +------+-------+  +-------+--------+           |
-+----------+----------------+------------------+--------------------+
-           |                |                  |
-           v                v                  v
-+-------------------------------------------------------------------+
-|              PostgreSQL 15 + PostGIS 3.3                           |
-|                                                                   |
-|  wards (290)  hotspots (32,826)  dispatch_runs  rain_events       |
-|  sensor_events  critical_infrastructure (1,235)  ward_elevation   |
-|                                                                   |
-|     <---- pg_tileserv (:7800) --- serves MVT tiles                |
-+-------------------------------------------------------------------+
+https://YOUR-APP-NAME.onrender.com
 ```
 
 ---
 
-## Tech Stack
+## Local development
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Frontend** | Leaflet.js 1.9.4, Chart.js 4.4, Leaflet.VectorGrid | Map rendering, charts, vector tiles |
-| **API** | FastAPI 0.111, Uvicorn, Pydantic 2.7 | Async REST API with auth |
-| **Database** | PostgreSQL 15, PostGIS 3.3, asyncpg | Spatial queries, GeoJSON generation |
-| **Tile Server** | pg_tileserv | Mapbox Vector Tiles from PostGIS |
-| **Optimization** | PuLP 2.8 | Linear programming for pump dispatch |
-| **Geospatial** | GeoAlchemy2, Shapely, GDAL, rasterio | Spatial ORM, geometry ops, DEM processing |
-| **Weather** | OpenWeatherMap API, APScheduler | Live rainfall polling, auto-cycle triggers |
-| **Containerization** | Docker Compose 3.9 | 3-service stack (db, backend, tileserv) |
+No Docker. Needs Python 3.11+ and your Supabase URI.
+
+**One-time setup:**
+```bash
+cd urban-hydrology-engine
+pip install -r backend/requirements.txt
+
+# Windows
+copy backend\.env.example backend\.env
+
+# Mac/Linux
+cp backend/.env.example backend/.env
+```
+
+Edit `backend/.env` — set `DATABASE_URL` to your Supabase URI. Everything else has defaults.
+
+**Start the app:**
+
+Windows (PowerShell):
+```powershell
+.\run_local.ps1
+```
+
+Mac / Linux:
+```bash
+cd backend
+export $(grep -v '#' .env | xargs)
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Open `http://localhost:8000`
 
 ---
 
-## Database Schema
+## Verify everything works
 
-| Table | Rows | Description |
-|---|---|---|
-| `wards` | 290 | Delhi ward polygons with zone, centroid, area |
-| `hotspots` | 32,826 | Flood-risk grid cells with capacity (0-100) |
-| `rain_events` | dynamic | Rainfall polygon events with intensity |
-| `sensor_events` | dynamic | IoT capacity-change deltas per hotspot |
-| `dispatch_runs` | ~37,000+ | LP optimization results per ward per cycle |
-| `critical_infrastructure` | 1,235 | Hospitals (871), substations (324), fire stations (40) |
-| `ward_elevation` | 290 | SRTM elevation stats, terrain class, runoff multiplier |
+```bash
+# Quick health check
+python backend/scripts/healthcheck.py --local
+
+# Full demo — readiness → Yamuna → cloudburst → cycle → 2023 backtest
+python backend/scripts/healthcheck.py --local --demo
+
+# Against live Render deployment
+python backend/scripts/healthcheck.py --base https://YOUR-APP.onrender.com --demo
+```
 
 ---
 
-## API Endpoints
+## Environment variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DATABASE_URL` | **Yes** | — | Supabase PostgreSQL URI |
+| `OWM_API_KEY` | No | — | OpenWeatherMap key (live rain polling) |
+| `API_SECRET_KEY` | No | `hydro-mvp-secret-2026` | Key for write endpoints |
+| `CITY_LAT` | No | `28.65` | Delhi centre latitude |
+| `CITY_LON` | No | `77.22` | Delhi centre longitude |
+| `RAIN_POLL_INTERVAL_SECONDS` | No | `600` | Weather polling interval (seconds) |
+| `TILESERV_URL` | No | `` (empty) | Vector tile server — leave empty on free tier |
+
+---
+
+## API reference
+
+Write endpoints require header: `X-API-Key: hydro-mvp-secret-2026`
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `GET` | `/health` | No | Health check |
-| `GET` | `/map/state` | No | All wards as GeoJSON with scores + status |
-| `GET` | `/map/infrastructure` | No | Critical infrastructure points as GeoJSON |
-| `GET` | `/map/elevation` | No | Ward elevation choropleth as GeoJSON |
-| `GET` | `/city/bounds` | No | City center, bounds, ward/hotspot counts |
-| `GET` | `/weather/status` | No | Current OWM weather + rain state |
-| `GET` | `/cycle/latest` | No | Timestamp of last scoring cycle |
-| `POST` | `/run/cycle` | API key | Run PMRS scoring + LP dispatch |
-| `POST` | `/ingest/rain` | API key | Submit a rainfall polygon event |
-| `POST` | `/ingest/sensor` | API key | Submit a sensor capacity delta |
-| `POST` | `/reset` | API key | Reset all events + dispatch history |
-| `GET` | `/history/timeline` | No | Daily dispatch breakdown (stacked bar data) |
-| `GET` | `/history/worst-wards` | No | Top wards by trigger count |
-| `GET` | `/history/summary` | No | Aggregate stats for a time period |
-| `GET` | `/history/seasons` | No | Available monsoon seasons in DB |
-
-### Query Parameters (History)
-
-- `days` — Number of days to look back (default: 30)
-- `year` — Monsoon year filter, e.g. `2024` (overrides days to Jun 1-Sep 30)
-- `limit` — Max wards for worst-wards endpoint (default: 10)
-
----
-
-## Quick Start
-
-### Prerequisites
-
-- Docker and Docker Compose
-- ~2 GB disk (PostGIS image + SRTM data)
-
-### 1. Start Services
-
-```bash
-docker compose up --build -d
-```
-
-Three containers launch: `db` (PostGIS), `backend` (FastAPI), `tileserv` (pg_tileserv).
-
-### 2. Seed the Database
-
-```bash
-# Import 290 Delhi ward boundaries
-docker compose exec backend python scripts/import_delhi_wards.py
-
-# Import OSM infrastructure (hospitals, substations, fire stations)
-docker compose exec backend python scripts/import_osm_infrastructure.py
-
-# Calculate infrastructure proximity penalties
-docker compose exec backend python scripts/update_hotspot_penalties.py
-
-# Process SRTM elevation data (requires srtm_52_07.tif in backend/data/srtm/)
-docker compose exec backend python scripts/calculate_elevation.py
-docker compose exec backend python scripts/update_hotspot_elevation.py
-
-# Seed 2024 monsoon historical data (122 days, real rainfall)
-docker compose exec backend python scripts/seed_history.py
-```
-
-### 3. Open Dashboard
-
-Navigate to **http://localhost:8000** — the full dashboard loads automatically.
-
-### 4. Run a Cycle
-
-Click **Run Cycle** on the control bar, or use the API:
-
-```bash
-curl -X POST http://localhost:8000/run/cycle \
-  -H "X-API-Key: hydro-mvp-secret-2026"
-```
-
-### 5. Simulate a Cloudburst
-
-Click **Cloudburst** on the dashboard, or manually:
-
-```bash
-# Push extreme rainfall across Delhi
-curl -X POST http://localhost:8000/ingest/rain \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: hydro-mvp-secret-2026" \
-  -d '{"geojson_polygon": {"type":"Polygon","coordinates":[[[77.0,28.5],[77.4,28.5],[77.4,28.8],[77.0,28.8],[77.0,28.5]]]}, "intensity_r": 8.5}'
-
-# Then run scoring cycle
-curl -X POST http://localhost:8000/run/cycle \
-  -H "X-API-Key: hydro-mvp-secret-2026"
-```
+| GET | `/health` | No | DB connectivity check |
+| GET | `/map/state` | No | 290 wards as GeoJSON with live scores |
+| GET | `/map/infrastructure` | No | Hospitals, substations, fire stations |
+| GET | `/map/elevation` | No | Ward elevation choropleth |
+| GET | `/map/floodline` | No | Yamuna flood zone classification |
+| GET | `/readiness/scores` | No | Pre-Monsoon Readiness Score — all wards |
+| GET | `/readiness/summary` | No | Aggregate stats + days to monsoon |
+| GET | `/readiness/ward/{id}` | No | Single ward readiness detail |
+| GET | `/yamuna/status` | No | Hathnikund discharge + advance warning |
+| GET | `/ssi` | No | System Saturation Index |
+| GET | `/forecast/6hour` | No | 6-hour rainfall forecast |
+| GET | `/weather/status` | No | Current weather |
+| GET | `/backtest/2023/status` | No | 2023 replay job progress |
+| GET | `/backtest/2023/result` | No | 2023 replay results |
+| GET | `/export/ward/{id}` | No | Printable HTML ward report |
+| GET | `/export/summary` | No | Printable all-ward league table |
+| GET | `/ward/{id}/detail` | No | Ward score history + infrastructure |
+| POST | `/run/cycle` | **Yes** | Run PMRS scoring + LP dispatch |
+| POST | `/ingest/rain` | **Yes** | Submit rainfall event |
+| POST | `/backtest/2023` | **Yes** | Start 2023 flood replay |
+| POST | `/reset` | **Yes** | Reset all events |
 
 ---
 
-## Scoring Algorithm (PMRS)
+## Troubleshooting
 
-The **Pump-dispatch Multi-factor Risk Score** combines four inputs per ward:
+**Map is empty after deploy**  
+Still seeding. Wait 3–5 minutes and refresh. Check Render logs for `AUTO-SEED COMPLETE`.
 
-| Factor | Weight | Source |
-|---|---|---|
-| Rainfall intensity | 40% | Rain events overlapping ward hotspots |
-| Drainage capacity | 30% | Hotspot capacity values (degraded by sensor events) |
-| Infrastructure proximity | 20% | 7-tier penalty from nearby hospitals/substations/fire stations |
-| Terrain elevation | 10% | SRTM-derived runoff multiplier (1.0x flat to 3.5x ridge) |
+**`DATABASE_URL` error**  
+Use the **URI** tab in Supabase, not the pooler. The app handles both `postgresql://` and `postgres://` prefixes automatically.
 
-Wards scoring below threshold are flagged **TRIGGERED**. Wards with negative scores are **CRITICAL**. The LP solver then optimizes pump allocation across all triggered wards to minimize total unmet demand.
+**`Connection refused` on healthcheck**  
+App isn't running. Start it first with `.\run_local.ps1`.
 
----
+**Render deploy fails at GDAL**  
+Transient build issue. Trigger a manual redeploy from the Render dashboard.
 
-## Data Sources
-
-| Data | Source | Details |
-|---|---|---|
-| Ward boundaries | [Datameet](https://github.com/datameet) | 290 Delhi wards, GeoJSON |
-| Infrastructure | OpenStreetMap via Overpass API | 871 hospitals, 324 substations, 40 fire stations |
-| Elevation | NASA SRTM 90m | Tile srtm_52_07 covering Delhi |
-| 2024 Monsoon | [Open-Meteo](https://open-meteo.com/) | Jun 1-Sep 30 2024, daily totals, 922.9mm cumulative |
-| Live weather | OpenWeatherMap 2.5 | Real-time rain detection + auto-cycle |
-| Basemap tiles | CartoDB Positron | Light minimal basemap |
+**Backtest takes 20–40 seconds**  
+Expected. It scores 290 wards against 6 rain events. The progress bar updates live via WebSocket. Don't refresh.
 
 ---
 
-## Project Structure
+## Cost
 
-```
-urban-hydrology-engine/
-├── docker-compose.yml              # 3-service stack
-├── frontend/
-│   └── index.html                  # Single-page dashboard (~1,800 lines)
-└── backend/
-    ├── Dockerfile                  # Python 3.11 + GDAL + g++
-    ├── requirements.txt
-    ├── app/
-    │   ├── main.py                 # FastAPI app, static mount, startup
-    │   ├── db.py                   # Async engine, ORM models
-    │   ├── auth.py                 # X-API-Key verification
-    │   ├── schemas.py              # Pydantic request/response models
-    │   ├── api/
-    │   │   ├── map_state.py        # All map, cycle, history routes
-    │   │   └── ingest.py           # Rain + sensor ingest routes
-    │   └── services/
-    │       ├── scoring.py          # PMRS scoring algorithm
-    │       ├── dispatch_lp.py      # PuLP LP solver
-    │       ├── weather.py          # OWM polling + APScheduler
-    │       └── geo.py              # Spatial utilities
-    ├── data/
-    │   ├── delhi_wards.geojson     # 290 ward boundaries
-    │   ├── delhi_monsoon_2024.json # Real rainfall data
-    │   ├── srtm/                   # SRTM elevation tiles
-    │   └── osm/                    # OSM infrastructure JSONs
-    └── scripts/
-        ├── import_delhi_wards.py   # Ward boundary import
-        ├── import_osm_infrastructure.py
-        ├── update_hotspot_penalties.py
-        ├── calculate_elevation.py
-        ├── update_hotspot_elevation.py
-        ├── seed_history.py         # 2024 monsoon simulation
-        └── seed_city.py            # Original synthetic seed
-```
+| Service | Monthly cost |
+|---|---|
+| Render (free tier) | $0 |
+| Supabase (free tier, 500MB) | $0 |
+| Open-Meteo | $0 |
+| OpenWeatherMap (free tier) | $0 |
+| **Total** | **$0** |
 
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `DATABASE_URL` | `postgresql://hydro:hydro123@db:5432/hydrology` | PostGIS connection string |
-| `OWM_API_KEY` | — | OpenWeatherMap API key |
-| `API_SECRET_KEY` | — | X-API-Key header value for write endpoints |
-| `CITY_LAT` | `28.65` | City center latitude |
-| `CITY_LON` | `77.22` | City center longitude |
-| `RAIN_POLL_INTERVAL_SECONDS` | `600` | Weather polling interval |
-| `RAIN_COVERAGE_DEGREES` | `0.15` | Rainfall polygon radius in degrees |
-
----
-
-## License
-
-MIT
+Free Render tier sleeps after 15 minutes idle — first request after sleep takes ~30 seconds. Fine for demos. For always-on: Render Starter is $7/month.

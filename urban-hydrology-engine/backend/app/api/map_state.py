@@ -85,6 +85,13 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
 
     await conn.commit()
 
+    # Invalidate SSI cache so next /ssi call reflects new stress state
+    try:
+        from app.services.ssi import invalidate_ssi_cache
+        invalidate_ssi_cache()
+    except Exception:
+        pass
+
     return {
         "cycle_completed_at": datetime.utcnow().isoformat(),
         "wards_scored": len(wards),
@@ -207,7 +214,8 @@ async def city_bounds():
         row = (await conn.execute(text("""
             SELECT ST_XMin(ext) AS xmin, ST_YMin(ext) AS ymin,
                    ST_XMax(ext) AS xmax, ST_YMax(ext) AS ymax,
-                   (SELECT count(*) FROM hotspots) AS hotspot_count
+                   (SELECT count(*) FROM hotspots) AS hotspot_count,
+                   (SELECT count(*) FROM wards) AS ward_count
             FROM (SELECT ST_Extent(geom) AS ext FROM wards) sub
         """))).mappings().first()
 
@@ -236,6 +244,9 @@ async def city_bounds():
         "center": [center_lat, center_lng],
         "bbox": [xmin, ymin, xmax, ymax],
         "rain_polygon": rain_polygon,
+        "city_lat": center_lat,
+        "city_lon": center_lng,
+        "ward_count": row["ward_count"],
         "hotspot_count": row["hotspot_count"],
     }
 
@@ -255,55 +266,60 @@ async def reset_city(_auth=Depends(verify_api_key)):
 @router.get("/map/state")
 async def map_state():
     """Return GeoJSON FeatureCollection of wards + hotspot list."""
-    async with engine.connect() as conn:
-        # ── Ward features with latest dispatch_run ───────────────────
-        ward_rows = await conn.execute(text("""
-            SELECT
-                w.id            AS ward_id,
-                w.name          AS ward_name,
-                ST_AsGeoJSON(w.geom)::json AS geometry,
-                dr.ws_score,
-                dr.status,
-                dr.result_json->>'dispatch_message' AS dispatch_message,
-                we.terrain_class,
-                we.mean_elevation,
-                we.runoff_t AS terrain_runoff_t,
-                we.mean_slope
-            FROM wards w
-            LEFT JOIN LATERAL (
-                SELECT ws_score, status, result_json
-                FROM dispatch_runs
-                WHERE ward_id = w.id
-                ORDER BY created_at DESC
-                LIMIT 1
-            ) dr ON true
-            LEFT JOIN ward_elevation we ON we.ward_id = w.id
-            ORDER BY w.id
-        """))
-        ward_features = []
-        for r in ward_rows.mappings().fetchall():
-            ws = r["ws_score"]
-            ward_features.append({
-                "type": "Feature",
-                "geometry": r["geometry"],
-                "properties": {
-                    "ward_id": r["ward_id"],
-                    "ward_name": r["ward_name"],
-                    "ws_score": ws,
-                    "status": r["status"] or "no_data",
-                    "dispatch_message": r["dispatch_message"] or "",
-                    "color": _ward_color(ws),
-                    "terrain_class": r["terrain_class"],
-                    "mean_elevation": round(r["mean_elevation"], 1) if r["mean_elevation"] is not None else None,
-                    "terrain_runoff_t": r["terrain_runoff_t"],
-                    "mean_slope": round(r["mean_slope"], 2) if r["mean_slope"] is not None else None,
-                },
-            })
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SET LOCAL statement_timeout = '25000'"))
+            # ── Ward features with latest dispatch_run ───────────────────
+            ward_rows = await conn.execute(text("""
+                WITH latest_dispatch AS (
+                    SELECT DISTINCT ON (ward_id)
+                        ward_id,
+                        ws_score,
+                        status,
+                        result_json->>'dispatch_message' AS dispatch_message
+                    FROM dispatch_runs
+                    ORDER BY ward_id, created_at DESC
+                )
+                SELECT
+                    w.id            AS ward_id,
+                    w.name          AS ward_name,
+                    ST_AsGeoJSON(w.geom)::json AS geometry,
+                    dr.ws_score,
+                    dr.status,
+                    dr.dispatch_message,
+                    we.terrain_class,
+                    we.mean_elevation,
+                    we.runoff_t     AS terrain_runoff_t,
+                    we.mean_slope
+                FROM wards w
+                LEFT JOIN latest_dispatch dr ON dr.ward_id = w.id
+                LEFT JOIN ward_elevation we ON we.ward_id = w.id
+                ORDER BY w.id
+            """))
+            ward_features = []
+            for r in ward_rows.mappings().fetchall():
+                ws = r["ws_score"]
+                ward_features.append({
+                    "type": "Feature",
+                    "geometry": r["geometry"],
+                    "properties": {
+                        "ward_id": r["ward_id"],
+                        "ward_name": r["ward_name"],
+                        "ws_score": ws,
+                        "status": r["status"] or "no_data",
+                        "dispatch_message": r["dispatch_message"] or "",
+                        "color": _ward_color(ws),
+                        "terrain_class": r["terrain_class"],
+                        "mean_elevation": round(r["mean_elevation"], 1) if r["mean_elevation"] is not None else None,
+                        "terrain_runoff_t": r["terrain_runoff_t"],
+                        "mean_slope": round(r["mean_slope"], 2) if r["mean_slope"] is not None else None,
+                    },
+                })
 
-    return {
-        "type": "FeatureCollection",
-        "features": ward_features,
-    }
+        return {"type": "FeatureCollection", "features": ward_features}
+    except Exception as exc:
+        print(f"[map_state] Error: {exc}")
+        return {"type": "FeatureCollection", "features": [], "error": str(exc)}
 
 
 # ---------------------------------------------------------------------------

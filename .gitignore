@@ -1,33 +1,37 @@
-# Python
+# ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
 *.egg-info/
 dist/
 build/
+.eggs/
+
+# ── Virtual environments ───────────────────────────────────────────────────
 .venv/
 venv/
-*.egg
+env/
+ENV/
 
-# Environment
+# ── Environment / secrets ─────────────────────────────────────────────────
 .env
-.env.local
+.env.*
+!.env.example
 
-# IDE
-.idea/
+# ── IDE / OS ──────────────────────────────────────────────────────────────
 .vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
+.idea/
+*.DS_Store
 Thumbs.db
 
-# Large data files (SRTM elevation rasters)
-*.tif
-*.zip
+# ── Logs / temp ───────────────────────────────────────────────────────────
+*.log
+*.tmp
+*.bak
+*.swp
 
-# Docker volumes
-pgdata/
-
-# Byte-compiled
-*.pyc
+# ── Docker ────────────────────────────────────────────────────────────────
+docker-compose.override.yml
