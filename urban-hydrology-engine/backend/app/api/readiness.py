@@ -24,11 +24,15 @@ async def _get_scores(force: bool = False) -> list[dict]:
     now = time.monotonic()
     if not force and _cache["scores"] and (now - _cache["ts"]) < _CACHE_TTL:
         return _cache["scores"]
-    async with engine.connect() as conn:
-        scores = await compute_readiness_scores(conn)
-    _cache["scores"] = scores
-    _cache["ts"] = now
-    return scores
+    try:
+        async with engine.connect() as conn:
+            scores = await compute_readiness_scores(conn)
+        _cache["scores"] = scores
+        _cache["ts"] = now
+        return scores
+    except Exception:
+        # DB hiccup — return last good scores if cached, else empty list
+        return _cache["scores"] or []
 
 
 @router.get("/scores")

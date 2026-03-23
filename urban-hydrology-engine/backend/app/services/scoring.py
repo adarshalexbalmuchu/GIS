@@ -10,10 +10,18 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 
-async def compute_ward_score(ward_id: int, conn: AsyncConnection) -> dict:
+async def compute_ward_score(
+    ward_id: int,
+    conn: AsyncConnection,
+    cutoff_override: datetime | None = None,
+) -> dict:
     """
     Compute the PMRS ward score for *ward_id* using rain events
-    from the last 60 minutes.
+    from the last 60 minutes (or from *cutoff_override* if supplied).
+
+    cutoff_override: earliest created_at to include — used by the
+    backtest engine to score against historical rain events instead of
+    the live 60-minute window.
 
     Returns a dict — never writes to the DB.
     """
@@ -43,7 +51,12 @@ async def compute_ward_score(ward_id: int, conn: AsyncConnection) -> dict:
         return _safe_result(ward_id, ward["name"])
 
     # ── Hotspots that intersect recent rain ──────────────────────────
-    cutoff = datetime.utcnow() - timedelta(minutes=60)
+    if cutoff_override is not None:
+        cutoff       = cutoff_override
+        cutoff_upper = cutoff_override + timedelta(hours=24)
+    else:
+        cutoff       = datetime.utcnow() - timedelta(minutes=60)
+        cutoff_upper = datetime.utcnow()
 
     rows = await conn.execute(
         text("""
@@ -57,10 +70,11 @@ async def compute_ward_score(ward_id: int, conn: AsyncConnection) -> dict:
             JOIN rain_events re
               ON ST_Intersects(h.geom, re.geom)
              AND re.created_at >= :cutoff
+             AND re.created_at <  :cutoff_upper
             WHERE h.ward_id = :wid
             GROUP BY h.id, h.capacity_c, h.runoff_t, h.critical_penalty_pc
         """),
-        {"wid": ward_id, "cutoff": cutoff},
+        {"wid": ward_id, "cutoff": cutoff, "cutoff_upper": cutoff_upper},
     )
     hotspots = rows.mappings().fetchall()
 

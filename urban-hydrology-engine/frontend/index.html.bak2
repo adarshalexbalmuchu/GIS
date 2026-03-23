@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FloodReady Delhi — Pre-Monsoon Intelligence System</title>
+<title>Delhi Municipal Flood Intelligence</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2300BCD4'/><text y='24' x='4' font-size='22'>🌊</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -13,7 +13,6 @@
 <script src="https://unpkg.com/leaflet.vectorgrid@1.3.0/dist/Leaflet.VectorGrid.bundled.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <style>
   /* ═══════════════════════════════════════════════════════════════
      DESIGN TOKENS — Municipal Intelligence
@@ -49,7 +48,6 @@
     --radius-sm:  6px;
     --header-h:   60px;
     --ctrl-h:     56px;
-    --footer-h:   28px;
     --panel-w:    340px;
     --font:       'DM Sans', system-ui, -apple-system, sans-serif;
     --mono:       'DM Mono', 'Fira Code', monospace;
@@ -207,58 +205,15 @@
     text-align: right;
   }
 
-  /* ── Connection status indicator ─────────────────────────── */
-  #conn-status {
-    display: flex; align-items: center; gap: 5px;
-    font-size: 11px; font-weight: 500;
-    color: rgba(255,255,255,.5);
-    flex-shrink: 0; white-space: nowrap;
-    transition: color .3s;
-  }
-  #conn-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #16A34A;
-    flex-shrink: 0;
-    transition: background .3s;
-    box-shadow: 0 0 5px rgba(22,163,74,.6);
-  }
-  #conn-dot.warn  { background: #D97706; box-shadow: 0 0 5px rgba(217,119,6,.6); }
-  #conn-dot.error { background: #DC2626; box-shadow: 0 0 5px rgba(220,38,38,.6); }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; } 50% { opacity: 0.35; }
-  }
-  #conn-dot.pulsing { animation: pulse-dot 1s ease-in-out infinite; }
-
   /* ═══════════════════════════════════════════════════════════════
      MAIN LAYOUT — Map + Side Panel
      ═══════════════════════════════════════════════════════════════ */
   #main {
     display: flex;
-    height: calc(100vh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
-    height: calc(100dvh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
+    height: calc(100vh - var(--header-h) - var(--ctrl-h));
+    height: calc(100dvh - var(--header-h) - var(--ctrl-h));
     position: relative;
   }
-
-  /* ── Footer bar ─────────────────────────────────────────────── */
-  #footer-bar {
-    height: var(--footer-h);
-    background: var(--navy-dark, #0F1B33);
-    border-top: 1px solid rgba(255,255,255,.07);
-    display: flex; align-items: center; justify-content: center;
-    padding: 0 20px;
-    font-size: 10.5px;
-    color: rgba(255,255,255,.38);
-    letter-spacing: .02em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 0;
-    gap: 0;
-  }
-  #footer-bar .footer-sep { margin: 0 10px; opacity: .35; }
-  #footer-bar a { color: rgba(255,255,255,.45); text-decoration: none; }
-  #footer-bar a:hover { color: var(--cyan-light); }
-  body.present-mode #footer-bar { display: none; }
   #map-container {
     flex: 1;
     position: relative;
@@ -286,22 +241,6 @@
     left: 16px;
   }
   .map-legend.visible { display: block; }
-
-  /* PMRS choropleth legend — bottom-right */
-  #pmrs-legend {
-    display: flex; align-items: center; justify-content: center;
-    gap: 6px; flex-wrap: wrap;
-    padding: 6px 12px; flex-shrink: 0;
-    border-top: 1px solid var(--border);
-    font-size: 11px; color: var(--text-sec);
-    background: var(--bg-card);
-  }
-  .pmrs-leg-item { display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
-  .pmrs-leg-sw {
-    display: inline-block; width: 10px; height: 10px;
-    border-radius: 2px; border: 1px solid; flex-shrink: 0;
-  }
-  .pmrs-leg-sep { color: var(--border); font-weight: 300; }
   .map-legend .legend-title {
     font-weight: 600;
     font-size: 11px;
@@ -319,25 +258,15 @@
      SIDE PANEL — 340px
      ═══════════════════════════════════════════════════════════════ */
   #side-panel {
-    position: fixed;
-    top: var(--header-h);
-    right: 0;
-    width: 380px;
-    height: calc(100vh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
+    width: var(--panel-w);
+    flex-shrink: 0;
     background: var(--bg-panel);
     border-left: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    z-index: 500;
-    transform: translateX(100%);
-    transition: transform .3s cubic-bezier(.4,0,.2,1);
-    box-shadow: -4px 0 20px rgba(0,0,0,.1);
+    transition: transform .3s ease;
   }
-  #side-panel.panel-open {
-    transform: translateX(0);
-  }
-  [data-theme="dark"] #side-panel { box-shadow: -4px 0 20px rgba(0,0,0,.4); }
 
   /* Stat Cards row */
   .stat-cards {
@@ -981,168 +910,6 @@
   #btn-theme:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); }
   #btn-theme svg { pointer-events: none; }
 
-  /* ── Methodology button ───────────────────────────────────── */
-  #btn-methodology {
-    background: none;
-    border: 1px solid rgba(0,188,212,.5);
-    border-radius: 6px;
-    height: 32px;
-    padding: 0 10px;
-    display: flex; align-items: center; gap: 5px;
-    cursor: pointer;
-    color: var(--cyan-light);
-    font-size: 12px;
-    font-weight: 500;
-    font-family: var(--font);
-    transition: all .2s;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  #btn-methodology:hover {
-    background: rgba(0,188,212,.12);
-    border-color: var(--cyan);
-    color: #fff;
-  }
-
-  /* ── Methodology modal ────────────────────────────────────── */
-  #methodology-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.65);
-    z-index: 9000;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  #methodology-overlay.open { display: flex; }
-  #methodology-modal {
-    background: var(--navy);
-    border: 1px solid var(--navy-light);
-    border-radius: 12px;
-    width: 100%;
-    max-width: 680px;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 24px 64px rgba(0,0,0,.6);
-    overflow: hidden;
-  }
-  #methodology-modal .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--navy-light);
-    flex-shrink: 0;
-  }
-  #methodology-modal .modal-header h2 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.3;
-  }
-  #methodology-modal .modal-header h2 span {
-    color: var(--cyan-light);
-  }
-  #btn-modal-close {
-    background: none;
-    border: 1px solid rgba(255,255,255,.15);
-    border-radius: 6px;
-    width: 30px; height: 30px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    color: rgba(255,255,255,.5);
-    font-size: 16px;
-    line-height: 1;
-    transition: all .2s;
-    flex-shrink: 0;
-  }
-  #btn-modal-close:hover { background: rgba(255,255,255,.08); color: #fff; }
-  #methodology-modal .modal-body {
-    overflow-y: auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .modal-section h3 {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--cyan-light);
-    text-transform: uppercase;
-    letter-spacing: .7px;
-    margin-bottom: 10px;
-  }
-  .modal-formula {
-    background: var(--navy-dark);
-    border: 1px solid var(--navy-light);
-    border-left: 3px solid var(--cyan);
-    border-radius: var(--radius-sm);
-    padding: 14px 16px;
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--cyan-light);
-    line-height: 1.6;
-    word-break: break-word;
-  }
-  .modal-factor-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .modal-factor {
-    background: var(--navy-dark);
-    border: 1px solid var(--navy-light);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-  }
-  .modal-factor-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 4px;
-  }
-  .modal-factor-label .factor-pct {
-    color: var(--cyan-light);
-    font-family: var(--mono);
-  }
-  .modal-factor p {
-    font-size: 12px;
-    color: rgba(255,255,255,.65);
-    line-height: 1.6;
-  }
-  .modal-source-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .modal-source-row {
-    display: flex;
-    gap: 8px;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .modal-source-row .src-key {
-    color: var(--cyan-light);
-    font-weight: 600;
-    white-space: nowrap;
-    flex-shrink: 0;
-    min-width: 130px;
-  }
-  .modal-source-row .src-val {
-    color: rgba(255,255,255,.65);
-  }
-  .modal-coverage {
-    background: var(--navy-dark);
-    border: 1px solid var(--navy-light);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    font-size: 13px;
-    color: rgba(255,255,255,.75);
-    line-height: 1.6;
-  }
-
   /* ── Loading skeleton states ─────────────────────────────── */
   @keyframes skeleton-pulse {
     0%, 100% { opacity: 1; }
@@ -1541,12 +1308,11 @@
   #rp-list { flex:1;overflow-y:auto;padding:6px 0; }
   #rp-list::-webkit-scrollbar { width:4px; }
   #rp-list::-webkit-scrollbar-thumb { background:var(--border);border-radius:4px; }
-  .rp-ward-row { display:flex;align-items:center;gap:10px;padding:7px 18px;cursor:pointer;border-left:3px solid transparent;transition:background .15s; }
+  .rp-ward-row { display:flex;align-items:center;gap:10px;padding:7px 18px;cursor:pointer;border-left:3px solid transparent;transition:background .1s; }
   .rp-ward-row:hover { background:var(--bg-card); }
   .rp-ward-row.red    { border-left-color:var(--red);    }
   .rp-ward-row.amber  { border-left-color:var(--yellow); }
   .rp-ward-row.green  { border-left-color:var(--green);  }
-  .rp-ward-row.rp-highlight { background:rgba(0,188,212,0.15);outline:1px solid var(--cyan); }
   .rp-ward-rank { font-size:10px;color:var(--text-dim);font-family:var(--mono);min-width:22px;text-align:right; }
   .rp-ward-info { flex:1;min-width:0; }
   .rp-ward-name { font-size:12px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
@@ -1673,7 +1439,7 @@
   .bt-ward-name { font-size: 12px; font-weight: 500; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bt-ward-tags { display: flex; gap: 4px; }
   .bt-tag { font-size: 10px; padding: 1px 6px; border-radius: 3px; }
-  .bt-tag.ref  { background: #FFF7ED; color: #C2410C; border: 1px solid #FB923C; cursor: help; }
+  .bt-tag.ref  { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red); }
   .bt-tag.pred { background: var(--cyan-dim); color: var(--cyan);  border: 1px solid var(--cyan); }
   .bt-ward-score { font-size: 11px; font-family: var(--mono); color: var(--text-sec); min-width: 44px; text-align: right; }
 
@@ -1682,167 +1448,6 @@
   .bt-status-icon { font-size: 32px; margin-bottom: 10px; }
   .bt-status-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
   .bt-status-sub { font-size: 12px; color: var(--text-sec); line-height: 1.6; }
-
-  /* ── Narrative stat strip ──────────────────────────────────── */
-  .bt-narrative {
-    background: linear-gradient(160deg, #1a0808 0%, #2d1010 100%);
-    border-bottom: 1px solid rgba(220,38,38,.35);
-    padding: 18px 18px 14px;
-    flex-shrink: 0;
-  }
-  [data-theme="light"] .bt-narrative { background: linear-gradient(160deg, #fff0f0 0%, #fee2e2 100%); }
-  .bt-narrative-eyebrow {
-    font-size: 10px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .07em; color: rgba(220,38,38,.8); margin-bottom: 8px;
-  }
-  .bt-narrative-peak-row {
-    display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;
-  }
-  .bt-narrative-peak-num {
-    font-size: 52px; font-weight: 800; font-family: var(--mono);
-    color: #DC2626; line-height: 1; letter-spacing: -2px;
-  }
-  .bt-narrative-peak-meta {
-    display: flex; flex-direction: column; gap: 2px;
-  }
-  .bt-narrative-peak-unit { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.7); }
-  [data-theme="light"] .bt-narrative-peak-unit { color: var(--text-sec); }
-  .bt-narrative-peak-sub { font-size: 11px; color: rgba(255,255,255,.45); }
-  [data-theme="light"] .bt-narrative-peak-sub { color: var(--text-dim); }
-  .bt-narrative-stats {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
-  }
-  .bt-nar-stat {
-    text-align: center; padding: 8px 6px; border-radius: 7px;
-    background: rgba(220,38,38,.1); border: 1px solid rgba(220,38,38,.2);
-  }
-  [data-theme="light"] .bt-nar-stat { background: rgba(220,38,38,.06); border-color: rgba(220,38,38,.15); }
-  .bt-nar-stat-val {
-    font-size: 15px; font-weight: 700; font-family: var(--mono); color: #DC2626; line-height: 1;
-  }
-  .bt-nar-stat-lbl {
-    font-size: 9px; color: rgba(255,255,255,.45); text-transform: uppercase;
-    letter-spacing: .04em; margin-top: 3px; line-height: 1.2;
-  }
-  [data-theme="light"] .bt-nar-stat-lbl { color: var(--text-dim); }
-
-  /* ── Pre-run horizontal timeline ──────────────────────────── */
-  .bt-pre-timeline {
-    padding: 14px 18px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
-  }
-  .bt-pre-tl-title {
-    font-size: 10px; font-weight: 600; color: var(--text-sec);
-    text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px;
-  }
-  .bt-tl-track {
-    position: relative; display: flex; align-items: flex-start;
-  }
-  .bt-tl-track::before {
-    content: ''; position: absolute;
-    top: 12px; left: 12px; right: 12px; height: 2px;
-    background: var(--border); z-index: 0;
-  }
-  .bt-tl-node {
-    flex: 1; display: flex; flex-direction: column; align-items: center;
-    position: relative; z-index: 1; gap: 5px;
-  }
-  .bt-tl-dot {
-    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-    border: 2px solid var(--bg-panel); background: var(--border-light);
-    box-shadow: 0 0 0 1px var(--border);
-  }
-  .bt-tl-node.peak  .bt-tl-dot { background: var(--red);    width:16px;height:16px; box-shadow:0 0 0 4px rgba(220,38,38,.25); margin-top:-3px; }
-  .bt-tl-node.high  .bt-tl-dot { background: var(--yellow); width:12px;height:12px; margin-top:-1px; }
-  .bt-tl-node.recede .bt-tl-dot { background: var(--cyan); }
-  .bt-tl-date { font-size: 9px; font-family: var(--mono); color: var(--text-dim); }
-  .bt-tl-rain { font-size: 11px; font-weight: 700; color: var(--text); text-align: center; line-height: 1; }
-  .bt-tl-node.peak .bt-tl-rain { color: var(--red); }
-  .bt-tl-node.high .bt-tl-rain { color: var(--yellow); }
-  .bt-tl-peak-tag {
-    font-size: 8px; font-weight: 800; text-transform: uppercase;
-    padding: 1px 5px; border-radius: 3px; letter-spacing: .04em;
-    background: var(--red-bg); color: var(--red); border: 1px solid var(--red);
-    white-space: nowrap;
-  }
-  .bt-tl-stage { font-size: 9px; color: var(--text-sec); text-align: center; }
-  .bt-tl-cta {
-    margin-top: 14px; text-align: center; font-size: 11px;
-    color: var(--text-sec); line-height: 1.5;
-  }
-  .bt-tl-cta strong { color: var(--text); }
-
-  /* ── Post-run PR statements ────────────────────────────────── */
-  .bt-pr-block {
-    padding: 14px 18px; border-bottom: 1px solid var(--border);
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .bt-pr-statement {
-    border-radius: 8px; padding: 12px 14px;
-    border-left: 4px solid currentColor; display: flex; align-items: center; gap: 14px;
-  }
-  .bt-pr-statement.recall    { color: var(--green); background: var(--green-bg); }
-  .bt-pr-statement.precision { color: var(--cyan);  background: rgba(0,188,212,.08); border-left-color: var(--cyan); }
-  .bt-pr-pct {
-    font-size: 36px; font-weight: 800; font-family: var(--mono);
-    line-height: 1; flex-shrink: 0; min-width: 72px;
-  }
-  .bt-pr-text { font-size: 11px; line-height: 1.55; }
-  .bt-pr-text strong { display: block; font-size: 12px; font-weight: 600; margin-bottom: 2px; }
-  .bt-pr-text span { color: var(--text-sec); }
-
-  /* ── Sample comparison table ───────────────────────────────── */
-  .bt-sample-table-wrap {
-    padding: 12px 18px 14px; border-bottom: 1px solid var(--border);
-  }
-  .bt-sample-table {
-    width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px;
-  }
-  .bt-sample-table th {
-    font-size: 9px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .05em; color: var(--text-sec); text-align: left;
-    padding: 0 6px 6px; border-bottom: 1px solid var(--border);
-  }
-  .bt-sample-table th:last-child { text-align: center; }
-  .bt-sample-table td {
-    padding: 6px 6px; border-bottom: 1px solid var(--border-light);
-    vertical-align: middle; color: var(--text);
-  }
-  .bt-sample-table tr:last-child td { border-bottom: none; }
-  .bt-sample-table td:last-child { text-align: center; font-size: 15px; }
-  .bt-pred-pill {
-    display: inline-block; font-size: 9px; font-weight: 700;
-    padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .03em;
-  }
-  .bt-pred-pill.crit { background: var(--red-bg);   color: var(--red);   border: 1px solid var(--red); }
-  .bt-pred-pill.safe { background: var(--green-bg); color: var(--green); border: 1px solid var(--green); }
-  .bt-flooded-yes { color: var(--red);   font-weight: 600; }
-  .bt-flooded-no  { color: var(--text-dim); }
-
-  /* ── Closing verdict ───────────────────────────────────────── */
-  .bt-verdict {
-    margin: 16px 18px 20px;
-    padding: 18px;
-    background: linear-gradient(135deg, rgba(0,188,212,.06) 0%, rgba(0,188,212,.02) 100%);
-    border: 1px solid rgba(0,188,212,.3);
-    border-radius: 10px;
-  }
-  .bt-verdict-headline {
-    font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 10px;
-  }
-  .bt-verdict-headline em { color: var(--cyan); font-style: normal; }
-  .bt-verdict-stats { display: flex; gap: 10px; margin-bottom: 10px; }
-  .bt-verdict-stat {
-    flex: 1; text-align: center; padding: 8px 6px; border-radius: 7px;
-    background: rgba(0,188,212,.08); border: 1px solid rgba(0,188,212,.2);
-  }
-  .bt-verdict-stat-val {
-    font-size: 22px; font-weight: 800; font-family: var(--mono); color: var(--cyan); line-height: 1;
-  }
-  .bt-verdict-stat-lbl { font-size: 9px; color: var(--text-sec); text-transform: uppercase; letter-spacing: .04em; margin-top: 3px; }
-  .bt-verdict-sub {
-    font-size: 11px; color: var(--text-sec); line-height: 1.6; border-top: 1px solid rgba(0,188,212,.15); padding-top: 10px;
-  }
-  .bt-verdict-sub strong { color: var(--text); }
 
   /* map overlay layer */
   .bt-map-overlay-legend {
@@ -1876,38 +1481,6 @@
   .yamuna-stat-lbl { font-size: 10px; color: var(--text-sec); margin-top: 1px; }
   .yamuna-eta { font-size: 11px; color: var(--text-sec); }
   .yamuna-eta strong { color: var(--text); }
-  .yamuna-source-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: 600; letter-spacing: .03em;
-    padding: 2px 8px; border-radius: 10px;
-    margin-top: 2px;
-    border: 1px solid currentColor;
-  }
-  .yamuna-source-badge.live    { color: #16A34A; background: rgba(22,163,74,.1); }
-  .yamuna-source-badge.proxy   { color: #D97706; background: rgba(217,119,6,.1); }
-  .yamuna-source-badge.unavail { color: #94A3B8; background: rgba(148,163,184,.1); }
-  .yamuna-stat-lbl-wrap { display: flex; align-items: center; gap: 4px; }
-  .yamuna-stat-tooltip {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 13px; height: 13px; border-radius: 50%;
-    background: var(--border); color: var(--text-sec);
-    font-size: 9px; font-weight: 700; cursor: help;
-    flex-shrink: 0; font-style: normal;
-    position: relative;
-  }
-  .yamuna-stat-tooltip:hover::after {
-    content: attr(data-tip);
-    position: absolute; bottom: calc(100% + 6px); left: 50%;
-    transform: translateX(-50%);
-    background: var(--navy-dark, #0F1B33);
-    color: #fff;
-    font-size: 11px; font-weight: 400; font-style: normal;
-    padding: 6px 10px; border-radius: 6px;
-    white-space: normal; width: 220px; text-align: left;
-    box-shadow: 0 4px 12px rgba(0,0,0,.3);
-    z-index: 9999; pointer-events: none;
-    line-height: 1.5;
-  }
 
 
   /* Drill panel enrichments */
@@ -1950,11 +1523,13 @@
   }
   #ftb-floodline.active { background: #DC2626; color: #fff; }
 
-  /* Countdown widget — lives in header */
+  /* Countdown widget */
   #countdown-widget {
-    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 10px; padding: 5px 12px; pointer-events: none;
+    position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+    z-index: 800; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 8px 18px; display: flex; align-items: center; gap: 14px;
+    box-shadow: var(--shadow-md); pointer-events: none;
     transition: opacity .3s;
   }
   #countdown-widget.hidden { opacity: 0; }
@@ -1988,10 +1563,10 @@
                color: var(--text-dim); }
 
 
-  /* Ward search — lives in header-right */
+  /* Ward search */
   #ward-search-wrap {
-    position: relative;
-    display: flex; flex-direction: column; gap: 4px; width: 200px; flex-shrink: 0;
+    position: absolute; top: 12px; right: 12px; z-index: 810;
+    display: flex; flex-direction: column; gap: 4px; width: 220px;
   }
   #ward-search {
     width: 100%; padding: 7px 12px; font-size: 12px;
@@ -2001,7 +1576,6 @@
   }
   #ward-search:focus { border-color: var(--cyan); }
   #ward-search-results {
-    position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 900;
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: 8px; box-shadow: var(--shadow-md);
     max-height: 220px; overflow-y: auto; display: none;
@@ -2037,106 +1611,26 @@
   .export-btn svg   { flex-shrink: 0; }
 
 
-  /* ── Pulsing red dot (backtest button) ──────────────────────── */
-  @keyframes pulse-red {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,.6); }
-    60%       { box-shadow: 0 0 0 5px rgba(220,38,38,0); }
-  }
-  .btn-pulse-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--red); flex-shrink: 0;
-    animation: pulse-red 1.4s ease-in-out infinite;
-  }
-
-  /* ── Map seed overlay (DB seeding in progress) ───────────────── */
-  #map-seed-overlay {
-    display: none;
-    position: absolute; inset: 0; z-index: 600;
-    background: rgba(var(--bg-rgb, 240,242,245),.92);
-    align-items: center; justify-content: center;
-    flex-direction: column; gap: 14px;
-    text-align: center;
-  }
-  #map-seed-overlay.visible { display: flex; }
-  .seed-spinner {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 3px solid var(--border); border-top-color: var(--cyan);
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .seed-title { font-size: 15px; font-weight: 600; color: var(--text); }
-  .seed-sub   { font-size: 12px; color: var(--text-sec); max-width: 340px; line-height: 1.6; }
-
-  /* ── Readiness quick-bar (above ward list) ───────────────────── */
-  #rp-quick-bar {
-    display: flex; gap: 6px; padding: 8px 16px 6px;
-    flex-shrink: 0; border-top: 1px solid var(--border-light);
-  }
-  .rp-qb-pill {
-    flex: 1; text-align: center; padding: 5px 6px; border-radius: 6px;
-    font-size: 11px; font-weight: 600; border: 1px solid currentColor;
-  }
-  .rp-qb-pill .rp-qb-num { font-size: 16px; font-weight: 700; display: block; font-family: var(--mono); line-height: 1.2; }
-  .rp-qb-pill.red   { color: var(--red);   background: var(--red-bg); }
-  .rp-qb-pill.amber { color: var(--yellow); background: var(--yellow-bg); }
-  .rp-qb-pill.green { color: var(--green);  background: var(--green-bg); }
-
-  /* ── Yamuna stat skeleton ────────────────────────────────────── */
-  .yamuna-stat.loading .yamuna-stat-val {
-    background: var(--border-light); color: transparent !important;
-    border-radius: 4px; min-width: 40px; min-height: 18px;
-    animation: skeleton-pulse 1.5s ease-in-out infinite;
-  }
-
-  /* ── Popup readiness block ───────────────────────────────────── */
-  .popup-rs-score {
-    font-size: 28px; font-weight: 700; font-family: var(--mono);
-    text-align: center; padding: 6px 0 4px; line-height: 1;
-  }
-  .popup-rs-band { font-size: 10px; font-weight: 600; text-align: center; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .popup-factors { display: flex; gap: 4px; margin-bottom: 6px; }
-  .popup-factor-pill {
-    flex: 1; text-align: center; padding: 3px 4px; border-radius: 5px;
-    font-size: 9px; font-weight: 600; background: var(--bg-panel);
-    border: 1px solid var(--border); color: var(--text-sec);
-  }
-  .popup-factor-pill span { display: block; font-size: 11px; font-weight: 700; color: var(--text); font-family: var(--mono); }
-  .popup-action {
-    font-size: 11px; padding: 6px 10px; border-radius: 6px;
-    border-left: 3px solid currentColor; line-height: 1.4; margin-bottom: 4px;
-  }
-  .popup-action.red   { color: var(--red);    background: var(--red-bg); }
-  .popup-action.amber { color: var(--yellow);  background: var(--yellow-bg); }
-  .popup-action.green { color: var(--green);   background: var(--green-bg); }
-
   /* ── Presentation mode ──────────────────────────────────────── */
   body.present-mode #side-panel,
   body.present-mode #control-bar,
   body.present-mode #history-panel,
   body.present-mode #readiness-panel,
   body.present-mode #backtest-panel,
+  body.present-mode #ward-search-wrap,
+  body.present-mode #header .header-right,
   body.present-mode #drawer-fab { display: none !important; }
 
-  /* In present mode hide only the non-essential header-right items */
-  body.present-mode #ward-search-wrap,
-  body.present-mode #m-weather,
-  body.present-mode #btn-methodology { display: none !important; }
-
-  /* Yamuna strip floats as an overlay in present mode */
-  body.present-mode #yamuna-strip {
-    position: fixed; bottom: 20px; left: 20px; z-index: 900;
-    width: 300px; background: var(--bg-card);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-  }
+  body.present-mode #map { left: 0 !important; width: 100% !important; }
+  body.present-mode #countdown-widget { top: 12px; }
   body.present-mode #ft-layer-bar { bottom: 12px; }
   body.present-mode #floodline-legend { bottom: 20px; }
 
   #present-btn {
-    position: fixed; top: calc(var(--header-h) + 12px); left: 16px; z-index: 999;
-    padding: 5px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
+    position: fixed; top: 70px; left: 12px; z-index: 999;
+    padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
     background: var(--navy, #1B2A4A); color: #fff; border: none; cursor: pointer;
-    display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
     transition: opacity .2s;
   }
   body.present-mode #present-btn { background: rgba(0,0,0,.6); }
@@ -2252,180 +1746,6 @@
     .cp-col { border-right: none; border-bottom: 1px solid var(--border); }
   }
 
-  /* ═══════════════════════════════════════════════════════════════
-     UX OVERHAUL — Panel Toggle, Tabs, Alert Banner, Controls
-     ═══════════════════════════════════════════════════════════════ */
-
-  /* ── Panel Toggle Button ── */
-  #panel-toggle-btn {
-    position: fixed;
-    top: calc(var(--header-h) + 8px);
-    right: 388px;       /* panel width (380) + 8px gap — sits just left of panel */
-    z-index: 510;
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text-sec);
-    font-size: 11px;
-    transition: right .3s cubic-bezier(.4,0,.2,1), background .15s, color .15s;
-  }
-  #panel-toggle-btn.panel-closed {
-    right: 8px;         /* panel gone — float at screen right edge */
-  }
-  #panel-toggle-btn:hover { background: var(--cyan); color: #fff; border-color: var(--cyan); }
-
-  /* ── Alert Banner ── */
-  #alert-banner {
-    height: 0; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    gap: 16px; font-size: 12px; font-weight: 500; padding: 0 24px;
-    transition: height .3s, background .5s;
-    background: var(--green-bg); color: var(--green);
-    border-bottom: 1px solid var(--green);
-  }
-  #alert-banner.visible { height: 36px; }
-  #alert-banner.level-normal { background: var(--green-bg); color: var(--green); border-bottom-color: var(--green); }
-  #alert-banner.level-elevated { background: var(--yellow-bg); color: #92400E; border-bottom-color: var(--yellow); }
-  #alert-banner.level-danger { background: var(--red-bg); color: var(--red); border-bottom-color: var(--red); }
-  #alert-banner.level-critical { background: #7F1D1D; color: #FEE2E2; border-bottom-color: #DC2626; }
-  .ab-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; animation: pulse-dot 1.5s ease-in-out infinite; }
-  .ab-item { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; white-space: nowrap; }
-  .ab-sep { opacity: .3; }
-
-  /* ── Panel Tabs ── */
-  .panel-tabs {
-    display: flex; border-bottom: 2px solid var(--border);
-    background: var(--bg-card); flex-shrink: 0;
-  }
-  .panel-tab-btn {
-    flex: 1; padding: 10px 6px; font-size: 10px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px; color: var(--text-dim);
-    background: transparent; border: none; border-bottom: 2px solid transparent;
-    cursor: pointer; transition: all .15s; font-family: var(--font);
-    margin-bottom: -2px;
-  }
-  .panel-tab-btn:hover { color: var(--text-sec); background: var(--bg); }
-  .panel-tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-  .panel-tab-content { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
-  .panel-tab-content.active { display: flex; }
-  /* Overview is compact — shrink to content so no dead whitespace appears below Yamuna strip */
-  #tab-overview.active { flex: 0 0 auto; overflow-y: auto; }
-  .panel-tab-content::-webkit-scrollbar { width: 4px; }
-  .panel-tab-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-  /* ── Floating Map Controls ── */
-  #floating-controls {
-    position: absolute; bottom: 24px; left: 12px; z-index: 800;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow-md);
-    display: flex; flex-direction: column; gap: 6px; min-width: 190px;
-  }
-  .fc-title {
-    font-size: 10px; font-weight: 600; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;
-  }
-  .fc-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 10px; font-size: 12px; color: var(--text);
-  }
-  .fc-label { display: flex; align-items: center; gap: 6px; }
-  .fc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .toggle-switch {
-    position: relative; width: 34px; height: 18px; background: var(--border);
-    border-radius: 9px; cursor: pointer; transition: background .2s; flex-shrink: 0;
-    border: none; padding: 0;
-  }
-  .toggle-switch.on { background: var(--cyan); }
-  .toggle-switch::after {
-    content: ''; position: absolute; top: 2px; left: 2px;
-    width: 14px; height: 14px; border-radius: 50%; background: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .2s;
-  }
-  .toggle-switch.on::after { transform: translateX(16px); }
-
-  /* ── Risk Tab ── */
-  .risk-summary-grid {
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 12px 16px;
-  }
-  .risk-card {
-    text-align: center; padding: 10px 8px; border-radius: 8px;
-    border: 1px solid var(--border); background: var(--bg-card);
-  }
-  .risk-card-num { font-size: 20px; font-weight: 700; font-family: var(--mono); line-height: 1; }
-  .risk-card-lbl { font-size: 10px; color: var(--text-sec); margin-top: 3px; }
-  .risk-card.red .risk-card-num { color: var(--red); }
-  .risk-card.red { border-color: var(--red); background: var(--red-bg); }
-  .risk-card.amber .risk-card-num { color: var(--yellow); }
-  .risk-card.amber { border-color: var(--yellow); background: var(--yellow-bg); }
-  .risk-card.green .risk-card-num { color: var(--green); }
-  .risk-card.green { border-color: var(--green); background: var(--green-bg); }
-  .risk-ssi-bar { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  .risk-ward-list { padding: 8px 0; }
-  .risk-ward-item {
-    display: flex; align-items: center; gap: 8px; padding: 5px 16px;
-    font-size: 12px; cursor: pointer; transition: background .1s;
-  }
-  .risk-ward-item:hover { background: var(--bg-card); }
-  .risk-ward-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-  .risk-ward-dot.red { background: var(--red); }
-  .risk-ward-dot.amber { background: var(--yellow); }
-  .risk-ward-dot.green { background: var(--green); }
-  .risk-ward-name { flex: 1; font-weight: 500; }
-  .risk-ward-score { font-family: var(--mono); font-weight: 700; font-size: 11px; }
-
-  /* ── Header Alert Strip ── */
-  #header-alert-strip {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-    background: var(--green); transition: background .5s;
-  }
-  #header-alert-strip.warning { background: var(--yellow); }
-  #header-alert-strip.danger { background: var(--red); }
-  #header-alert-strip.critical { background: var(--red); animation: pulse-strip 1s infinite; }
-  @keyframes pulse-strip { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
-
-  /* ── Simplified Control Bar ── */
-  .ctrl-group {
-    display: flex; align-items: center; gap: 4px;
-    padding: 4px 6px; border-radius: 8px;
-    background: var(--bg); border: 1px solid var(--border-light);
-  }
-  .ctrl-group-label {
-    font-size: 9px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: .04em; color: var(--text-dim); padding: 0 4px;
-    white-space: nowrap;
-  }
-
-  /* Adjust for alert banner presence */
-  body.has-alert #main { height: calc(100vh - var(--header-h) - var(--ctrl-h) - 36px); }
-  body.has-alert #side-panel { top: calc(var(--header-h) + 36px); height: calc(100vh - var(--header-h) - var(--ctrl-h) - 36px); }
-  body.has-alert #readiness-panel,
-  body.has-alert #drill-panel { top: calc(var(--header-h) + 36px); }
-
-  /* ── Layers tab content ── */
-  .layers-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
-  .layers-section-title {
-    font-size: 10px; font-weight: 600; color: var(--text-dim);
-    text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px;
-  }
-  .layer-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 0; font-size: 12px; color: var(--text);
-  }
-  .layer-row-left { display: flex; align-items: center; gap: 8px; }
-  .layer-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-
-  /* ── Responsive adjustments ── */
-  @media (max-width: 820px) {
-    #side-panel { width: 100vw; }
-    /* on mobile, panel-open button hides behind full-width panel — keep it at edge */
-    #panel-toggle-btn { right: 8px; }
-    #floating-controls { bottom: 12px; min-width: 160px; }
-  }
-
 </style>
 </head>
 <body>
@@ -2437,7 +1757,7 @@
   <div class="brand">
     <div class="brand-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
     <div class="brand-text">
-      <h1>FloodReady Delhi</h1>
+      <h1>Delhi Flood Intelligence</h1>
       <span>Municipal Hydrology Command &middot; Real-Time</span>
     </div>
   </div>
@@ -2452,138 +1772,15 @@
     <div class="stat-pill warn" id="pill-weather" style="display:none">
       <span class="pill-val" id="pill-weather-text"></span>
     </div>
-    <div class="stat-pill" title="System coverage across all three civic bodies">
-      <span class="pill-val">290</span> Wards &middot; <span class="pill-val">32,826+</span> Hotspots &middot; 871 Hospitals
-    </div>
-  </div>
-  <!-- Pre-Monsoon Countdown -->
-  <div id="countdown-widget">
-    <div class="cd-title" id="cd-title">Pre-Monsoon Countdown</div>
-    <div class="cd-unit"><div class="cd-num" id="cd-days">—</div><div class="cd-lbl">days</div></div>
-    <div class="cd-sep">:</div>
-    <div class="cd-unit"><div class="cd-num" id="cd-hours">—</div><div class="cd-lbl">hours</div></div>
-    <div class="cd-sep">:</div>
-    <div class="cd-unit"><div class="cd-num" id="cd-mins">—</div><div class="cd-lbl">mins</div></div>
   </div>
   <div class="header-right">
-    <div id="ward-search-wrap">
-      <input id="ward-search" type="text" placeholder="🔍 Search ward…"
-             oninput="wardSearch(this.value)" onblur="setTimeout(()=>wardSearchClose(),200)"
-             onfocus="wardSearch(this.value)">
-      <div id="ward-search-results"></div>
-    </div>
     <span id="m-weather">Loading weather...</span>
-    <button id="btn-methodology" onclick="openMethodologyModal()" title="Methodology & data sources" aria-label="Open methodology info">ⓘ Methodology</button>
     <button id="btn-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
       <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z"/></svg>
       <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
     </button>
 
-    <div id="conn-status" title="Backend connection status">
-      <span id="conn-dot"></span>
-      <span id="conn-label">Live</span>
-    </div>
     <span id="header-clock">--:--</span>
-  </div>
-  <div id="header-alert-strip"></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     ALERT BANNER — Dynamic risk summary
-     ═══════════════════════════════════════════════════════════════ -->
-<div id="alert-banner">
-  <span class="ab-dot"></span>
-  <span class="ab-item" id="ab-status">System Normal</span>
-  <span class="ab-sep">|</span>
-  <span class="ab-item" id="ab-triggered">0 wards triggered</span>
-  <span class="ab-sep">|</span>
-  <span class="ab-item" id="ab-ssi">SSI —</span>
-  <span class="ab-sep">|</span>
-  <span class="ab-item" id="ab-yamuna">Yamuna: Normal</span>
-</div>
-
-<!-- ════════════════════════════════════════════════════════════════
-     METHODOLOGY MODAL
-     ════════════════════════════════════════════════════════════════ -->
-<div id="methodology-overlay" onclick="closeMethodologyModal(event)">
-  <div id="methodology-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-header">
-      <h2 id="modal-title">How the <span>Pre-Monsoon Readiness Score</span> Works</h2>
-      <button id="btn-modal-close" onclick="closeMethodologyModal()" aria-label="Close modal">&#x2715;</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- Scoring Formula -->
-      <div class="modal-section">
-        <h3>Scoring Formula</h3>
-        <div class="modal-formula">PMRS = 100 &minus; (40 &times; Flood Risk) &minus; (30 &times; Drain Deficit) &minus; (20 &times; Elevation Risk) &minus; (10 &times; Infra Exposure)</div>
-      </div>
-
-      <!-- Factor Weights -->
-      <div class="modal-section">
-        <h3>Factor Weights &mdash; Source Citations</h3>
-        <div class="modal-factor-list">
-          <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">40%</span> &mdash; Flood Risk</div>
-            <p>Historical trigger frequency from 122-day 2024 monsoon dataset. Weighted highest per NDMA Urban Flood Guidelines 2010, which identify historical frequency as the primary flood predictor.</p>
-          </div>
-          <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">30%</span> &mdash; Drain Capacity</div>
-            <p>Average hotspot capacity deficit per ward. Per CWC 2023 Delhi Flood Case Study, drainage congestion was identified as the second-largest flood amplifier in the July 2023 disaster.</p>
-          </div>
-          <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">20%</span> &mdash; Elevation Risk</div>
-            <p>SRTM v4.1 mean ward elevation. Wards below 210&thinsp;m (Yamuna floodplain zone) carry highest risk. Source: CIAT SRTM Version 4.1, Jarvis et al. 2008.</p>
-          </div>
-          <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">10%</span> &mdash; Infrastructure Exposure</div>
-            <p>Count of hospitals, fire stations, substations within 2&thinsp;km of ward centroid. Sourced from OpenStreetMap (871 hospitals, 40 fire stations, 324 substations).</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Sources -->
-      <div class="modal-section">
-        <h3>Data Sources</h3>
-        <div class="modal-source-list">
-          <div class="modal-source-row"><span class="src-key">Ward Boundaries</span><span class="src-val">Datameet Delhi Wards GeoJSON (290 wards: MCD + NDMC + Cantonment)</span></div>
-          <div class="modal-source-row"><span class="src-key">Elevation</span><span class="src-val">SRTM v4.1 via CIAT / Open-Meteo Elevation API</span></div>
-          <div class="modal-source-row"><span class="src-key">Rainfall History</span><span class="src-val">Open-Meteo Historical API, Delhi 2024 monsoon (Jun 1 &ndash; Sep 30, 122 days)</span></div>
-          <div class="modal-source-row"><span class="src-key">Infrastructure</span><span class="src-val">OpenStreetMap via Overpass API</span></div>
-          <div class="modal-source-row"><span class="src-key">Yamuna Thresholds</span><span class="src-val">Central Water Commission (CWC) &mdash; Old Railway Bridge alert levels</span></div>
-          <div class="modal-source-row"><span class="src-key">2023 Backtest Ref.</span><span class="src-val">NRSC 2023 flood inundation satellite data + CWC case study</span></div>
-        </div>
-      </div>
-
-      <!-- Coverage -->
-      <div class="modal-section">
-        <h3>Coverage</h3>
-        <div class="modal-coverage">290 administrative wards covering MCD (Municipal Corporation of Delhi), NDMC (New Delhi Municipal Council), and Delhi Cantonment Board jurisdictions.</div>
-      </div>
-
-      <div class="modal-section">
-        <h3>Validation</h3>
-        <div class="modal-factor">
-          <div class="modal-factor-label">Backtest Validation — July 2023 Delhi Flood</div>
-          <p>Model tested against the July 2023 Delhi flood using NRSC satellite inundation data and CWC discharge records. Reference flooded wards derived from NRSC 2023 flood inundation mapping. Precision, recall, and F1 scores computed against this reference dataset.</p>
-        </div>
-        <div class="modal-source-list" style="margin-top:10px">
-          <div class="modal-source-row">
-            <span class="src-key">Primary reference</span>
-            <span class="src-val">Central Water Commission, "Delhi Floods 2023 Case Study," August 2024.</span>
-          </div>
-          <div class="modal-source-row">
-            <span class="src-key">Inundation mapping</span>
-            <span class="src-val">NRSC 2023 flood inundation satellite data (SAR-derived extent).</span>
-          </div>
-          <div class="modal-source-row">
-            <span class="src-key">Discharge records</span>
-            <span class="src-val">CWC India-WRIS — Hathnikund Barrage peak: 3,60,000 cusecs, Jul 11 2023.</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
   </div>
 </div>
 
@@ -2592,14 +1789,18 @@
      ════════════════════════════════════════════════════════════════ -->
 <div id="main">
   <div id="map-container">
-    <div id="map-seed-overlay">
-      <div class="seed-spinner"></div>
-      <div class="seed-title">FloodReady Delhi — Initialising</div>
-      <div class="seed-sub">Connecting to live database and loading 290 ward boundaries across Delhi NCT…</div>
-    </div>
     <div id="map">
 <!-- Flood type layer toggles on map -->
 
+<!-- Pre-monsoon countdown -->
+<div id="countdown-widget">
+  <div class="cd-title" id="cd-title">Pre-Monsoon Countdown</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-days">—</div><div class="cd-lbl">days</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-hours">—</div><div class="cd-lbl">hours</div></div>
+  <div class="cd-sep">:</div>
+  <div class="cd-unit"><div class="cd-num" id="cd-mins">—</div><div class="cd-lbl">mins</div></div>
+</div>
 
 <!-- Floodline legend -->
 <div id="floodline-legend">
@@ -2615,7 +1816,22 @@
   <div style="font-size:10px;color:var(--text-dim);margin-top:3px">NGT 2023 · SRTM 90m DEM</div>
 </div>
 
+<!-- Ward search -->
+<div id="ward-search-wrap">
+  <input id="ward-search" type="text" placeholder="🔍 Search ward…"
+         oninput="wardSearch(this.value)" onblur="setTimeout(()=>wardSearchClose(),200)"
+         onfocus="wardSearch(this.value)">
+  <div id="ward-search-results"></div>
+</div>
 
+<div id="ft-layer-bar">
+  <button class="ft-layer-btn river"    id="ftb-river"    onclick="toggleFtLayer('river')">   <span class="ft-color-dot" style="background:#2563EB"></span> River flood</button>
+  <button class="ft-layer-btn pluvial"  id="ftb-pluvial"  onclick="toggleFtLayer('pluvial')"> <span class="ft-color-dot" style="background:#D97706"></span> Pluvial</button>
+  <button class="ft-layer-btn backflow" id="ftb-backflow" onclick="toggleFtLayer('backflow')"><span class="ft-color-dot" style="background:#7C3AED"></span> Backflow</button>
+  <button class="ft-layer-btn" id="ftb-floodline" onclick="toggleFloodline()">
+    <span class="ft-color-dot" style="background:#DC2626"></span> Floodline zones</button>
+  <button class="ft-layer-btn sustained" id="ftb-sustained"onclick="toggleFtLayer('sustained')"><span class="ft-color-dot" style="background:#DC2626"></span> Sustained</button>
+</div>
 </div>
     <div class="map-skeleton" id="map-skeleton">
       <div class="map-skeleton-inner">
@@ -2632,7 +1848,6 @@
       <div class="legend-row"><span class="legend-dot" style="background:#2563EB"></span> <span id="leg-fire">Fire Station (—)</span></div>
     </div>
 
-
     <!-- Elevation Legend -->
     <div id="elev-legend" class="map-legend">
       <div class="legend-title">Terrain Classification</div>
@@ -2648,27 +1863,14 @@
     </div>
   </div>
 
-  <!-- Panel toggle — lives outside panel so it stays visible when panel is closed -->
-  <button id="panel-toggle-btn" onclick="toggleSidePanel()" title="Toggle dashboard panel (P)">
-    <span id="panel-toggle-icon">◀</span>
-  </button>
-
-  <!-- Side Panel (overlay) -->
-  <div id="side-panel" class="panel-open">
-    <!-- Tab Navigation -->
-    <div class="panel-tabs">
-      <button class="panel-tab-btn active" data-tab="overview" onclick="switchPanelTab('overview')">Overview</button>
-      <button class="panel-tab-btn" data-tab="risk" onclick="switchPanelTab('risk')">Risk</button>
-    </div>
-
-    <!-- TAB: Overview -->
-    <div class="panel-tab-content active" id="tab-overview">
+  <!-- Side Panel -->
+  <div id="side-panel">
     <!-- Stat Cards -->
     <div class="stat-cards" id="stat-cards-wrap">
       <div class="stat-card accent-cyan skeleton">
         <div class="sc-label">Last Cycle</div>
-        <div class="sc-value" id="m-time" style="font-size:12px;color:var(--text-dim)">No cycle run yet</div>
-        <div class="sc-sub">last scoring run</div>
+        <div class="sc-value" id="m-time">—</div>
+        <div class="sc-sub">IST timestamp</div>
       </div>
       <div class="stat-card accent-red skeleton">
         <div class="sc-label">Triggered</div>
@@ -2687,6 +1889,7 @@
       </div>
     </div>
 
+    <!-- 6-Hour Forecast -->
     <!-- Yamuna advance warning strip -->
     <div id="yamuna-strip">
       <div class="yamuna-header">
@@ -2694,70 +1897,37 @@
         <span class="yamuna-alert-pill" id="yamuna-pill" style="background:#DCFCE7;color:#16A34A">NORMAL</span>
       </div>
       <div class="yamuna-data-row">
-        <div class="yamuna-stat loading" id="ys-discharge-card">
+        <div class="yamuna-stat">
           <div class="yamuna-stat-val" id="yamuna-discharge">—</div>
           <div class="yamuna-stat-lbl">Discharge (cusecs)</div>
         </div>
-        <div class="yamuna-stat loading" id="ys-stage-card">
+        <div class="yamuna-stat">
           <div class="yamuna-stat-val" id="yamuna-stage">—</div>
-          <div class="yamuna-stat-lbl yamuna-stat-lbl-wrap">
-            Pred. Delhi stage (m)
-            <i class="yamuna-stat-tooltip" data-tip="Estimated Delhi water level based on Hathnikund discharge. Travel time: 48–72 hours. Source: CWC alert thresholds.">?</i>
-          </div>
+          <div class="yamuna-stat-lbl">Pred. Delhi stage (m)</div>
         </div>
-        <div class="yamuna-stat loading" id="ys-eta-card">
+        <div class="yamuna-stat">
           <div class="yamuna-stat-val" id="yamuna-eta-hrs">—</div>
           <div class="yamuna-stat-lbl">ETA (hours)</div>
         </div>
       </div>
       <div class="yamuna-eta" id="yamuna-eta-str">Loading Hathnikund data…</div>
-      <span class="yamuna-source-badge unavail" id="yamuna-source-badge">○ Loading…</span>
     </div>
-    <div id="forecast-section" style="display:none">
+    <div id="forecast-section">
       <div class="forecast-header">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
         6-Hour Forecast
       </div>
-      <div class="forecast-body" id="forecast-body"></div>
+      <div class="forecast-body" id="forecast-body">
+        <div class="forecast-none">Loading forecast...</div>
+      </div>
     </div>
-    </div><!-- /tab-overview -->
 
-    <!-- TAB: Risk -->
-    <div class="panel-tab-content" id="tab-risk">
-      <div class="risk-summary-grid">
-        <div class="risk-card red"><div class="risk-card-num" id="rt-red">—</div><div class="risk-card-lbl">Critical</div></div>
-        <div class="risk-card amber"><div class="risk-card-num" id="rt-amber">—</div><div class="risk-card-lbl">At Risk</div></div>
-        <div class="risk-card green"><div class="risk-card-num" id="rt-green">—</div><div class="risk-card-lbl">Ready</div></div>
-      </div>
-      <div class="risk-ssi-bar">
-        <div class="ssi-label-row">
-          <span class="ssi-title">System Saturation Index</span>
-          <span class="ssi-value" id="rt-ssi-val" style="color:var(--green)">—</span>
-        </div>
-        <div class="ssi-track"><div class="ssi-fill" id="rt-ssi-fill" style="width:0%;background:var(--green)"></div></div>
-      </div>
-      <div style="padding:8px 16px;border-bottom:1px solid var(--border)">
-        <input id="rt-search" type="text" placeholder="Search ward…" style="width:100%;padding:6px 10px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text);outline:none;font-family:var(--font)" oninput="renderRiskTab()">
-      </div>
-      <div id="rt-ward-list" class="risk-ward-list" style="flex:1;overflow-y:auto">
-        <div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">Loading risk data…</div>
-      </div>
-      <div style="padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0">
-        <button class="btn btn-primary" onclick="toggleReadiness()" style="width:100%;justify-content:center;font-size:12px;gap:6px">
-          Open Full Readiness Panel →
-        </button>
-        <div style="text-align:center;font-size:10px;color:var(--text-dim);margin-top:5px">Press <kbd style="background:var(--bg-card);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px">R</kbd> to open</div>
-      </div>
-    </div><!-- /tab-risk -->
-
-    <!-- PMRS Choropleth Legend — compact static strip -->
-    <div id="pmrs-legend">
-      <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#FEE2E2;border-color:#DC2626"></span><span style="color:#DC2626">Critical</span> 0–40</span>
-      <span class="pmrs-leg-sep">·</span>
-      <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#FEF3C7;border-color:#D97706"></span><span style="color:#D97706">At Risk</span> 40–65</span>
-      <span class="pmrs-leg-sep">·</span>
-      <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#DCFCE7;border-color:#16A34A"></span><span style="color:#16A34A">Ready</span> 65–100</span>
+    <!-- Console -->
+    <div class="panel-section-header">
+      <span class="dot-live"></span>
+      Dispatch Console
     </div>
+    <div id="console-log"></div>
 
     <!-- Footer -->
     <div class="panel-footer">
@@ -2775,22 +1945,48 @@
      CONTROL BAR
      ════════════════════════════════════════════════════════════════ -->
 <div id="control-bar">
+  <div id="ctrl-mode" class="ctrl-mode">
+    <button id="mode-ops" class="ctrl-mode-btn active" onclick="setControlMode('operations')">Operations</button>
+    <button id="mode-ana" class="ctrl-mode-btn" onclick="setControlMode('analysis')">Analysis</button>
+  </div>
+
   <button class="btn btn-primary" id="btn-cycle" onclick="runCycle()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Run Cycle <span class="btn-spinner" id="sp-cycle"></span>
-  </button>
-  <button class="btn btn-ghost" id="btn-reset" onclick="resetCity()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reset <span class="btn-spinner" id="sp-reset"></span>
   </button>
   <button class="btn btn-danger" id="btn-storm" onclick="simulateCloudburst()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Cloudburst <span class="btn-spinner" id="sp-storm"></span>
   </button>
-  <button class="btn btn-ghost" id="btn-backtest" onclick="toggleBacktest()" style="border-color:var(--red);color:var(--red);gap:5px" title="Replay July 2023 — Delhi's worst flood in 45 years. See if our model predicts it.">
-    <span class="btn-pulse-dot"></span>
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 2023 Replay
+  <button class="btn btn-ghost" id="btn-reset" onclick="resetCity()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reset <span class="btn-spinner" id="sp-reset"></span>
   </button>
-  <button class="btn btn-ghost" id="btn-readiness" onclick="toggleReadiness()" style="border-color:var(--cyan);color:var(--cyan)">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Readiness
+
+  <div class="ctrl-sep"></div>
+
+  <button class="btn btn-ghost" id="btn-infra" onclick="toggleInfrastructure()">
+    Infrastructure
   </button>
+  <button class="btn btn-ghost" id="btn-elev" onclick="toggleElevation()">
+    Elevation
+  </button>
+
+  <div class="ctrl-sep"></div>
+
+      <button class="btn btn-ghost" id="btn-backtest" onclick="toggleBacktest()" style="border:1px solid var(--red);color:var(--red);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    2023 Replay
+  </button>
+  <button class="btn btn-ghost" id="btn-readiness" onclick="toggleReadiness()" style="border:1px solid var(--cyan);color:var(--cyan);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Readiness
+  </button>
+  <button class="btn btn-ghost btn-history" id="btn-history" onclick="toggleHistory()">
+    History
+  </button>
+  <button class="btn btn-ghost" id="btn-report" onclick="window.open('/report/snapshot','_blank')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    Report
+  </button>
+
   <span style="flex:1"></span>
 </div>
 
@@ -2871,88 +2067,16 @@
     <button id="bt-close" onclick="toggleBacktest()">✕</button>
   </div>
   <div id="bt-body">
-
-    <!-- ── Narrative stat strip ──────────────────────────────── -->
-    <div class="bt-narrative">
-      <div class="bt-narrative-eyebrow">July 2023 — Worst flood in 45 years</div>
-      <div class="bt-narrative-peak-row">
-        <div class="bt-narrative-peak-num">208.66</div>
-        <div class="bt-narrative-peak-meta">
-          <span class="bt-narrative-peak-unit">metres</span>
-          <span class="bt-narrative-peak-sub">Yamuna at Old Railway Bridge</span>
-          <span class="bt-narrative-peak-sub">Highest since 1978 · Jul 13, 2023</span>
-        </div>
-      </div>
-      <div class="bt-narrative-stats">
-        <div class="bt-nar-stat">
-          <div class="bt-nar-stat-val">153mm</div>
-          <div class="bt-nar-stat-lbl">Single-day rainfall Jul 11</div>
-        </div>
-        <div class="bt-nar-stat">
-          <div class="bt-nar-stat-val">27,000+</div>
-          <div class="bt-nar-stat-lbl">Families displaced</div>
-        </div>
-        <div class="bt-nar-stat">
-          <div class="bt-nar-stat-val">₹1,200Cr</div>
-          <div class="bt-nar-stat-lbl">Estimated damage</div>
-        </div>
+    <div id="bt-status">
+      <div class="bt-status-icon">🌊</div>
+      <div class="bt-status-title">July 2023 — Delhi's worst flood in 45 years</div>
+      <div class="bt-status-sub">
+        Yamuna peaked at <strong>208.66m</strong> on July 12.<br>
+        153mm fell in a single day. 27,000+ families displaced.<br><br>
+        Run the replay to see which wards our model flags as critical —
+        then compare against known flooded areas.
       </div>
     </div>
-
-    <!-- ── 6-event pre-run timeline ───────────────────────────── -->
-    <div class="bt-pre-timeline">
-      <div class="bt-pre-tl-title">Flood Progression — Key Dates</div>
-      <div class="bt-tl-track">
-
-        <div class="bt-tl-node">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 9</div>
-          <div class="bt-tl-rain">41mm</div>
-          <div class="bt-tl-stage">204.1m</div>
-        </div>
-
-        <div class="bt-tl-node high">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 10</div>
-          <div class="bt-tl-rain">63mm</div>
-          <div class="bt-tl-stage">205.8m</div>
-        </div>
-
-        <div class="bt-tl-node peak">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 11</div>
-          <div class="bt-tl-rain">153mm</div>
-          <div class="bt-tl-peak-tag">⚠ PEAK RAIN</div>
-        </div>
-
-        <div class="bt-tl-node peak">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 12–13</div>
-          <div class="bt-tl-rain">208.66m</div>
-          <div class="bt-tl-peak-tag">🔴 PEAK STAGE</div>
-        </div>
-
-        <div class="bt-tl-node">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 14</div>
-          <div class="bt-tl-rain">44mm</div>
-          <div class="bt-tl-stage">207.1m</div>
-        </div>
-
-        <div class="bt-tl-node recede">
-          <div class="bt-tl-dot"></div>
-          <div class="bt-tl-date">Jul 15</div>
-          <div class="bt-tl-rain">22mm</div>
-          <div class="bt-tl-stage">↓ Receding</div>
-        </div>
-
-      </div>
-      <div class="bt-tl-cta">
-        <strong>Hathnikund discharge peaked at 3,60,000 cusecs on Jul 11.</strong><br>
-        Travel time to Delhi: 48–72 hours. Our model had that window to act.
-      </div>
-    </div>
-
   </div>
 </div>
 
@@ -2971,12 +2095,27 @@
   Present
 </button>
 
-
-<!-- Footer bar -->
-<div id="footer-bar">
-  Data: SRTM v4.1 &middot; OpenStreetMap &middot; IMD/Open-Meteo &middot; Datameet &middot; CWC
-  <span class="footer-sep">|</span>
-  Built for <strong style="color:rgba(255,255,255,.55);font-weight:600">India Innovates 2026</strong> &mdash; Urban Flooding &amp; Hydrology Engine
+<!-- Ward comparison panel -->
+<div id="compare-panel">
+  <div id="cp-header">
+    <h2>⚖ Ward Comparison</h2>
+    <span style="font-size:11px;color:var(--text-dim)" id="cp-hint">Click any ward on the map to add it</span>
+    <button id="cp-close" onclick="closeCompare()">✕</button>
+  </div>
+  <div id="cp-body">
+    <div class="cp-col" id="cp-left">
+      <div class="cp-empty">
+        <div>Select a ward</div>
+        <span class="cp-select-hint" onclick="closeCompare()">Click map to select</span>
+      </div>
+    </div>
+    <div class="cp-col" id="cp-right">
+      <div class="cp-empty">
+        <div>Select a second ward</div>
+        <div style="font-size:11px">Select first ward first</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Alert feed -->
@@ -3038,13 +2177,6 @@
   <!-- search -->
   <div class="rp-search-wrap">
     <input id="rp-search" type="text" placeholder="Search ward name…" oninput="rpRender()">
-  </div>
-
-  <!-- quick-count bar — always visible above the scrollable list -->
-  <div id="rp-quick-bar">
-    <div class="rp-qb-pill red"><span class="rp-qb-num" id="rp-qb-red">—</span>Critical</div>
-    <div class="rp-qb-pill amber"><span class="rp-qb-num" id="rp-qb-amber">—</span>At Risk</div>
-    <div class="rp-qb-pill green"><span class="rp-qb-num" id="rp-qb-green">—</span>Ready</div>
   </div>
 
   <!-- ward list -->
@@ -3129,12 +2261,9 @@
   // ═══════════════════════════════════════════════════════════════
   function updateClock() {
     const now = new Date();
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const ist = new Date(now.getTime() + istOffset -
-      (now.getTimezoneOffset() * 60 * 1000));
-    const h = String(ist.getHours()).padStart(2, '0');
-    const m = String(ist.getMinutes()).padStart(2, '0');
-    document.getElementById('header-clock').textContent = h + ':' + m + ' IST';
+    const ist = new Date(now.getTime() + (330 - now.getTimezoneOffset()) * 60000);
+    document.getElementById('header-clock').textContent =
+      ist.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
   updateClock();
   setInterval(updateClock, 30000);
@@ -3173,26 +2302,12 @@
     currentTileLayer.setUrl(url);
   }
 
-  function openMethodologyModal() {
-    document.getElementById('methodology-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeMethodologyModal(e) {
-    if (e && e.currentTarget && e.target !== e.currentTarget) return;
-    document.getElementById('methodology-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeMethodologyModal({ target: document.getElementById('methodology-overlay') });
-  });
-
   function toggleTheme() {
     const next = isDark() ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('hydro-theme', next);
     applyThemeIcons();
     swapTiles();
-    refreshMapColors();   // re-apply PMRS choropleth for new theme
 
     // Re-render elevation layer with correct dark/light null colour
     if (elevLayer) {
@@ -3222,12 +2337,11 @@
   // MAP INIT
   // ═══════════════════════════════════════════════════════════════
   const map = L.map('map', {
-    center: [28.6139, 77.2090],
-    zoom: 11,
+    center: [28.65, 77.25],
+    zoom: 12,
     zoomControl: true,
     attributionControl: false,
   });
-  map.setMaxBounds([[28.40, 76.83], [28.90, 77.55]]);
 
   currentTileLayer = L.tileLayer(isDark() ? TILE_DARK : TILE_LIGHT, {
     maxZoom: 19,
@@ -3235,29 +2349,6 @@
 
   let wardLayer = null;
   let hotspotLayer = null;
-  let _mapSeeded = false;        // true once wards have loaded successfully at least once
-  let _overlayDismissed = false; // once the seed overlay is hidden, never show it again
-
-  // ── Seed poller: auto-retry every 15s while overlay is visible ──
-  let _seedPollTimer = null;
-  function _startSeedPoller() {
-    if (_seedPollTimer) return;            // already running
-    _seedPollTimer = setInterval(async () => {
-      try {
-        const r = await fetch('/health');
-        if (!r.ok) return;
-        const h = await r.json();
-        if (h.status === 'ok' && (h.wards ?? h.ward_count ?? 0) > 0) {
-          _stopSeedPoller();
-          await refreshMap();              // will hide overlay + draw wards
-          await Promise.all([refreshPanel(), refreshOverview()]);
-        }
-      } catch (_) { /* silent — server still waking up */ }
-    }, 15000);
-  }
-  function _stopSeedPoller() {
-    if (_seedPollTimer) { clearInterval(_seedPollTimer); _seedPollTimer = null; }
-  }
 
   function hotspotColor(cap) {
     if (cap >= 60) return '#16a34a';
@@ -3313,44 +2404,6 @@
     if (props.color === 'grey') return C.grey;
     if (props.ws_score !== null && props.ws_score < 0) return C.critical;
     return C[props.color] || C.grey;
-  }
-
-  // PMRS-based choropleth style — uses readiness scores, not dispatch status
-  function pmrsStyle(feature) {
-    const override = _cycleOverrides[feature.properties.ward_name];
-    if (override === 'red') {
-      return { fillColor: isDark() ? '#450a0a' : '#FEE2E2', fillOpacity: isDark() ? 0.7 : 0.75, color: '#DC2626', weight: 1, opacity: 0.85 };
-    }
-    if (override === 'amber') {
-      return { fillColor: isDark() ? '#422006' : '#FEF3C7', fillOpacity: isDark() ? 0.65 : 0.7, color: '#D97706', weight: 1, opacity: 0.85 };
-    }
-    const rw = _rsLookup[feature.properties.ward_id];
-    const score = rw ? rw.readiness_score : null;
-    let fill, border, fillOpacity;
-    if (score === null || score === undefined) {
-      fill   = isDark() ? 'rgba(0,188,212,0.06)' : 'rgba(0,180,200,0.08)';
-      border = isDark() ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.18)';
-      fillOpacity = 0.5;
-    } else if (score < 40) {
-      fill        = isDark() ? '#450a0a' : '#FEE2E2';
-      border      = '#DC2626';
-      fillOpacity = isDark() ? 0.7 : 0.75;
-    } else if (score <= 65) {
-      fill        = isDark() ? '#422006' : '#FEF3C7';
-      border      = '#D97706';
-      fillOpacity = isDark() ? 0.65 : 0.7;
-    } else {
-      fill        = isDark() ? '#052e16' : '#DCFCE7';
-      border      = '#16A34A';
-      fillOpacity = isDark() ? 0.6 : 0.65;
-    }
-    return { fillColor: fill, fillOpacity, color: border, weight: 1, opacity: 0.85 };
-  }
-
-  // Re-apply PMRS colors after readiness loads or theme switches
-  function refreshMapColors() {
-    if (!wardLayer) return;
-    wardLayer.setStyle(pmrsStyle);
   }
 
   function scoreClass(ws) {
@@ -3572,26 +2625,29 @@
   // 6-HOUR FORECAST WIDGET
   // ═══════════════════════════════════════════════════════════════
   async function loadForecast() {
-    const section = document.getElementById('forecast-section');
     const body = document.getElementById('forecast-body');
     try {
       const resp = await fetch('/forecast/6hour');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const fc = await resp.json();
-      if (fc.error || !fc.hours || fc.hours.length === 0 || fc.risk_level === 'NONE') {
-        if (section) section.style.display = 'none';
+      if (fc.error && fc.hours.length === 0) {
+        body.innerHTML = '<div class="forecast-none">Forecast unavailable</div>';
         return;
       }
-      if (section) section.style.display = '';
       renderForecast(fc);
     } catch (err) {
       console.error('[FORECAST]', err);
-      if (section) section.style.display = 'none';
+      body.innerHTML = '<div class="forecast-none">Forecast unavailable</div>';
     }
   }
 
   function renderForecast(fc) {
     const body = document.getElementById('forecast-body');
+
+    if (fc.risk_level === 'NONE') {
+      body.innerHTML = '<div class="forecast-none">No precipitation forecast</div>';
+      return;
+    }
 
     const pulseClass = (fc.risk_level === 'HIGH' || fc.risk_level === 'EXTREME') ? ' pulse' : '';
     const peak = fc.peak_rain_mm || 1;
@@ -3640,26 +2696,16 @@
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
 
-      // Show/hide seed overlay. Once dismissed (_overlayDismissed), never show again.
-      const seedOverlay = document.getElementById('map-seed-overlay');
-      if (seedOverlay) {
-        if (!data.features || data.features.length === 0) {
-          if (!_overlayDismissed) {
-            seedOverlay.classList.add('visible');
-            _startSeedPoller();
-          }
-        } else {
-          _mapSeeded = true;
-          _overlayDismissed = true;
-          seedOverlay.classList.remove('visible');
-          _stopSeedPoller();
-        }
-      }
-
       if (wardLayer) map.removeLayer(wardLayer);
 
       wardLayer = L.geoJSON(data.features, {
-        style: pmrsStyle,
+        style: (feature) => ({
+          fillColor: wardFillColor(feature.properties),
+          fillOpacity: isDark() ? 0.5 : 0.6,
+          color: isDark() ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)',
+          weight: 0.8,
+          opacity: 0.5,
+        }),
         onEachFeature: (feature, layer) => {
           const p = feature.properties;
           const ws = p.ws_score !== null && p.ws_score !== undefined ? Number(p.ws_score) : null;
@@ -3674,53 +2720,13 @@
                  <span>Elev: ${p.mean_elevation}m</span>
                </div>`
             : '';
-          layer.bindPopup(() => {
-            const rw = _rpData.find(r => r.ward_id === p.ward_id);
-            const rs = rw ? rw.readiness_score : null;
-            const band = rw ? rw.band : null;
-            const rsColor = rs === null ? 'var(--text-sec)'
-              : band === 'red' ? 'var(--red)' : band === 'amber' ? 'var(--yellow)' : 'var(--green)';
-
-            // Top 2 risk factors
-            const factorLabels = {
-              flood_risk_pct: 'Flood Risk',
-              capacity_pct: 'Drain Deficit',
-              elevation_risk_pct: 'Elevation',
-              infra_exposure_pct: 'Infra Exposure',
-            };
-            let factorsHtml = '';
-            if (rw && rw.factors) {
-              const top2 = Object.entries(rw.factors)
-                .sort((a, b) => b[1] - a[1]).slice(0, 2);
-              factorsHtml = `<div class="popup-factors">${
-                top2.map(([k, v]) =>
-                  `<div class="popup-factor-pill">${factorLabels[k] || k}<span>${v}%</span></div>`
-                ).join('')
-              }</div>`;
-            }
-
-            // Recommended action
-            const actions = {
-              red:   'Deploy pumps immediately. Alert ward officer.',
-              amber: 'Pre-position resources. Clear drain chokepoints.',
-              green: 'Monitor. No immediate action required.',
-            };
-            const actionHtml = band
-              ? `<div class="popup-action ${band}">${actions[band]}</div>`
-              : '';
-
-            const rsBlock = rs !== null ? `
-              <div class="popup-rs-score" style="color:${rsColor}">${rs.toFixed(1)}</div>
-              <div class="popup-rs-band" style="color:${rsColor}">${band === 'red' ? 'Critical' : band === 'amber' ? 'At Risk' : 'Ready'}</div>
-              ${factorsHtml}${actionHtml}` : '';
-
-            return `
+          layer.bindPopup(`
             <div class="popup-header">
               <div class="popup-ward">${p.ward_name}</div>
               ${p.zone_name ? '<div class="popup-ward-zone">' + p.zone_name + '</div>' : ''}
             </div>
             <div class="popup-body">
-              ${rsBlock}
+              <div class="popup-score ${cls}">${sc}</div>
               <div class="popup-status">
                 <span class="status-dot ${dotClass}"></span>
                 ${p.status}
@@ -3730,8 +2736,8 @@
               <div style="text-align:center;margin-top:6px">
                 <button onclick="openDrillPanel(${p.ward_id}, '${p.ward_name.replace(/'/g, "\\'")}')" style="font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--purple);cursor:pointer;font-family:var(--font);font-weight:500;transition:background .15s" onmouseover="this.style.background='var(--purple-bg)'" onmouseout="this.style.background='var(--bg)'">View Details</button>
               </div>
-            </div>`;
-          });
+            </div>
+          `);
         },
       }).addTo(map);
 
@@ -3740,14 +2746,13 @@
 
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
-      showAlert('warn', 'Map state unavailable', `Could not load ward data — retrying. (${err.message})`);
     }
   }
 
   // ═══════════════════════════════════════════════════════════════
   // CONSOLE
   // ═══════════════════════════════════════════════════════════════
-  const consoleEl = null; // console-log panel removed
+  const consoleEl = document.getElementById('console-log');
   let logCount = 0;
   let controlMode = 'operations';
 
@@ -3766,11 +2771,22 @@
   }
 
   function logConsole(msg, type = 'system') {
-    // console panel removed — no-op (keep calls in place to avoid errors)
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = `log-entry log-${type}`;
+    const tagMap = { system: 'SYSTEM', safe: 'SAFE', triggered: 'DISPATCH', critical: 'CRITICAL', error: 'ERROR' };
+    const tag = tagMap[type] || 'SYSTEM';
+    entry.innerHTML = `<span class="log-ts">${ts}</span><span class="log-tag log-tag-${type}">${tag}</span><span class="log-msg">${msg}</span>`;
+    consoleEl.prepend(entry);
     logCount++;
+    while (consoleEl.children.length > 50) {
+      consoleEl.removeChild(consoleEl.lastChild);
+    }
   }
 
   function clearConsole() {
+    consoleEl.innerHTML = '';
     logCount = 0;
   }
 
@@ -3815,20 +2831,9 @@
       }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-      console.log('[runCycle] response:', JSON.stringify(data, null, 2));
-
-      // Build cycle overrides for immediate map recoloring (before readiness reload)
-      _cycleOverrides = {};
-      (data.dispatches || []).forEach(d => {
-        _cycleOverrides[d.ward_name] = d.ws_score < 30 ? 'red' : 'amber';
-      });
-      refreshMapColors();
 
       const cycleTime = new Date().toTimeString().slice(0, 8);
-      const mTime = document.getElementById('m-time');
-      mTime.textContent = cycleTime;
-      mTime.style.fontSize = '';
-      mTime.style.color = '';
+      document.getElementById('m-time').textContent = cycleTime;
       document.getElementById('last-cycle-footer').textContent = `Last: ${cycleTime} IST`;
 
       let totalPumps = 0;
@@ -3850,17 +2855,7 @@
       }
       logConsole(`Cycle complete — ${data.wards_triggered} triggered, ${data.safe_wards} safe`, 'system');
 
-      // Reload readiness scores and repaint — do NOT call refreshMap() here
-      // as that reloads GeoJSON and can briefly return empty features, which
-      // would flash the seed overlay and blank the map.
-      await loadReadiness();
-      refreshMapColors();
-
-      // Open Risk tab and scroll to top so triggered wards (sorted highest risk)
-      // are immediately visible
-      switchPanelTab('risk');
-      const riskTab = document.getElementById('tab-risk');
-      if (riskTab) riskTab.scrollTop = 0;
+      await refreshMap();
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
     } finally {
@@ -3931,14 +2926,10 @@
       const resp = await fetch('/reset', { method: 'POST', headers: POST_AUTH });
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
-      _cycleOverrides = {};
       clearConsole();
       logConsole('City reset to baseline — all wards nominal', 'system');
 
-      const mTimeReset = document.getElementById('m-time');
-      mTimeReset.textContent = 'No cycle run yet';
-      mTimeReset.style.fontSize = '12px';
-      mTimeReset.style.color = 'var(--text-dim)';
+      document.getElementById('m-time').textContent = '—';
       document.getElementById('last-cycle-footer').textContent = 'Awaiting first cycle';
       syncStats(0, 0);
 
@@ -4004,38 +2995,6 @@
 
   setInterval(pollCycleLatest, 30000);
   setInterval(refreshWeatherStatus, 60000);
-
-  // ═══════════════════════════════════════════════════════════════
-  // CONNECTION STATUS — health-check dot
-  // ═══════════════════════════════════════════════════════════════
-  let _connFailures = 0;
-
-  async function checkBackendHealth() {
-    const dot   = document.getElementById('conn-dot');
-    const label = document.getElementById('conn-label');
-    try {
-      const resp = await fetch('/health', { cache: 'no-store' });
-      if (resp.ok) {
-        _connFailures = 0;
-        dot.className   = '';
-        label.textContent = 'Live';
-      } else {
-        throw new Error(`HTTP ${resp.status}`);
-      }
-    } catch (_) {
-      _connFailures++;
-      if (_connFailures >= 2) {
-        dot.className   = 'error pulsing';
-        label.textContent = 'Reconnecting…';
-      } else {
-        dot.className   = 'warn';
-        label.textContent = 'Live';
-      }
-    }
-  }
-
-  checkBackendHealth();
-  setInterval(checkBackendHealth, 60000);
 
   // ═══════════════════════════════════════════════════════════════
   // WEBSOCKET — real-time cycle push
@@ -4131,7 +3090,6 @@
     await refreshWeatherStatus();
     refreshYamuna();
     refreshSSI();
-    loadReadiness();   // color ward polygons by PMRS on startup
 
     try {
       const cResp = await fetch('/cycle/latest');
@@ -4141,10 +3099,6 @@
           const t = new Date(cd.last_cycle_at);
           const label = t.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
           document.getElementById('last-cycle-footer').textContent = 'Last cycle: ' + label;
-          const mTimeInit = document.getElementById('m-time');
-          mTimeInit.textContent = label;
-          mTimeInit.style.fontSize = '';
-          mTimeInit.style.color = '';
           lastKnownCycleAt = cd.last_cycle_at;
         }
       }
@@ -4181,21 +3135,18 @@
   };
 
   async function toggleInfrastructure() {
-    const btn = document.getElementById('btn-infra') || document.getElementById('ts-infra');
+    const btn = document.getElementById('btn-infra');
     const legend = document.getElementById('infra-legend');
 
     if (infraVisible) {
       if (infraLayer) { map.removeLayer(infraLayer); infraLayer = null; }
-      if (btn) btn.classList.remove('active');
+      btn.classList.remove('active');
       legend.classList.remove('visible');
       infraVisible = false;
-      // Sync toggle switch
-      const tsBtn = document.getElementById('ts-infra');
-      if (tsBtn) tsBtn.classList.remove('on');
       return;
     }
 
-    if (btn) btn.classList.add('active');
+    btn.classList.add('active');
     try {
       const resp = await fetch('/map/infrastructure');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -4238,12 +3189,9 @@
 
       legend.classList.add('visible');
       infraVisible = true;
-      // Sync toggle switch
-      const tsInfra = document.getElementById('ts-infra');
-      if (tsInfra) tsInfra.classList.add('on');
       logConsole(`Infrastructure layer: ${data.features.length} facilities loaded`, 'system');
     } catch (err) {
-      if (btn) btn.classList.remove('active');
+      btn.classList.remove('active');
       logConsole(`Infrastructure load error: ${err.message}`, 'error');
     }
   }
@@ -4255,20 +3203,18 @@
   let elevVisible = false;
 
   async function toggleElevation() {
-    const btn = document.getElementById('btn-elev') || document.getElementById('ts-elev');
+    const btn = document.getElementById('btn-elev');
     const legend = document.getElementById('elev-legend');
 
     if (elevVisible) {
       if (elevLayer) { map.removeLayer(elevLayer); elevLayer = null; }
-      if (btn) btn.classList.remove('active');
+      btn.classList.remove('active');
       legend.classList.remove('visible');
       elevVisible = false;
-      const tsElev = document.getElementById('ts-elev');
-      if (tsElev) tsElev.classList.remove('on');
       return;
     }
 
-    if (btn) btn.classList.add('active');
+    btn.classList.add('active');
     try {
       const resp = await fetch('/map/elevation');
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -4311,10 +3257,8 @@
       const tc = data.terrain_counts || {};
       const countStr = Object.entries(tc).map(([k,v]) => `${k}: ${v}`).join(', ');
       logConsole(`Elevation layer: ${data.features.length} wards | ${countStr}`, 'system');
-      const tsElev2 = document.getElementById('ts-elev');
-      if (tsElev2) tsElev2.classList.add('on');
     } catch (err) {
-      if (btn) btn.classList.remove('active');
+      btn.classList.remove('active');
       logConsole(`Elevation load error: ${err.message}`, 'error');
     }
   }
@@ -4338,7 +3282,7 @@
     const panel = document.getElementById('history-panel');
     const btn = document.getElementById('btn-history');
     const isOpen = panel.classList.toggle('open');
-    if (btn) btn.classList.toggle('active', isOpen);
+    btn.classList.toggle('active', isOpen);
     if (isOpen) loadHistory();
   }
 
@@ -4580,8 +3524,6 @@
      ════════════════════════════════════════════════════════════════ */
 
   let _rpData = [];          // full ward list from /readiness/scores
-  let _rsLookup = {};        // ward_id → readiness row (for map coloring)
-  let _cycleOverrides = {};  // ward_name → 'red'|'amber' from latest cycle result
   let _rpFilter = 'all';     // active flood-type filter
   let _ftActiveLayers = {};  // map highlight layers keyed by flood type
   let _ftLayerActive = {};   // button state per flood type
@@ -4593,57 +3535,12 @@
     if (isOpen && _rpData.length === 0) loadReadiness();
   }
 
-  // ── Risk tab ward click: open readiness panel + scroll + map pan ──
-  function riskWardClick(wardId, wardName) {
-    // Ensure readiness panel is open
-    const panel = document.getElementById('readiness-panel');
-    if (!panel.classList.contains('open')) {
-      panel.classList.add('open');
-      if (_rpData.length === 0) loadReadiness();
-    }
-
-    // Pan map to ward
-    if (wardLayer) {
-      wardLayer.eachLayer(layer => {
-        if (layer.feature?.properties?.id === wardId ||
-            layer.feature?.properties?.ward_id === wardId) {
-          map.fitBounds(layer.getBounds(), { padding: [60, 60] });
-        }
-      });
-    }
-
-    // Scroll to and highlight the ward row in the readiness panel list
-    function scrollToRow() {
-      const row = document.querySelector(`#rp-list .rp-ward-row[data-ward-id="${wardId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        row.classList.add('rp-highlight');
-        setTimeout(() => row.classList.remove('rp-highlight'), 2000);
-        return true;
-      }
-      return false;
-    }
-
-    // Try immediately; if list not yet rendered, retry once after render
-    if (!scrollToRow()) {
-      setTimeout(() => {
-        rpRender();
-        setTimeout(scrollToRow, 80);
-      }, 120);
-    }
-  }
-
   // ── Fetch from backend ─────────────────────────────────────────
   async function loadReadiness() {
     try {
       const resp = await fetch('/readiness/scores');
       const json = await resp.json();
       _rpData = json.wards || [];
-      // Build fast lookup for map coloring
-      _rsLookup = {};
-      _rpData.forEach(w => { _rsLookup[w.ward_id] = w; });
-      refreshMapColors();   // re-color ward polygons immediately
-
       const sum  = json.summary || {};
 
       // countdown
@@ -4660,23 +3557,14 @@
       document.getElementById('rp-amber').textContent = amberCount || sum.amber_wards || '0';
       document.getElementById('rp-green').textContent = greenCount || sum.green_wards || '0';
 
-      // Quick-bar above the ward list
-      const qbRed = document.getElementById('rp-qb-red');
-      const qbAmber = document.getElementById('rp-qb-amber');
-      const qbGreen = document.getElementById('rp-qb-green');
-      if (qbRed) qbRed.textContent = redCount || sum.red_wards || '0';
-      if (qbAmber) qbAmber.textContent = amberCount || sum.amber_wards || '0';
-      if (qbGreen) qbGreen.textContent = greenCount || sum.green_wards || '0';
-
       // SSI — load from real /ssi endpoint (computed from DB)
       refreshSSI();
 
       rpRender();
       applyFtMapHighlights();
     } catch (e) {
-      // Silent failure — no toast. If we have stale data leave it visible.
-      // Retry after 30 seconds so the panel recovers without user action.
-      setTimeout(loadReadiness, 30000);
+      document.getElementById('rp-list').innerHTML =
+        '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">Failed to load readiness data.</div>';
     }
   }
 
@@ -4730,7 +3618,7 @@
     }
 
     const rows = wards.map((w, i) => `
-      <div class="rp-ward-row ${w.band}" data-ward-id="${w.ward_id}" onclick="rpWardClick(${w.ward_id}, '${w.ward_name.replace(/'/g,"\\'")}')">
+      <div class="rp-ward-row ${w.band}" onclick="rpWardClick(${w.ward_id}, '${w.ward_name.replace(/'/g,"\\'")}')">
         <span class="rp-ward-rank">${i + 1}</span>
         <div class="rp-ft-dot ${w.flood_type}"></div>
         <div class="rp-ward-info">
@@ -4958,68 +3846,8 @@
         </div>`;
     }).join('');
 
-    // Build sample comparison table (3 TPs + 2 FNs for dramatic contrast)
-    const tpSamples = (d.wards || []).filter(w => w.match === 'true_positive').slice(0, 3);
-    const fnSamples = (d.wards || []).filter(w => w.match === 'false_negative').slice(0, 2);
-    const sampleRows = [...tpSamples, ...fnSamples].map(w => {
-      const isTP = w.match === 'true_positive';
-      const predLabel = w.predicted_flooded
-        ? `<span class="bt-pred-pill crit">Critical</span>`
-        : `<span class="bt-pred-pill safe">Safe</span>`;
-      const refLabel = w.reference_flooded
-        ? `<span class="bt-flooded-yes">Yes</span>`
-        : `<span class="bt-flooded-no">No</span>`;
-      const matchIcon = isTP ? '✅' : w.match === 'false_negative' ? '❌' : w.match === 'false_positive' ? '⚠️' : '—';
-      return `<tr>
-        <td style="font-weight:500">${w.ward_name}</td>
-        <td>${predLabel}</td>
-        <td>${refLabel}</td>
-        <td>${matchIcon}</td>
-      </tr>`;
-    }).join('');
-
-    // Verdict numbers
-    const totalRef = d.true_positives + d.false_negatives;
-    const warningHours = '48–72';
-
     body.innerHTML = `
-
-      <!-- Narrative strip (persists in results) -->
-      <div class="bt-narrative">
-        <div class="bt-narrative-eyebrow">July 2023 — Worst flood in 45 years</div>
-        <div class="bt-narrative-peak-row">
-          <div class="bt-narrative-peak-num">208.66</div>
-          <div class="bt-narrative-peak-meta">
-            <span class="bt-narrative-peak-unit">metres</span>
-            <span class="bt-narrative-peak-sub">Yamuna at Old Railway Bridge · Jul 13</span>
-          </div>
-        </div>
-        <div class="bt-narrative-stats">
-          <div class="bt-nar-stat"><div class="bt-nar-stat-val">153mm</div><div class="bt-nar-stat-lbl">Peak single-day rain</div></div>
-          <div class="bt-nar-stat"><div class="bt-nar-stat-val">27,000+</div><div class="bt-nar-stat-lbl">Families displaced</div></div>
-          <div class="bt-nar-stat"><div class="bt-nar-stat-val">₹1,200Cr</div><div class="bt-nar-stat-lbl">Estimated damage</div></div>
-        </div>
-      </div>
-
-      <!-- Precision / Recall plain-language statements -->
-      <div class="bt-pr-block">
-        <div class="bt-pr-statement recall">
-          <div class="bt-pr-pct">${d.recall}%</div>
-          <div class="bt-pr-text">
-            <strong>Recall — Wards correctly warned</strong>
-            <span>The model correctly flagged <strong>${d.recall}%</strong> of wards that historically flooded in July 2023. Of the ${totalRef} reference-flooded wards, <strong>${d.true_positives} received advance warning.</strong></span>
-          </div>
-        </div>
-        <div class="bt-pr-statement precision">
-          <div class="bt-pr-pct">${d.precision}%</div>
-          <div class="bt-pr-text">
-            <strong>Precision — Signal quality</strong>
-            <span>Of every ward the model flagged Critical, <strong>${d.precision}%</strong> were actually flooded — keeping false alarms low and protecting resource credibility.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Precision / Recall / F1 score cards -->
+      <!-- Precision / Recall / F1 -->
       <div id="bt-metrics">
         <div class="bt-metric precision">
           <div class="bt-metric-num">${d.precision}%</div>
@@ -5058,20 +3886,6 @@
         </div>
       </div>
 
-      <!-- Sample comparison table -->
-      <div class="bt-sample-table-wrap">
-        <div class="bt-section-lbl">Model vs Reality — Sample Wards</div>
-        <table class="bt-sample-table">
-          <thead><tr>
-            <th>Ward</th>
-            <th>Our Prediction</th>
-            <th>Actually Flooded</th>
-            <th>Match</th>
-          </tr></thead>
-          <tbody>${sampleRows || '<tr><td colspan="4" style="color:var(--text-dim);text-align:center;padding:10px">No ward data</td></tr>'}</tbody>
-        </table>
-      </div>
-
       <!-- Event timeline -->
       <div id="bt-timeline">
         <div class="bt-section-lbl">Key 2023 events replayed</div>
@@ -5088,36 +3902,6 @@
           <button class="bt-filter-btn" onclick="btFilter(this,'false_positive')">~ Over-pred (${d.false_positives})</button>
         </div>
         <div id="bt-ward-list"></div>
-      </div>
-
-      <!-- Closing verdict -->
-      <div class="bt-verdict">
-        <div class="bt-verdict-headline">
-          If deployed before July 2023, this system would have given Delhi authorities
-          <em>${warningHours} hours</em> advance warning for
-          <em>${d.true_positives}</em> of the <em>${totalRef}</em> wards that flooded.
-        </div>
-        <div class="bt-verdict-stats">
-          <div class="bt-verdict-stat">
-            <div class="bt-verdict-stat-val">${warningHours}h</div>
-            <div class="bt-verdict-stat-lbl">Advance warning</div>
-          </div>
-          <div class="bt-verdict-stat">
-            <div class="bt-verdict-stat-val">${d.true_positives}</div>
-            <div class="bt-verdict-stat-lbl">Wards warned in time</div>
-          </div>
-          <div class="bt-verdict-stat">
-            <div class="bt-verdict-stat-val">${d.recall}%</div>
-            <div class="bt-verdict-stat-lbl">Coverage rate</div>
-          </div>
-        </div>
-        <div class="bt-verdict-sub">
-          Hathnikund discharge peaked on <strong>Jul 11</strong>. With 48–72h travel time,
-          this model's pre-monsoon score would have flagged
-          <strong>${d.true_positives} critical wards by Jul 9</strong> —
-          before a single family was displaced.
-          The ${d.false_negatives} missed wards represent the frontier for sensor coverage expansion.
-        </div>
       </div>`;
 
     _btFilter = 'all';
@@ -5144,19 +3928,17 @@
 
     const rows = filtered.slice(0, 150).map(w => {
       const refTag  = w.reference_flooded
-        ? `<span class="bt-tag ref" title="This ward historically flooded in July 2023 per NRSC satellite data">Ref</span>` : '';
+        ? `<span class="bt-tag ref">Ref</span>` : '';
       const predTag = w.predicted_flooded
         ? `<span class="bt-tag pred">Pred</span>` : '';
-      const isMissed = w.match === 'false_negative';
-      const scoreHtml = isMissed
-        ? `<span style="color:var(--red);font-size:11px;font-family:var(--mono)">Not triggered</span>`
-        : `<span class="bt-ward-score">${w.worst_score <= -999 ? 'CRIT' : w.worst_score.toFixed(1)}</span>`;
+      const score = w.worst_score <= -999 ? 'CRIT'
+                  : w.worst_score.toFixed(1);
       return `
         <div class="bt-ward-row" onclick="rpWardClick(${w.ward_id},'${w.ward_name.replace(/'/g,"\\'")}')">
           <div class="bt-match-dot ${DOT_CLASS[w.match] || 'tn-dot'}"></div>
           <div class="bt-ward-name">${w.ward_name}</div>
           <div class="bt-ward-tags">${refTag}${predTag}</div>
-          ${scoreHtml}
+          <div class="bt-ward-score">${score}</div>
         </div>`;
     }).join('');
 
@@ -5239,46 +4021,20 @@
       pill.style.border     = `1px solid ${d.alert_colour || '#94A3B8'}`;
 
       document.getElementById('yamuna-discharge').textContent =
-        d.discharge_cusecs === undefined || d.discharge_cusecs === null
-          ? 'Fetching…'
-          : d.discharge_cusecs === 0
-            ? '0 (calm)'
-            : (d.discharge_cusecs / 1000).toFixed(1) + 'L';
+        d.discharge_cusecs > 0
+          ? (d.discharge_cusecs / 1000).toFixed(1) + 'L'
+          : '—';
       document.getElementById('yamuna-stage').textContent =
         d.predicted_delhi_stage_m || '—';
       document.getElementById('yamuna-eta-hrs').textContent =
         d.travel_time_hours ? d.travel_time_hours + 'h' : '—';
       document.getElementById('yamuna-eta-str').textContent =
         d.is_live
-          ? `ETA Delhi arrival: ${d.eta_delhi}`
-          : d.source === 'Unavailable'
-            ? 'Data unavailable — displaying last known safe state'
-            : `ETA Delhi arrival: ${d.eta_delhi}`;
-
-      const badge = document.getElementById('yamuna-source-badge');
-      if (d.is_live) {
-        badge.textContent  = '● Live — CWC India-WRIS';
-        badge.className    = 'yamuna-source-badge live';
-      } else if (d.source === 'Unavailable') {
-        badge.textContent  = '○ Data unavailable';
-        badge.className    = 'yamuna-source-badge unavail';
-      } else {
-        badge.textContent  = '◐ Estimated — Upstream precipitation proxy (Open-Meteo) calibrated to CWC Hathnikund thresholds';
-        badge.className    = 'yamuna-source-badge proxy';
-      }
-
-      // Remove loading skeleton from yamuna stat cards
-      ['ys-discharge-card','ys-stage-card','ys-eta-card'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.classList.remove('loading');
-      });
+          ? `Live — ${d.source}. ETA: ${d.eta_delhi}`
+          : `Proxy estimate — ${d.note || d.source}`;
 
     } catch (_) {
       document.getElementById('yamuna-eta-str').textContent = 'Yamuna data unavailable';
-      showAlert('warn', 'Yamuna data unavailable', 'Could not reach Hathnikund status feed — retrying in 5 minutes.');
-      const badge = document.getElementById('yamuna-source-badge');
-      badge.textContent = '○ Data unavailable';
-      badge.className   = 'yamuna-source-badge unavail';
     }
   }
 
@@ -5549,20 +4305,151 @@
     setTimeout(() => map.invalidateSize(), 300);
   }
 
-  // Keyboard shortcuts
+  // Esc exits presentation mode
   document.addEventListener('keydown', e => {
-    const inInput = document.activeElement.tagName === 'INPUT'
-                 || document.activeElement.tagName === 'TEXTAREA';
     if (e.key === 'Escape' && _presentMode) togglePresentMode();
-    if (inInput) return;
-    // R — toggle Readiness panel
-    if (e.key === 'r' || e.key === 'R') toggleReadiness();
-    // P — toggle side panel
-    if ((e.key === 'p' || e.key === 'P') && !e.ctrlKey && !e.metaKey) toggleSidePanel();
   });
 
 
+  /* ════════════════════════════════════════════════════════════════
+     WARD COMPARISON MODE
+     ════════════════════════════════════════════════════════════════ */
+  let _compareMode  = false;
+  let _compareWards = [];   // [{ward_id, ward_name}] — max 2
+  let _compareData  = {};   // ward_id → {readiness, detail}
 
+  const BAND_COLORS = { red: '#DC2626', amber: '#D97706', green: '#16A34A' };
+  const ACTION_ITEMS = {
+    red:   ['Desilt all ward drains before June 15','Verify all pump stations','Pre-position NDRF team and flood relief','Issue advance notice to low-lying residents','Confirm evacuation routes + shelter capacity'],
+    amber: ['Complete drain desilting within 3 weeks','Pump station inspection this week','Update ward flood contact list','Mark waterlogging-prone roads','Confirm medical facility preparedness'],
+    green: ['Routine monthly drain inspection','Verify sensor coverage','Ward flood contact list review'],
+  };
+
+  function toggleCompareMode() {
+    _compareMode = !_compareMode;
+    const panel = document.getElementById('compare-panel');
+    panel.classList.toggle('open', _compareMode);
+    if (!_compareMode) {
+      _compareWards = [];
+      _compareData  = {};
+      _renderCompare();
+    }
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  function closeCompare() {
+    _compareMode = false;
+    _compareWards = [];
+    _compareData  = {};
+    document.getElementById('compare-panel').classList.remove('open');
+    setTimeout(() => map.invalidateSize(), 300);
+  }
+
+  async function addWardToCompare(wardId, wardName) {
+    if (!_compareMode) return;
+
+    // Replace if same slot already filled, else fill next empty slot
+    if (_compareWards.length === 2) _compareWards = [];
+    if (_compareWards.some(w => w.ward_id === wardId)) return;
+    _compareWards.push({ ward_id: wardId, ward_name: wardName });
+
+    // Fetch data if not cached
+    if (!_compareData[wardId]) {
+      try {
+        const [rdResp, detResp] = await Promise.all([
+          fetch(`/readiness/ward/${wardId}`),
+          fetch(`/ward/${wardId}/detail`),
+        ]);
+        const rd  = rdResp.ok  ? await rdResp.json()  : null;
+        const det = detResp.ok ? await detResp.json() : null;
+        _compareData[wardId] = { readiness: rd, detail: det };
+      } catch(e) {
+        _compareData[wardId] = { readiness: null, detail: null };
+      }
+    }
+    _renderCompare();
+  }
+
+  function _renderCompare() {
+    const hint = document.getElementById('cp-hint');
+    if (hint) hint.textContent = _compareWards.length === 0
+      ? 'Click any ward on the map to add it'
+      : _compareWards.length === 1
+      ? `${_compareWards[0].ward_name} selected — click second ward`
+      : 'Comparing two wards';
+
+    ['left','right'].forEach((side, i) => {
+      const col = document.getElementById(`cp-${side}`);
+      if (!col) return;
+      const w = _compareWards[i];
+
+      if (!w) {
+        col.innerHTML = `<div class="cp-empty">
+          <div>${i === 0 ? 'Select a ward' : 'Select a second ward'}</div>
+          <div style="font-size:11px">${i === 0 ? 'Click map to select' : 'Select first ward first'}</div>
+        </div>`;
+        return;
+      }
+
+      const d = _compareData[w.ward_id] || {};
+      const rd  = d.readiness || {};
+      const det = d.detail    || {};
+      const band  = rd.band  || 'green';
+      const score = rd.readiness_score != null ? rd.readiness_score.toFixed(1) : '—';
+      const color = BAND_COLORS[band] || '#16A34A';
+      const ft    = rd.flood_type || '—';
+      const ni    = det.nearby_infrastructure || {};
+      const actions = (ACTION_ITEMS[band] || ACTION_ITEMS.green)
+        .map(a => `<li>${a}</li>`).join('');
+
+      col.innerHTML = `
+        <div class="cp-ward-title">${w.ward_name}</div>
+        <div class="cp-ward-zone">${rd.zone_name || det.zone_name || '—'}</div>
+        <div class="cp-score-row">
+          <div class="cp-score-big" style="color:${color}">${score}</div>
+          <div>
+            <div class="cp-score-meta" style="font-weight:600;color:${color}">${(rd.band_label||band).toUpperCase()}</div>
+            <div class="cp-score-meta">${ft.charAt(0).toUpperCase()+ft.slice(1)} flood type</div>
+          </div>
+        </div>
+        <div class="cp-metric-grid">
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.mean_elevation ? det.mean_elevation+'m' : '—'}</div>
+            <div class="cp-metric-lbl">Elevation</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.hotspot_count ?? '—'}</div>
+            <div class="cp-metric-lbl">Hotspots</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val">${det.times_triggered_30d ?? '—'}</div>
+            <div class="cp-metric-lbl">Triggered (30d)</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:${color}">${rd.trigger_rate_pct != null ? rd.trigger_rate_pct+'%' : '—'}</div>
+            <div class="cp-metric-lbl">Trigger rate</div>
+          </div>
+        </div>
+        <div class="cp-metric-grid">
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:#DC2626">${ni.hospitals??0}</div>
+            <div class="cp-metric-lbl">Hospitals</div>
+          </div>
+          <div class="cp-metric">
+            <div class="cp-metric-val" style="color:#2563EB">${ni.fire_stations??0}</div>
+            <div class="cp-metric-lbl">Fire stn</div>
+          </div>
+        </div>
+        <div class="cp-section-lbl">Pre-monsoon actions</div>
+        <ul class="cp-action-list">${actions}</ul>
+        <div style="margin-top:10px">
+          <a href="/export/ward/${w.ward_id}" target="_blank" class="export-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export PDF
+          </a>
+        </div>`;
+    });
+  }
 
   /* ════════════════════════════════════════════════════════════════
      ALERT FEED — structured real-time toasts
@@ -5669,260 +4556,60 @@
   }, 2000);
 
 
-
-
   /* ════════════════════════════════════════════════════════════════
-     UX OVERHAUL JS — Panel Toggle, Tabs, Alert Banner, Heatmap
+     WIRE COMPARE MODE INTO MAP WARD CLICKS
      ════════════════════════════════════════════════════════════════ */
+  // Add Compare button to control bar (done in JS to avoid HTML injection complexity)
+  document.addEventListener('DOMContentLoaded', () => {
+    // Compare button
+    const ctrlBar = document.getElementById('control-bar');
+    if (ctrlBar) {
+      const sep = document.createElement('div');
+      sep.className = 'ctrl-sep';
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-ghost';
+      btn.id = 'btn-compare';
+      btn.dataset.mode = 'analysis';
+      btn.style.cssText = 'border:1px solid var(--purple,#7C3AED);color:var(--purple,#7C3AED);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;background:transparent;font-family:var(--font);font-weight:500;display:flex;align-items:center;gap:6px';
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Compare`;
+      btn.onclick = () => {
+        toggleCompareMode();
+        btn.style.background = _compareMode ? 'var(--purple,#7C3AED)' : 'transparent';
+        btn.style.color      = _compareMode ? '#fff' : 'var(--purple,#7C3AED)';
+      };
+      // Insert before the flex spacer at the end
+      const spacer = ctrlBar.querySelector('span[style*="flex:1"]');
+      if (spacer) { ctrlBar.insertBefore(sep, spacer); ctrlBar.insertBefore(btn, spacer); }
+      else { ctrlBar.appendChild(sep); ctrlBar.appendChild(btn); }
 
-  // ── Side Panel Toggle ─────────────────────────────────────────
-  function toggleSidePanel() {
-    const panel = document.getElementById('side-panel');
-    const btn   = document.getElementById('panel-toggle-btn');
-    const icon  = document.getElementById('panel-toggle-icon');
-    const isOpen = panel.classList.toggle('panel-open');
-    btn.classList.toggle('panel-closed', !isOpen);
-    if (icon) icon.textContent = isOpen ? '◀' : '▶';
-    setTimeout(() => map.invalidateSize(), 350);
-  }
-
-  // ── Panel Tab Switching ───────────────────────────────────────
-  function switchPanelTab(tabName) {
-    document.querySelectorAll('.panel-tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.panel-tab-btn[data-tab="${tabName}"]`).classList.add('active');
-    document.querySelectorAll('.panel-tab-content').forEach(c => c.classList.remove('active'));
-    document.getElementById('tab-' + tabName).classList.add('active');
-
-    // Lazy-load risk tab data
-    if (tabName === 'risk') loadRiskTab();
-  }
-
-  // ── Risk Tab ──────────────────────────────────────────────────
-  let _riskTabLoaded = false;
-
-  async function loadRiskTab() {
-    if (_riskTabLoaded && _rpData.length > 0) { renderRiskTab(); return; }
-    try {
-      if (_rpData.length === 0) {
-        const resp = await fetch('/readiness/scores');
-        const json = await resp.json();
-        _rpData = json.wards || [];
-      }
-      _riskTabLoaded = true;
-      renderRiskTab();
-
-      // Also update SSI in risk tab
-      try {
-        const sResp = await fetch('/ssi');
-        if (sResp.ok) {
-          const sd = await sResp.json();
-          if (!sd.error) {
-            const fill = document.getElementById('rt-ssi-fill');
-            const val = document.getElementById('rt-ssi-val');
-            if (fill && val) {
-              const col = sd.ssi >= 75 ? '#DC2626' : sd.ssi >= 50 ? '#D97706' : sd.ssi >= 30 ? '#CA8A04' : '#16A34A';
-              fill.style.width = sd.ssi + '%';
-              fill.style.background = col;
-              val.textContent = sd.ssi;
-              val.style.color = col;
-            }
-          }
-        }
-      } catch(_) {}
-    } catch(e) {
-      document.getElementById('rt-ward-list').innerHTML =
-        '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">Failed to load risk data</div>';
+      setControlMode(controlMode);
     }
-  }
-
-  function renderRiskTab() {
-    // Summary cards
-    const redCount = _rpData.filter(w => w.band === 'red').length;
-    const amberCount = _rpData.filter(w => w.band === 'amber').length;
-    const greenCount = _rpData.filter(w => w.band === 'green').length;
-    const rtRed = document.getElementById('rt-red');
-    const rtAmber = document.getElementById('rt-amber');
-    const rtGreen = document.getElementById('rt-green');
-    if (rtRed) rtRed.textContent = redCount;
-    if (rtAmber) rtAmber.textContent = amberCount;
-    if (rtGreen) rtGreen.textContent = greenCount;
-
-    // Ward list
-    const query = (document.getElementById('rt-search')?.value || '').toLowerCase();
-    let wards = _rpData;
-    if (query) wards = wards.filter(w => w.ward_name.toLowerCase().includes(query));
-
-    // Sort: red first, then amber, then green
-    const bandOrder = { red: 0, amber: 1, green: 2 };
-    wards = [...wards].sort((a, b) => (bandOrder[a.band] ?? 3) - (bandOrder[b.band] ?? 3));
-
-    const list = document.getElementById('rt-ward-list');
-    if (!list) return;
-
-    if (wards.length === 0) {
-      list.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-dim)">No wards match</div>';
-      return;
-    }
-
-    list.innerHTML = wards.slice(0, 100).map(w => {
-      const col = w.band === 'red' ? 'var(--red)' : w.band === 'amber' ? 'var(--yellow)' : 'var(--green)';
-      return `<div class="risk-ward-item" onclick="riskWardClick(${w.ward_id},'${w.ward_name.replace(/'/g,"\\'")}')">
-        <div class="risk-ward-dot ${w.band}"></div>
-        <div class="risk-ward-name">${w.ward_name}</div>
-        <div class="risk-ward-score" style="color:${col}">${w.readiness_score.toFixed(0)}</div>
-      </div>`;
-    }).join('');
-  }
-
-  // ── Layer Toggle Switches ─────────────────────────────────────
-  function toggleLayerSwitch(layer, btn) {
-    const isOn = btn.classList.toggle('on');
-
-    switch (layer) {
-      case 'hotspots':
-        if (isOn) { loadHotspots(); }
-        else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
-        break;
-      case 'heatmap':
-        if (isOn) { loadHeatmap(); }
-        else if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
-        // Sync the other heatmap toggle
-        const fcHm = document.getElementById('fc-heatmap');
-        const tsHm = document.getElementById('ts-heatmap');
-        if (fcHm && fcHm !== btn) fcHm.classList.toggle('on', isOn);
-        if (tsHm && tsHm !== btn) tsHm.classList.toggle('on', isOn);
-        break;
-      case 'infra':
-        toggleInfrastructure();
-        break;
-      case 'elev':
-        toggleElevation();
-        break;
-      case 'river':
-      case 'pluvial':
-      case 'backflow':
-      case 'sustained':
-        toggleFtLayer(layer);
-        break;
-      case 'floodline':
-        toggleFloodline();
-        break;
-    }
-  }
-
-  function toggleFcWards(btn) {
-    const isOn = btn.classList.toggle('on');
-    if (wardLayer) {
-      if (isOn) wardLayer.addTo(map);
-      else map.removeLayer(wardLayer);
-    }
-  }
-
-  // ── Heatmap Layer ─────────────────────────────────────────────
-  let heatLayer = null;
-
-  async function loadHeatmap() {
-    if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
-    const b = map.getBounds();
-    const url = `/map/hotspots?minx=${b.getWest().toFixed(4)}&miny=${b.getSouth().toFixed(4)}&maxx=${b.getEast().toFixed(4)}&maxy=${b.getNorth().toFixed(4)}`;
-    try {
-      const data = await fetch(url).then(r => r.json());
-      if (!data.features || data.features.length === 0) return;
-      const points = data.features.map(f => {
-        const cap = f.properties.capacity_c || 100;
-        const intensity = Math.max(0.1, 1 - (cap / 100)); // low capacity = high intensity
-        return [f.geometry.coordinates[1], f.geometry.coordinates[0], intensity];
-      });
-      heatLayer = L.heatLayer(points, {
-        radius: 18,
-        blur: 12,
-        maxZoom: 15,
-        max: 1.0,
-        gradient: { 0.2: '#16A34A', 0.4: '#D97706', 0.6: '#EA580C', 0.8: '#DC2626', 1.0: '#991B1B' }
-      }).addTo(map);
-    } catch(e) { console.warn('[HEATMAP]', e); }
-  }
-
-  // Re-render heatmap on map move if active
-  map.on('moveend', function() {
-    if (heatLayer) loadHeatmap();
   });
 
-  // ── Alert Banner ──────────────────────────────────────────────
-  function updateAlertBanner() {
-    const banner = document.getElementById('alert-banner');
-    if (!banner) return;
+  // Tag control-bar actions by mode and apply initial filter.
+  (function initControlModes() {
+    const opIds = ['btn-cycle', 'btn-storm', 'btn-reset'];
+    const anIds = ['btn-infra', 'btn-elev', 'btn-backtest', 'btn-readiness', 'btn-history', 'btn-report'];
+    opIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('data-mode', 'operations');
+    });
+    anIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('data-mode', 'analysis');
+    });
+    setControlMode(controlMode);
+  })();
 
-    const triggered = parseInt(document.getElementById('m-triggered')?.textContent) || 0;
-    const ssiVal = document.getElementById('ssi-val')?.textContent || '—';
-    const ssiNum = parseInt(ssiVal) || 0;
-    const yamunaText = document.getElementById('yamuna-pill')?.textContent?.trim() || 'NORMAL';
-
-    // Determine level
-    let level = 'normal';
-    if (triggered > 50 || yamunaText === 'EXTREME' || ssiNum >= 75) level = 'critical';
-    else if (triggered > 20 || yamunaText === 'DANGER' || ssiNum >= 50) level = 'danger';
-    else if (triggered > 5 || yamunaText === 'WARNING' || yamunaText === 'WATCH' || ssiNum >= 30) level = 'elevated';
-
-    // Update banner text
-    const statusEl = document.getElementById('ab-status');
-    const trigEl = document.getElementById('ab-triggered');
-    const ssiEl = document.getElementById('ab-ssi');
-    const yamEl = document.getElementById('ab-yamuna');
-
-    const STATUS_TEXT = {
-      normal: '✓ System Normal',
-      elevated: '⚠ Elevated Alert',
-      danger: '🔴 Danger',
-      critical: '🔴 CRITICAL'
-    };
-
-    if (statusEl) statusEl.textContent = STATUS_TEXT[level] || 'System Normal';
-    if (trigEl) trigEl.textContent = `${triggered} wards triggered`;
-    if (ssiEl) ssiEl.textContent = `SSI ${ssiVal}`;
-    if (yamEl) yamEl.textContent = `Yamuna: ${yamunaText}`;
-
-    // Update banner class
-    banner.className = 'visible level-' + level;
-    banner.id = 'alert-banner';
-
-    // Update header strip
-    const strip = document.getElementById('header-alert-strip');
-    if (strip) {
-      strip.className = level === 'normal' ? '' : level === 'elevated' ? 'warning' : level === 'danger' ? 'danger' : 'critical';
+  // Patch openDrillPanel to also feed compare mode
+  const _origOpenDrillPanel = openDrillPanel;
+  window.openDrillPanel = function(wardId, wardName) {
+    if (_compareMode) {
+      addWardToCompare(wardId, wardName);
+      // Don't open drill panel in compare mode
+      return;
     }
-
-    // Toggle body class for layout
-    document.body.classList.toggle('has-alert', level !== 'normal');
-  }
-
-  // Run alert banner update after each major event
-  const _origRefreshMap2 = refreshMap;
-  window.refreshMap = async function() {
-    await _origRefreshMap2.apply(this, arguments);
-    setTimeout(updateAlertBanner, 500);
-  };
-
-  // Also update on SSI/Yamuna refresh
-  const _origRefreshSSI2 = window.refreshSSI || refreshSSI;
-  window.refreshSSI = async function() {
-    await _origRefreshSSI2.apply(this, arguments);
-    setTimeout(updateAlertBanner, 300);
-  };
-
-  // Initial banner update
-  setTimeout(updateAlertBanner, 3000);
-  setInterval(updateAlertBanner, 30000);
-
-  // ── Presentation Mode adjustments ─────────────────────────────
-  // Hide panel toggle in present mode
-  const _origTogglePM = togglePresentMode;
-  window.togglePresentMode = function() {
-    _origTogglePM.apply(this, arguments);
-    const ptBtn = document.getElementById('panel-toggle-btn');
-    if (ptBtn) ptBtn.style.display = _presentMode ? 'none' : 'flex';
-    const fc = document.getElementById('floating-controls');
-    if (fc) fc.style.display = _presentMode ? 'none' : 'flex';
+    _origOpenDrillPanel.apply(this, arguments);
   };
 
 </script>

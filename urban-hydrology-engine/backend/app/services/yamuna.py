@@ -199,7 +199,7 @@ async def _fallback_open_meteo() -> dict:
             "upstream_24h_rain_mm": round(cum_24h, 1),
             "yamuna_thresholds":   YAMUNA_THRESHOLDS,
             "is_live":             False,
-            "note": "CWC WRIS unavailable — showing upstream rain proxy estimate",
+            "note": "CWC India-WRIS unavailable — discharge estimated from upstream Haridwar precipitation (Open-Meteo) using empirical proxy: 1mm upstream ≈ 5,000 cusecs at Hathnikund. Thresholds from CWC published alert levels.",
         }
 
     except Exception as exc:

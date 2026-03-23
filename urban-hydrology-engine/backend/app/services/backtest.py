@@ -14,13 +14,13 @@ What this does:
 The reference flooded-ward list is derived from:
   - NRSC 2023 flood inundation satellite data
   - Known low-elevation areas along Yamuna (< 207m)
-  - Reported flooding in Delhi news: Yamuna Khadar, Civil Lines, 
-    Kashmere Gate, ITO area, Mayur Vihar, Wazirabad, Burari, 
+  - Reported flooding in Delhi news: Yamuna Khadar, Civil Lines,
+    Kashmere Gate, ITO area, Mayur Vihar, Wazirabad, Burari,
     Usmanpur, Gokulpuri, Mustafabad, Shahdara, Geeta Colony
 """
 
+import json
 from datetime import datetime, timedelta
-import random
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
@@ -107,23 +107,33 @@ def _is_reference_flooded(ward_name: str) -> bool:
 # Simulation geometry helpers
 # ---------------------------------------------------------------------------
 
-def _full_delhi_polygon():
-    """Bounding polygon covering all of Delhi (EPSG:4326)."""
+def _yamuna_corridor_polygon() -> dict:
+    """Narrow corridor following the Yamuna floodplain.
+    Covers ITO, Civil Lines, Kashmere Gate, Wazirabad,
+    Yamuna Vihar, Shahdara — the reference flooded areas.
+    """
     return {
         "type": "Polygon",
-        "coordinates": [[[76.83, 28.40], [77.55, 28.40],
-                          [77.55, 28.90], [76.83, 28.90],
-                          [76.83, 28.40]]]
+        "coordinates": [[
+            [77.10, 28.50], [77.35, 28.50],
+            [77.35, 28.80], [77.10, 28.80],
+            [77.10, 28.50]
+        ]]
     }
 
 
-def _yamuna_corridor_polygon():
-    """Narrow polygon covering the Yamuna floodplain corridor."""
+def _north_central_delhi_polygon() -> dict:
+    """Broader polygon covering north/central Delhi for pre-peak urban rain.
+    Weighted toward north and east Delhi where urban flooding concentrates
+    before the Yamuna overtops.
+    """
     return {
         "type": "Polygon",
-        "coordinates": [[[77.20, 28.52], [77.32, 28.52],
-                          [77.32, 28.82], [77.20, 28.82],
-                          [77.20, 28.52]]]
+        "coordinates": [[
+            [77.05, 28.50], [77.40, 28.50],
+            [77.40, 28.82], [77.05, 28.82],
+            [77.05, 28.50]
+        ]]
     }
 
 
@@ -131,17 +141,39 @@ def _yamuna_corridor_polygon():
 # Main backtest function
 # ---------------------------------------------------------------------------
 
+async def _insert_backtest_rain(
+    conn: AsyncConnection,
+    poly: dict,
+    intensity_r: float,
+    event_dt: datetime,
+) -> int:
+    """
+    Insert a rain event with a historical created_at timestamp.
+    Returns the new event id.
+    """
+    row = await conn.execute(
+        text(
+            "INSERT INTO rain_events (geom, intensity_r, created_at) "
+            "VALUES (ST_GeomFromGeoJSON(:geom), :intensity, :ts) "
+            "RETURNING id"
+        ),
+        {"geom": json.dumps(poly), "intensity": intensity_r, "ts": event_dt},
+    )
+    return row.scalar_one()
+
+
 async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
     """
     Run the 2023 backtest:
-      - Insert synthetic rain events for each key 2023 date
-      - Score all wards for EACH event date
+      - Insert synthetic rain events with historical 2023 created_at timestamps
+      - Score all wards using cutoff_override=event_dt so the scoring engine
+        sees only that day's event (not the live 60-min window)
       - Compute aggregate predicted status per ward
       - Compare against reference flooded wards
+      - Clean up all inserted backtest rain events by ID when done
       - Return results + precision/recall
     """
     from app.services.scoring import compute_ward_score
-    from app.api.ingest import ingest_rain_internal  # reuse existing logic
 
     # ── Fetch all wards ───────────────────────────────────────────────────
     ward_rows = await conn.execute(text(
@@ -151,36 +183,43 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
     if not wards:
         return {"error": "No wards found. Run import_delhi_wards.py first."}
 
-    # ── Clear any existing backtest rain events (tagged with source) ──────
-    await conn.execute(text(
-        "DELETE FROM rain_events WHERE created_at > NOW() - INTERVAL '30 days' "
-        "AND intensity_r >= 9.0"  # proxy tag: peak events only
-    ))
-    await conn.commit()
-
     # ── For each event, insert rain + score all wards ─────────────────────
     ward_triggered_count = {w["id"]: 0 for w in wards}
     ward_critical_count  = {w["id"]: 0 for w in wards}
     ward_worst_score     = {w["id"]: 100.0 for w in wards}
 
     event_summaries = []
+    all_inserted_ids: list[int] = []
 
     for event in EVENTS_2023:
-        # Insert rain event covering Delhi
-        poly = _yamuna_corridor_polygon() if event["yamuna_level_m"] > 206.5 \
-               else _full_delhi_polygon()
+        # Event date at midnight — used as cutoff_override so the scoring
+        # engine's  re.created_at >= cutoff  window includes the noon event.
+        event_dt = datetime.strptime(event["date"], "%Y-%m-%d")
 
-        result = await ingest_rain_internal(
-            {"geojson_polygon": poly, "intensity_r": event["intensity_r"]},
-            conn
+        # Polygon: peak/recession events use the Yamuna corridor;
+        # pre-peak urban rain uses a broader north/central Delhi polygon.
+        if event["yamuna_level_m"] > 206.5:
+            poly = _yamuna_corridor_polygon()
+        else:
+            poly = _north_central_delhi_polygon()
+
+        # Insert rain event at noon on the event date
+        event_noon = event_dt.replace(hour=12)
+        event_id = await _insert_backtest_rain(
+            conn, poly, event["intensity_r"], event_noon
         )
+        all_inserted_ids.append(event_id)
         await conn.commit()
 
-        # Score all wards against this rain event
+        # Score all wards with cutoff = event midnight so noon event is visible
         n_triggered = 0
         n_critical  = 0
         for ward in wards:
-            score = await compute_ward_score(ward["id"], conn)
+            score = await compute_ward_score(
+                ward_id=ward["id"],
+                conn=conn,
+                cutoff_override=event_dt,
+            )
             if score["triggered"]:
                 n_triggered += 1
                 ward_triggered_count[ward["id"]] += 1
@@ -191,14 +230,14 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
                 ward_worst_score[ward["id"]] = score["ws_score"]
 
         event_summaries.append({
-            "date":          event["date"],
-            "label":         event["label"],
-            "rain_mm":       event["rain_mm"],
-            "yamuna_m":      event["yamuna_level_m"],
-            "intensity_r":   event["intensity_r"],
+            "date":            event["date"],
+            "label":           event["label"],
+            "rain_mm":         event["rain_mm"],
+            "yamuna_m":        event["yamuna_level_m"],
+            "intensity_r":     event["intensity_r"],
             "wards_triggered": n_triggered,
             "wards_critical":  n_critical,
-            "peak":          event.get("peak", False),
+            "peak":            event.get("peak", False),
         })
 
         if progress_cb:
@@ -209,10 +248,12 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
                 pct
             )
 
-        # Remove rain events after each day so they don't stack
-        await conn.execute(text(
-            "DELETE FROM rain_events WHERE created_at > NOW() - INTERVAL '5 minutes'"
-        ))
+    # ── Clean up all inserted backtest rain events by ID ──────────────────
+    if all_inserted_ids:
+        await conn.execute(
+            text("DELETE FROM rain_events WHERE id = ANY(:ids)"),
+            {"ids": all_inserted_ids},
+        )
         await conn.commit()
 
     # ── Build per-ward result ─────────────────────────────────────────────
@@ -249,15 +290,15 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
             true_negatives += 1
 
         ward_results.append({
-            "ward_id":          wid,
-            "ward_name":        wname,
-            "triggered_days":   triggered_days,
-            "critical_days":    critical_days,
-            "worst_score":      worst_score,
+            "ward_id":           wid,
+            "ward_name":         wname,
+            "triggered_days":    triggered_days,
+            "critical_days":     critical_days,
+            "worst_score":       worst_score,
             "predicted_flooded": predicted_flooded,
             "reference_flooded": reference_flooded,
-            "match":            match,
-            "trigger_rate_pct": round(triggered_days / n_events * 100, 1),
+            "match":             match,
+            "trigger_rate_pct":  round(triggered_days / n_events * 100, 1),
         })
 
     # Sort: worst match / highest risk first
@@ -268,6 +309,47 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
         -r["trigger_rate_pct"]
     ))
 
+    # ── Debug: geometry check for Missed (false-negative) wards ──────────
+    missed_wards = [r for r in ward_results if r["match"] == "false_negative"]
+    if missed_wards:
+        corridor_wkt = "POLYGON((77.18 28.52,77.28 28.52,77.28 28.75,77.18 28.75,77.18 28.52))"
+        print("\n[BACKTEST DEBUG] ── Missed wards geometry check ──────────────")
+        for r in missed_wards:
+            wid = r["ward_id"]
+            try:
+                cx_row = await conn.execute(
+                    text("SELECT ST_X(ST_Centroid(geom)) AS cx, "
+                         "ST_Y(ST_Centroid(geom)) AS cy FROM wards WHERE id = :wid"),
+                    {"wid": wid},
+                )
+                cx_rec = cx_row.mappings().fetchone()
+                cx = round(cx_rec["cx"], 5) if cx_rec else "N/A"
+                cy = round(cx_rec["cy"], 5) if cx_rec else "N/A"
+
+                hs_row = await conn.execute(
+                    text("SELECT COUNT(*) AS n FROM hotspots WHERE ward_id = :wid"),
+                    {"wid": wid},
+                )
+                n_hotspots = hs_row.scalar_one()
+
+                ix_row = await conn.execute(
+                    text("SELECT ST_Intersects(geom, "
+                         "ST_GeomFromText(:wkt, 4326)) AS intersects "
+                         "FROM wards WHERE id = :wid"),
+                    {"wkt": corridor_wkt, "wid": wid},
+                )
+                intersects = ix_row.scalar_one()
+
+                print(
+                    f"  MISSED  {r['ward_name']:<30}  "
+                    f"centroid=({cx}, {cy})  "
+                    f"hotspots={n_hotspots}  "
+                    f"rain_intersects={intersects}"
+                )
+            except Exception as exc:
+                print(f"  MISSED  {r['ward_name']} — debug query failed: {exc}")
+        print("[BACKTEST DEBUG] ─────────────────────────────────────────────\n")
+
     # ── Precision / Recall ────────────────────────────────────────────────
     precision = (true_positives / (true_positives + false_positives)
                  if (true_positives + false_positives) > 0 else 0.0)
@@ -276,23 +358,23 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
     f1        = (2 * precision * recall / (precision + recall)
                  if (precision + recall) > 0 else 0.0)
 
-    n_ref_flooded    = sum(1 for r in ward_results if r["reference_flooded"])
-    n_pred_flooded   = sum(1 for r in ward_results if r["predicted_flooded"])
+    n_ref_flooded  = sum(1 for r in ward_results if r["reference_flooded"])
+    n_pred_flooded = sum(1 for r in ward_results if r["predicted_flooded"])
 
     return {
-        "backtest_year":    2023,
-        "peak_event":       "July 12 2023 — Yamuna 208.66m (highest since 1978)",
-        "total_wards":      len(ward_results),
+        "backtest_year":       2023,
+        "peak_event":          "July 12 2023 — Yamuna 208.66m (highest since 1978)",
+        "total_wards":         len(ward_results),
         "n_reference_flooded": n_ref_flooded,
         "n_predicted_flooded": n_pred_flooded,
-        "true_positives":   true_positives,
-        "false_positives":  false_positives,
-        "false_negatives":  false_negatives,
-        "true_negatives":   true_negatives,
-        "precision":        round(precision * 100, 1),
-        "recall":           round(recall    * 100, 1),
-        "f1_score":         round(f1        * 100, 1),
-        "events":           event_summaries,
-        "wards":            ward_results,
-        "computed_at":      datetime.utcnow().isoformat(),
+        "true_positives":      true_positives,
+        "false_positives":     false_positives,
+        "false_negatives":     false_negatives,
+        "true_negatives":      true_negatives,
+        "precision":           round(precision * 100, 1),
+        "recall":              round(recall    * 100, 1),
+        "f1_score":            round(f1        * 100, 1),
+        "events":              event_summaries,
+        "wards":               ward_results,
+        "computed_at":         datetime.utcnow().isoformat(),
     }

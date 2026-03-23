@@ -2,7 +2,7 @@
 
 import asyncio
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -116,7 +116,11 @@ async def on_startup():
         except Exception as exc:
             print(f"DB not ready (attempt {attempt}/{max_retries}): {exc}")
             if attempt == max_retries:
-                raise
+                print(
+                    "WARNING: DB unreachable after all retries — starting anyway. "
+                    "Set DATABASE_URL in the Render dashboard and redeploy."
+                )
+                break
             await asyncio.sleep(2)
 
     # Pre-load hotspot centroids into memory (avoids per-request PostGIS calls)
@@ -162,9 +166,14 @@ async def on_startup():
     scheduler.add_job(hathnikund_scrape_job, "interval", seconds=3600,
                       id="hathnikund_scrape", replace_existing=True)
 
+    # Self-ping keep-alive — every 13 minutes during 6am–10pm IST
+    scheduler.add_job(self_ping_job, "interval", minutes=13,
+                      id="self_ping", replace_existing=True)
+
     scheduler.start()
     print(f"Weather polling started — every {interval}s")
     print("Hathnikund scraper started — every 3600s")
+    print("[keep-alive] Self-ping scheduled every 13 minutes — Render instance will stay warm")
 
     # Trigger initial weather fetch so status isn't stuck at 'unknown'
     try:
@@ -194,15 +203,39 @@ async def index():
     return FileResponse(os.path.join(_FRONTEND_DIR, "index.html"))
 
 
+@app.get("/ping")
+async def ping():
+    """Lightweight keep-alive probe — no DB call."""
+    return {"status": "ok", "ts": datetime.now(timezone.utc).isoformat()}
+
+
 @app.get("/health")
 async def health():
-    """Ping the database and report status."""
+    """System status — DB connectivity, data counts, model metadata."""
+    from app.services.yamuna import _cache as yamuna_cache
+    base = {
+        "model_version": "1.0.0-india-innovates-2026",
+        "data_sources": ["SRTM v4.1", "OpenStreetMap", "Open-Meteo", "Datameet", "CWC"],
+    }
+    # Yamuna last-checked timestamp (from in-memory cache)
+    last_yamuna = yamuna_cache.get("ts")
+    base["last_yamuna_check"] = last_yamuna.isoformat() if last_yamuna else None
+
     try:
         async with async_session() as session:
-            await session.execute(text("SELECT 1"))
-        return {"status": "ok", "db": "connected"}
+            ward_row = await session.execute(text("SELECT COUNT(*) FROM wards"))
+            hs_row   = await session.execute(text("SELECT COUNT(*) FROM hotspots"))
+            wards    = ward_row.scalar() or 0
+            hotspots = hs_row.scalar() or 0
+        return {
+            "status":   "ok",
+            "db":       "connected",
+            "wards":    wards,
+            "hotspots": hotspots,
+            **base,
+        }
     except Exception:
-        return {"status": "error", "db": "unreachable"}
+        return {"status": "error", "db": "unreachable", "wards": None, "hotspots": None, **base}
 
 
 @app.websocket("/ws")
@@ -269,6 +302,27 @@ async def yamuna_status():
         return await fetch_yamuna_status()
     except Exception as exc:
         return {"error": str(exc), "alert_level": "UNKNOWN"}
+
+
+async def self_ping_job():
+    """
+    Ping /ping to keep the Render free-tier instance warm.
+    Only fires during active demo hours (6am–10pm IST) to avoid
+    burning quota overnight.
+    """
+    _IST = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(_IST)
+    if not (6 <= now_ist.hour < 22):
+        return  # outside active window — let the dyno sleep
+
+    ping_base = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000").rstrip("/")
+    url = f"{ping_base}/ping"
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url)
+        print(f"[keep-alive] Ping {url} → {resp.status_code}")
+    except Exception as exc:
+        print(f"[keep-alive] Ping failed: {exc}")
 
 
 async def hathnikund_scrape_job():

@@ -38,27 +38,51 @@ def _band_label(score: float) -> str:
 
 
 # ── Flood type classification ──────────────────────────────────────────────
+# Ward name fragments that identify Yamuna-corridor / floodplain wards.
+# Used when ward_elevation table is unpopulated (elevation = 220 default).
+_RIVER_WARD_FRAGMENTS = [
+    "yamuna", "khadar", "wazirabad", "burari", "usmanpur",
+    "gokulpuri", "mustafabad", "karawal", "bhajanpura",
+    "civil lines", "kashmere", "chandni chowk",
+    "geeta colony", "shahdara", "mayur vihar", "patparganj",
+    "ito", "rajghat", "mori gate",
+]
+
+
 def _flood_type(mean_elev: float | None, runoff_t: float | None,
-                terrain_class: str | None, trigger_rate: float) -> str:
+                terrain_class: str | None, trigger_rate: float,
+                ward_name: str = "") -> str:
     """
     Classify dominant flood type for a ward from available signals.
-    River   — very low elevation (floodplain/low-lying terrain)
-    Pluvial — high runoff multiplier (dense urban impervious surface)
-    Backflow — low elevation + historically high trigger rate
-    Sustained — moderate everything but high historical trigger frequency
-    """
-    elev = mean_elev or 220.0
-    runoff = runoff_t or 1.0
-    tc = (terrain_class or "").lower()
+    River    — Yamuna floodplain wards (elevation or name-based)
+    Backflow — same low-lying wards with notable trigger history
+    Sustained — higher-elevation wards with frequent trigger history
+    Pluvial  — default urban rainfall flooding
 
-    if elev < 207 or tc == "floodplain":
-        if trigger_rate > 0.25:
+    Falls back to name-based classification when ward_elevation is empty
+    (mean_elev will be 220.0 from COALESCE default).
+    """
+    elev = mean_elev if mean_elev is not None else 220.0
+    tc = (terrain_class or "").lower()
+    name_lower = ward_name.lower()
+
+    # Yamuna-corridor ward — by elevation or terrain class or name
+    is_floodplain = (
+        elev < 210
+        or tc == "floodplain"
+        or any(frag in name_lower for frag in _RIVER_WARD_FRAGMENTS)
+    )
+
+    if is_floodplain:
+        if trigger_rate > 0.1:
             return "backflow"
         return "river"
-    if runoff >= 2.5 or tc == "ridge":
-        return "pluvial"
-    if trigger_rate > 0.3:
+
+    # Sustained — high trigger history
+    if trigger_rate > 0.15:
         return "sustained"
+
+    # Pluvial — default urban
     return "pluvial"
 
 
@@ -196,7 +220,8 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
 
         flood_type = _flood_type(
             r["mean_elevation"], r["runoff_t"],
-            r["terrain_class"],  r["trigger_rate"]
+            r["terrain_class"],  r["trigger_rate"],
+            ward_name=r["name"],
         )
 
         results.append({

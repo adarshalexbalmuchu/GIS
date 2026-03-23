@@ -3,6 +3,7 @@ Map-state, run/cycle, weather status, history API routes.
 """
 
 import json
+import random
 from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
@@ -187,15 +188,23 @@ async def map_hotspots(
     if not _cache_loaded or len(_hotspot_cache) == 0:
         await load_hotspot_cache()
 
+    _CAP = 8000
+    filtered = [
+        h for h in _hotspot_cache
+        if minx <= h["lon"] <= maxx and miny <= h["lat"] <= maxy
+    ]
+    # Random sample when over cap so all geographic areas are represented evenly
+    if len(filtered) > _CAP:
+        filtered = random.sample(filtered, _CAP)
+
     features = [
         {
             "type": "Feature",
             "geometry": {"type": "Point", "coordinates": [h["lon"], h["lat"]]},
             "properties": {"capacity_c": round(h["capacity_c"], 1)},
         }
-        for h in _hotspot_cache
-        if minx <= h["lon"] <= maxx and miny <= h["lat"] <= maxy
-    ][:8000]
+        for h in filtered
+    ]
 
     return {"type": "FeatureCollection", "features": features}
 
@@ -207,26 +216,47 @@ async def reload_hotspot_cache():
     return {"status": "ok", "count": len(_hotspot_cache)}
 
 
+_DELHI_FALLBACK_BOUNDS = {
+    "center":       [28.64,  77.19],
+    "bbox":         [76.83, 28.40, 77.55, 28.88],
+    "rain_polygon": {
+        "type": "Polygon",
+        "coordinates": [[
+            [76.83, 28.40], [77.55, 28.40],
+            [77.55, 28.88], [76.83, 28.88],
+            [76.83, 28.40],
+        ]],
+    },
+    "city_lat":     28.64,
+    "city_lon":     77.19,
+    "ward_count":   0,
+    "hotspot_count": 0,
+}
+
 @router.get("/city/bounds")
 async def city_bounds():
-    """Return bounding box of all wards + a central rain polygon (~40% area)."""
-    async with engine.connect() as conn:
-        row = (await conn.execute(text("""
-            SELECT ST_XMin(ext) AS xmin, ST_YMin(ext) AS ymin,
-                   ST_XMax(ext) AS xmax, ST_YMax(ext) AS ymax,
-                   (SELECT count(*) FROM hotspots) AS hotspot_count,
-                   (SELECT count(*) FROM wards) AS ward_count
-            FROM (SELECT ST_Extent(geom) AS ext FROM wards) sub
-        """))).mappings().first()
+    """Return bounding box of all wards + a central rain polygon (~40% area).
+    Always returns 200 — falls back to static Delhi bbox on any DB error.
+    """
+    try:
+        async with engine.connect() as conn:
+            row = (await conn.execute(text("""
+                SELECT ST_XMin(ext) AS xmin, ST_YMin(ext) AS ymin,
+                       ST_XMax(ext) AS xmax, ST_YMax(ext) AS ymax,
+                       (SELECT count(*) FROM hotspots) AS hotspot_count,
+                       (SELECT count(*) FROM wards) AS ward_count
+                FROM (SELECT ST_Extent(geom) AS ext FROM wards) sub
+            """))).mappings().first()
+
+        if not row or row["xmin"] is None:
+            return _DELHI_FALLBACK_BOUNDS
 
         xmin, ymin = row["xmin"], row["ymin"]
         xmax, ymax = row["xmax"], row["ymax"]
 
-        # Center lat/lng and zoom-friendly bbox
         center_lat = (ymin + ymax) / 2
         center_lng = (xmin + xmax) / 2
 
-        # Shrink 30% on each side for rain polygon
         dx = (xmax - xmin) * 0.30
         dy = (ymax - ymin) * 0.30
         rain_polygon = {
@@ -240,27 +270,57 @@ async def city_bounds():
             ]],
         }
 
-    return {
-        "center": [center_lat, center_lng],
-        "bbox": [xmin, ymin, xmax, ymax],
-        "rain_polygon": rain_polygon,
-        "city_lat": center_lat,
-        "city_lon": center_lng,
-        "ward_count": row["ward_count"],
-        "hotspot_count": row["hotspot_count"],
-    }
+        return {
+            "center":       [center_lat, center_lng],
+            "bbox":         [xmin, ymin, xmax, ymax],
+            "rain_polygon": rain_polygon,
+            "city_lat":     center_lat,
+            "city_lon":     center_lng,
+            "ward_count":   row["ward_count"],
+            "hotspot_count": row["hotspot_count"],
+        }
+    except Exception:
+        return _DELHI_FALLBACK_BOUNDS
 
 
 @router.post("/reset")
 async def reset_city(_auth=Depends(verify_api_key)):
-    """Reset all event data and restore hotspot capacity for live demos."""
+    """
+    Reset simulation data for live demos.
+
+    Deletes ONLY recent simulation events:
+      - rain_events        (all — these are always transient)
+      - sensor_events      (all — transient sensor readings)
+      - dispatch_runs      (only runs from the last 2 hours — preserves historical seeded data)
+
+    Does NOT touch: wards, hotspots, ward_elevation, critical_infrastructure.
+    """
     async with engine.begin() as conn:
-        await conn.execute(text("DELETE FROM dispatch_runs"))
-        await conn.execute(text("DELETE FROM sensor_events"))
         await conn.execute(text("DELETE FROM rain_events"))
-        await conn.execute(text("UPDATE hotspots SET capacity_c = 80.0"))
-        ward_count = (await conn.execute(text("SELECT count(*) FROM wards"))).scalar()
-    return {"message": "City reset to baseline", "wards_reset": ward_count}
+        await conn.execute(text("DELETE FROM sensor_events"))
+        await conn.execute(text(
+            "DELETE FROM dispatch_runs "
+            "WHERE created_at > NOW() - INTERVAL '2 hours'"
+        ))
+
+        # Read base-data counts for the confirmation log
+        ward_count  = (await conn.execute(text("SELECT COUNT(*) FROM wards"))).scalar_one()
+        hs_count    = (await conn.execute(text("SELECT COUNT(*) FROM hotspots"))).scalar_one()
+        infra_count = (await conn.execute(
+            text("SELECT COUNT(*) FROM critical_infrastructure")
+        )).scalar_one()
+
+    msg = (
+        f"[reset] Cleared simulation data. Base data intact: "
+        f"{ward_count} wards, {hs_count} hotspots, {infra_count} infrastructure points"
+    )
+    print(msg)
+    return {
+        "message": msg,
+        "wards":        ward_count,
+        "hotspots":     hs_count,
+        "infrastructure": infra_count,
+    }
 
 
 @router.get("/map/state")
@@ -430,17 +490,45 @@ async def map_elevation():
 # GET /cycle/latest — public, no auth
 # ---------------------------------------------------------------------------
 
+_NO_CYCLE = {
+    "cycle_id": None,
+    "created_at": None,
+    "triggered_wards": 0,
+    "status": "no_cycle_run",
+}
+
 @router.get("/cycle/latest")
 async def cycle_latest():
-    """Return the timestamp of the most recent dispatch_run."""
-    async with engine.connect() as conn:
-        row = await conn.execute(text(
-            "SELECT created_at FROM dispatch_runs ORDER BY created_at DESC LIMIT 1"
-        ))
-        result = row.scalar_one_or_none()
-    return {
-        "last_cycle_at": result.isoformat() if result else None,
-    }
+    """Return summary of the most recent scoring cycle.
+
+    Always returns 200. When no cycle has run yet (empty table or
+    table not yet created) returns safe defaults instead of 500.
+    """
+    try:
+        async with engine.connect() as conn:
+            row = await conn.execute(text("""
+                SELECT
+                    MAX(id)                                                          AS cycle_id,
+                    created_at,
+                    COUNT(*) FILTER (WHERE status IN ('critical','triggered','dispatched'))
+                                                                                     AS triggered_wards
+                FROM dispatch_runs
+                WHERE created_at = (SELECT MAX(created_at) FROM dispatch_runs)
+                GROUP BY created_at
+            """))
+            rec = row.mappings().first()
+
+        if not rec or rec["created_at"] is None:
+            return _NO_CYCLE
+
+        return {
+            "cycle_id":        rec["cycle_id"],
+            "created_at":      rec["created_at"].isoformat(),
+            "triggered_wards": rec["triggered_wards"] or 0,
+            "status":          "ok",
+        }
+    except Exception:
+        return _NO_CYCLE
 
 
 # ---------------------------------------------------------------------------

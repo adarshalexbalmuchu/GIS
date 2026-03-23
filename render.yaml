@@ -20,7 +20,6 @@ services:
     plan: free
     rootDir: urban-hydrology-engine
     dockerfilePath: ./Dockerfile.render
-    dockerContext: .
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
