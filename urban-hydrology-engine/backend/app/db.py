@@ -24,6 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
+from sqlalchemy.pool import NullPool
 from geoalchemy2 import Geometry
 
 
@@ -47,12 +48,19 @@ ASYNC_DATABASE_URL = re.sub(
 # Skip SSL only for local Docker/dev connections.
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
 _connect_args = {"ssl": "require"} if not _is_local else {}
+# Disable asyncpg prepared statement cache — required for pgbouncer
+# (Supabase transaction pooler on port 6543).
 _connect_args["statement_cache_size"] = 0
-_connect_args["prepared_statement_cache_size"] = 0
+
+# Use NullPool for remote (pgbouncer) connections — pgbouncer handles
+# pooling, so SQLAlchemy must not reuse connections that carry stale
+# server-side prepared statements.
+_pool_cls = NullPool if not _is_local else None
+_pool_kwargs = {"poolclass": _pool_cls} if _pool_cls else {}
 
 engine = create_async_engine(
     ASYNC_DATABASE_URL, echo=False, future=True, connect_args=_connect_args,
-    pool_pre_ping=True,
+    pool_pre_ping=True, **_pool_kwargs,
 )
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

@@ -242,6 +242,15 @@ async def scrape_and_store(conn) -> dict:
         if not reading:
             reading = await _fetch_openmeteo_proxy(client)
 
+    # Ensure observed_at is a proper datetime object (asyncpg rejects strings)
+    obs = reading["observed_at"]
+    if isinstance(obs, str):
+        from datetime import datetime as _dt
+        try:
+            obs = _dt.fromisoformat(obs)
+        except (ValueError, TypeError):
+            obs = datetime.now(_IST)
+
     await conn.execute(text("""
         INSERT INTO yamuna_readings
             (station, discharge_cusecs, level_m, alert_level, source, observed_at)
@@ -253,7 +262,7 @@ async def scrape_and_store(conn) -> dict:
         "level_m":     reading["level_m"],
         "alert":       reading["alert_level"],
         "source":      reading["source"],
-        "observed_at": reading["observed_at"],
+        "observed_at": obs,
     })
     await conn.commit()
 
