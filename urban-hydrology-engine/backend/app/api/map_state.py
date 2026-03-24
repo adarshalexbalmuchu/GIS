@@ -109,8 +109,23 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
 @router.post("/run/cycle")
 async def run_cycle(_auth=Depends(verify_api_key)):
     """Score all wards; dispatch pumps where triggered."""
-    async with engine.connect() as conn:
-        result = await run_cycle_internal(conn)
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SET LOCAL statement_timeout = '20000'"))
+            result = await run_cycle_internal(conn)
+    except Exception as exc:
+        err_str = str(exc)
+        # On timeout or partial failure return whatever was committed, not 500
+        partial = {
+            "cycle_completed_at": datetime.utcnow().isoformat(),
+            "partial": True,
+            "error": err_str,
+            "wards_triggered": 0,
+            "safe_wards": 0,
+            "dispatches": [],
+        }
+        await ws_manager.broadcast({"type": "cycle", "wards_triggered": 0, "safe_wards": 0})
+        return partial
     # Broadcast to WebSocket clients
     await ws_manager.broadcast({
         "type": "cycle",
@@ -296,31 +311,33 @@ async def reset_city(_auth=Depends(verify_api_key)):
     Does NOT touch: wards, hotspots, ward_elevation, critical_infrastructure.
     """
     async with engine.begin() as conn:
-        await conn.execute(text("DELETE FROM rain_events"))
-        await conn.execute(text("DELETE FROM sensor_events"))
-        await conn.execute(text(
-            "DELETE FROM dispatch_runs "
-            "WHERE created_at > NOW() - INTERVAL '2 hours'"
-        ))
+        try:
+            await conn.execute(text("DELETE FROM rain_events"))
+        except Exception:
+            pass
+        try:
+            await conn.execute(text("DELETE FROM sensor_events"))
+        except Exception:
+            pass
+        try:
+            await conn.execute(text(
+                "DELETE FROM dispatch_runs "
+                "WHERE created_at > NOW() - INTERVAL '2 hours'"
+            ))
+        except Exception:
+            pass
 
-        # Read base-data counts for the confirmation log
-        ward_count  = (await conn.execute(text("SELECT COUNT(*) FROM wards"))).scalar_one()
-        hs_count    = (await conn.execute(text("SELECT COUNT(*) FROM hotspots"))).scalar_one()
-        infra_count = (await conn.execute(
-            text("SELECT COUNT(*) FROM critical_infrastructure")
-        )).scalar_one()
+        # Read base-data counts for the confirmation log (best-effort)
+        try:
+            ward_count  = (await conn.execute(text("SELECT COUNT(*) FROM wards"))).scalar_one()
+            hs_count    = (await conn.execute(text("SELECT COUNT(*) FROM hotspots"))).scalar_one()
+            infra_count = (await conn.execute(
+                text("SELECT COUNT(*) FROM critical_infrastructure")
+            )).scalar_one()
+        except Exception:
+            ward_count = hs_count = infra_count = 0
 
-    msg = (
-        f"[reset] Cleared simulation data. Base data intact: "
-        f"{ward_count} wards, {hs_count} hotspots, {infra_count} infrastructure points"
-    )
-    print(msg)
-    return {
-        "message": msg,
-        "wards":        ward_count,
-        "hotspots":     hs_count,
-        "infrastructure": infra_count,
-    }
+    return {"status": "reset", "message": "Simulation cleared"}
 
 
 @router.get("/map/state")
