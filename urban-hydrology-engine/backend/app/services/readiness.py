@@ -65,24 +65,28 @@ def _flood_type(mean_elev: float | None, runoff_t: float | None,
     elev = mean_elev if mean_elev is not None else 220.0
     tc = (terrain_class or "").lower()
     name_lower = ward_name.lower()
+    rt = runoff_t if runoff_t is not None else 2.0
 
-    # Yamuna-corridor ward — by elevation or terrain class or name
+    # Yamuna-corridor ward — by elevation, terrain class, or name fragment
     is_floodplain = (
-        elev < 210
+        elev < 215                        # raised from 210 → catches transition zone
         or tc == "floodplain"
         or any(frag in name_lower for frag in _RIVER_WARD_FRAGMENTS)
     )
 
     if is_floodplain:
-        if trigger_rate > 0.1:
+        # Backflow: floodplain + high runoff multiplier (dense urban over alluvial clay)
+        # Replaces trigger_rate threshold — works without historical cycle data
+        if rt >= 2.8 or trigger_rate > 0.1:
             return "backflow"
         return "river"
 
-    # Sustained — high trigger history
-    if trigger_rate > 0.15:
+    # Sustained: high runoff multiplier in non-floodplain zone
+    # Captures dense urban areas that flood repeatedly from accumulated rain
+    if rt >= 3.0 or trigger_rate > 0.15:
         return "sustained"
 
-    # Pluvial — default urban
+    # Pluvial — default urban flash flood
     return "pluvial"
 
 

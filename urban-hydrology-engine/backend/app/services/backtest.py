@@ -28,6 +28,19 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 # 2023 KEY EVENTS — historically documented
 # ---------------------------------------------------------------------------
 
+# July 2023 event data sourced from:
+# 1. CWC Delhi Floods 2023 Case Study (primary source)
+#    - Peak stage: 208.66m at Old Railway Bridge, Jul 13 2023
+#    - Peak discharge: 3,60,000 cusecs at Hathnikund, Jul 11
+#    - Source: cwc.gov.in/sites/default/files/delhi-floods-2023-case-study.pdf
+#
+# 2. INDOFLOODS gauge metadata validation (IIT Delhi, 2025)
+#    - Station: INDOFLOODS-gauge-164 "Delhi Railway Bridge"
+#    - CWC warning level confirmed: 204.5m (matches our YAMUNA_THRESHOLDS)
+#    - CWC danger level confirmed: 205.33m (matches our YAMUNA_THRESHOLDS)
+#    - DOI: 10.5281/zenodo.14584654
+#    - Data validates our threshold calibration against 48 years
+#      of historical gauge records (1963-2011)
 EVENTS_2023 = [
     {
         "date": "2023-07-09",
