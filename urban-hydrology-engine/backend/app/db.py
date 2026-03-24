@@ -4,7 +4,7 @@ Database engine, session, and ORM table definitions for Urban Hydrology Engine.
 Rules:
 - SRID is always 4326 for all geometry storage
 - All geometry columns have GIST spatial indexes
-- Uses asyncpg as the async DB driver
+- Uses psycopg (async) as the DB driver — compatible with pgbouncer transaction mode
 """
 
 import os
@@ -37,24 +37,20 @@ DATABASE_URL = os.getenv(
     "postgresql://hydro:hydro123@localhost:5432/hydrology",
 )
 
-# asyncpg requires the postgresql+asyncpg:// scheme.
+# psycopg async driver — works with pgbouncer transaction mode (no prepared statements).
 # Render provides postgres:// URLs; handle both prefixes.
 import re
 ASYNC_DATABASE_URL = re.sub(
-    r"^postgres(ql)?://", "postgresql+asyncpg://", DATABASE_URL
+    r"^postgres(ql)?://", "postgresql+psycopg://", DATABASE_URL
 )
 
 # Supabase (and other remote hosts) require SSL.
 # Skip SSL only for local Docker/dev connections.
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
-_connect_args = {"ssl": "require"} if not _is_local else {}
-# Disable asyncpg prepared statement cache — required for pgbouncer
-# (Supabase transaction pooler on port 6543).
-_connect_args["statement_cache_size"] = 0
+_connect_args = {"sslmode": "require"} if not _is_local else {}
 
 # Use NullPool for remote (pgbouncer) connections — pgbouncer handles
-# pooling, so SQLAlchemy must not reuse connections that carry stale
-# server-side prepared statements.
+# pooling, so SQLAlchemy must not maintain its own pool.
 _pool_cls = NullPool if not _is_local else None
 _pool_kwargs = {"poolclass": _pool_cls} if _pool_cls else {}
 
