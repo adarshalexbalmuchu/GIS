@@ -3898,11 +3898,12 @@
     try {
       // Retry up to 3 times to handle Render free-tier wake-up (502)
       let resp, attempts = 0;
-      while (attempts < 3) {
+      while (attempts < 4) {
         resp = await fetch('/run/cycle', { method: 'POST', headers: POST_AUTH });
-        if (resp.status !== 502) break;
+        if (resp.ok) break;
+        if (resp.status !== 502 && resp.status !== 503) break;
         attempts++;
-        logConsole(`Server waking up, retrying (${attempts}/3)...`, 'system');
+        logConsole(`Server waking up, retrying (${attempts}/4)...`, 'system');
         await new Promise(r => setTimeout(r, 4000));
       }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
