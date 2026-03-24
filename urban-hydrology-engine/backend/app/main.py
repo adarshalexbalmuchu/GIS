@@ -292,14 +292,17 @@ async def yamuna_status():
     """Real-time Hathnikund discharge + Delhi flood advance warning."""
     from app.services.cwc_scraper import get_latest_reading
     from app.services.yamuna import fetch_yamuna_status
+    from app.services.weather import get_weather_status
     try:
         # Try DB-backed reading first (most recent scraped value)
         async with engine.connect() as conn:
             db_reading = await get_latest_reading(conn)
-        if db_reading:
-            return db_reading
-        # Fall back to live fetch if no DB readings yet
-        return await fetch_yamuna_status()
+        reading = db_reading or await fetch_yamuna_status()
+        # Merge local Delhi rainfall from cached weather status
+        wx = await get_weather_status()
+        reading["local_rainfall_mm_hr"] = wx.get("local_rainfall_mm_hr")
+        reading["rainfall_source"]      = wx.get("rainfall_source")
+        return reading
     except Exception as exc:
         return {"error": str(exc), "alert_level": "UNKNOWN"}
 

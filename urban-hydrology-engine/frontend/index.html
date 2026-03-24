@@ -2711,6 +2711,7 @@
         </div>
       </div>
       <div class="yamuna-eta" id="yamuna-eta-str">Loading Hathnikund data…</div>
+      <div class="yamuna-eta" id="yamuna-local-rain" style="display:none"></div>
       <span class="yamuna-source-badge unavail" id="yamuna-source-badge">○ Loading…</span>
     </div>
     <div id="forecast-section" style="display:none">
@@ -5265,6 +5266,17 @@
       } else {
         badge.textContent  = '● Live — Open-Meteo ERA5 + CWC thresholds';
         badge.className    = 'yamuna-source-badge live';
+      }
+
+      // Local Delhi rainfall line
+      const rainEl = document.getElementById('yamuna-local-rain');
+      if (d.local_rainfall_mm_hr !== null && d.local_rainfall_mm_hr !== undefined) {
+        const mm = parseFloat(d.local_rainfall_mm_hr).toFixed(2);
+        const src = d.rainfall_source || 'IMD/OWM';
+        rainEl.textContent = `Delhi local rainfall: ${mm} mm/hr (${src})`;
+        rainEl.style.display = '';
+      } else {
+        rainEl.style.display = 'none';
       }
 
       // Remove loading skeleton from yamuna stat cards
