@@ -3416,6 +3416,29 @@
   function refreshMapColors() {
     if (!wardLayer) return;
     wardLayer.setStyle(pmrsStyle);
+    // Force direct per-layer style push for cycle overrides
+    // (Leaflet setStyle(fn) sometimes doesn't repaint — this guarantees it)
+    wardLayer.eachLayer(layer => {
+      const name = layer.feature?.properties?.ward_name;
+      const override = _cycleOverrides[name];
+      if (override === 'red') {
+        layer.setStyle({
+          fillColor: '#FEE2E2',
+          fillOpacity: 0.88,
+          color: '#DC2626',
+          weight: 2.5,
+          opacity: 1
+        });
+      } else if (override === 'amber') {
+        layer.setStyle({
+          fillColor: '#FEF3C7',
+          fillOpacity: 0.82,
+          color: '#D97706',
+          weight: 2,
+          opacity: 1
+        });
+      }
+    });
   }
 
   function scoreClass(ws) {
