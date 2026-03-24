@@ -157,7 +157,7 @@ async def scrape_and_store(conn) -> dict:
             (station, discharge_cusecs, level_m, alert_level, source, observed_at)
         VALUES
             ('Hathnikund Barrage', :discharge, :level_m, :alert,
-             :source, :observed_at::timestamptz)
+             :source, :observed_at)
     """), {
         "discharge":   reading["discharge_cusecs"],
         "level_m":     reading["level_m"],
