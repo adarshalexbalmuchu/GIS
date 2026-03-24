@@ -3351,9 +3351,13 @@
     } catch(e) { /* hotspots unavailable, skip silently */ }
   }
 
+  let _hotspotDebounce = null;
   map.on('moveend', function() {
-    if (map.getZoom() >= 9) loadHotspots();
-    else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
+    clearTimeout(_hotspotDebounce);
+    _hotspotDebounce = setTimeout(() => {
+      if (map.getZoom() >= 9) loadHotspots();
+      else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
+    }, 800);
   });
 
   const COLORS_LIGHT = {
