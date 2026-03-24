@@ -4017,14 +4017,20 @@
 
       logConsole('Degrading drainage capacity...', 'system');
       const maxHid = hotspotCount || 32826;
-      for (let i = 0; i < 200; i++) {
-        const hid = 1 + Math.floor(Math.random() * maxHid);
-        const delta = -(20 + Math.random() * 25);
-        await fetch('/ingest/sensor', {
-          method: 'POST',
-          headers: AUTH_HEADERS,
-          body: JSON.stringify({ hotspot_id: hid, delta_capacity: parseFloat(delta.toFixed(2)) })
-        });
+      // Batch into groups of 10 with 300ms pause — prevents Render 503
+      for (let i = 0; i < 200; i += 10) {
+        const batch = [];
+        for (let j = i; j < Math.min(i + 10, 200); j++) {
+          const hid = 1 + Math.floor(Math.random() * maxHid);
+          const delta = -(20 + Math.random() * 25);
+          batch.push(fetch('/ingest/sensor', {
+            method: 'POST',
+            headers: AUTH_HEADERS,
+            body: JSON.stringify({ hotspot_id: hid, delta_capacity: parseFloat(delta.toFixed(2)) })
+          }));
+        }
+        await Promise.all(batch);
+        await new Promise(r => setTimeout(r, 300));
       }
       logConsole('30 sensor degradation events pushed', 'triggered');
 
