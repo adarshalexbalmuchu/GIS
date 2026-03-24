@@ -186,7 +186,7 @@ async def _fallback_open_meteo() -> dict:
         alert = _discharge_to_alert(discharge_cusecs)
 
         return {
-            "source":              "Open-Meteo upstream proxy",
+            "source":              "Open-Meteo ERA5 reanalysis — Haridwar upstream gauge",
             "station":             "Hathnikund Barrage (estimated)",
             "discharge_cusecs":    round(discharge_cusecs),
             "discharge_cumecs":    round(discharge_cusecs * 0.0283168, 1),

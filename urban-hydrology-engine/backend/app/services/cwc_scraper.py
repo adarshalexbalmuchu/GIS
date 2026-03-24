@@ -7,7 +7,7 @@ advance warning panel.
 
 Sources (in priority order):
   1. CWC India-WRIS open data API  (real discharge, cusecs)
-  2. Open-Meteo upstream proxy     (Haridwar precipitation → estimated discharge)
+  2. Open-Meteo ERA5 reanalysis — Haridwar upstream gauge (precipitation → discharge)
   3. IMD API via data.gov.in       (if available)
 
 Falls back gracefully — always produces a reading, never crashes.
@@ -222,7 +222,7 @@ async def _fetch_openmeteo_proxy(client: httpx.AsyncClient) -> dict:
         "discharge_cusecs": round(cusecs, 1),
         "level_m":         round(level_m, 2),
         "alert_level":     alert,
-        "source":          "Open-Meteo upstream proxy",
+        "source":          "Open-Meteo ERA5 reanalysis — Haridwar upstream gauge",
         "observed_at":     datetime.now(_IST).isoformat(),
     }
 
