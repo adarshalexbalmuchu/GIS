@@ -31,14 +31,20 @@ from sqlalchemy import text
 _IST = timezone(timedelta(hours=5, minutes=30))
 
 # ── CWC sources to try in order ───────────────────────────────────────────
-_CWC_ENDPOINTS = [
-    # Primary: India-WRIS public gauge API
+# 1. CWC FFS station details — Hathnikund Barrage (station id 240400)
+_CWC_FFS_STATION_URL = (
+    "https://ffs.india-water.gov.in/ffsite/stationdetails/?id=240400"
+)
+# 2. CWC FFS Delhi forecast details (Old Railway Bridge water level)
+_CWC_FFS_FORECAST_URL = (
+    "https://ffs.india-water.gov.in/ffsite/floodforecast/"
+    "getforecastdetails/?id=1&state=Delhi"
+)
+# 3. India-WRIS public gauge API (legacy fallback)
+_CWC_WRIS_URL = (
     "https://indiawris.gov.in/wris/data/PublicReport/realTimeData"
-    "?stationId=240400&dataType=DISCHARGE&lang=en",
-
-    # Secondary: CWC flood forecast (HTML scrape fallback)
-    "https://ffs.cwc.gov.in/",
-]
+    "?stationId=240400&dataType=DISCHARGE&lang=en"
+)
 
 # ── Discharge → alert mapping ─────────────────────────────────────────────
 def _classify(cusecs: float) -> tuple[str, float]:
@@ -75,10 +81,92 @@ async def ensure_table(conn) -> None:
     await conn.commit()
 
 
-# ── Fetch from CWC WRIS ───────────────────────────────────────────────────
+# ── Fetch from CWC FFS (primary) ─────────────────────────────────────────
+async def _fetch_cwc_ffs(client: httpx.AsyncClient) -> dict | None:
+    """Try CWC FloodWatch FFS endpoints for live Hathnikund + Delhi data."""
+
+    # ── Attempt 1: station details (discharge + level at Hathnikund) ──────
+    try:
+        resp = await client.get(_CWC_FFS_STATION_URL, timeout=12)
+        if resp.status_code == 200:
+            data = resp.json()
+            # FFS may return a list or a dict with nested records
+            records = (
+                data if isinstance(data, list)
+                else data.get("data", data.get("records", data.get("stationData", [])))
+            )
+            if isinstance(records, dict):
+                records = [records]
+            r = records[0] if records else None
+            if r:
+                cusecs = float(
+                    r.get("discharge", r.get("discharge_cusecs",
+                    r.get("value", r.get("flow", 0)))) or 0
+                )
+                level_m_raw = float(
+                    r.get("level", r.get("water_level",
+                    r.get("gauge_level", 0))) or 0
+                )
+                if cusecs > 0:
+                    obs_str = r.get(
+                        "obsTime", r.get("observed_at",
+                        r.get("dateTime", r.get("date",
+                        datetime.now(_IST).isoformat())))
+                    )
+                    alert, predicted_level_m = _classify(cusecs)
+                    return {
+                        "discharge_cusecs": cusecs,
+                        "level_m":         round(level_m_raw or predicted_level_m, 2),
+                        "alert_level":     alert,
+                        "source":          "CWC FFS Live",
+                        "observed_at":     obs_str,
+                    }
+    except Exception:
+        pass
+
+    # ── Attempt 2: Delhi forecast details (level at Old Railway Bridge) ───
+    try:
+        resp = await client.get(_CWC_FFS_FORECAST_URL, timeout=12)
+        if resp.status_code == 200:
+            data = resp.json()
+            records = (
+                data if isinstance(data, list)
+                else data.get("forecastData", data.get("data", data.get("records", [])))
+            )
+            if isinstance(records, dict):
+                records = [records]
+            r = records[0] if records else None
+            if r:
+                level_m_raw = float(
+                    r.get("forecastLevel", r.get("water_level",
+                    r.get("level", r.get("gauge_level", 0)))) or 0
+                )
+                cusecs = float(
+                    r.get("discharge", r.get("flow", 0)) or 0
+                )
+                if level_m_raw > 0 or cusecs > 0:
+                    obs_str = r.get(
+                        "forecastTime", r.get("obsTime",
+                        r.get("dateTime", datetime.now(_IST).isoformat()))
+                    )
+                    alert, predicted_level_m = _classify(cusecs)
+                    return {
+                        "discharge_cusecs": cusecs,
+                        "level_m":         round(level_m_raw or predicted_level_m, 2),
+                        "alert_level":     alert,
+                        "source":          "CWC FFS Forecast",
+                        "observed_at":     obs_str,
+                    }
+    except Exception:
+        pass
+
+    return None
+
+
+# ── Fetch from CWC WRIS (secondary fallback) ──────────────────────────────
 async def _fetch_cwc_wris(client: httpx.AsyncClient) -> dict | None:
     try:
-        resp = await client.get(_CWC_ENDPOINTS[0], timeout=12)
+        resp = await client.get(_CWC_WRIS_URL, timeout=12)
         if resp.status_code != 200:
             return None
         data = resp.json()
@@ -148,7 +236,9 @@ async def scrape_and_store(conn) -> dict:
     await ensure_table(conn)
 
     async with httpx.AsyncClient() as client:
-        reading = await _fetch_cwc_wris(client)
+        reading = await _fetch_cwc_ffs(client)
+        if not reading:
+            reading = await _fetch_cwc_wris(client)
         if not reading:
             reading = await _fetch_openmeteo_proxy(client)
 
@@ -199,7 +289,7 @@ async def get_latest_reading(conn) -> dict | None:
             "predicted_delhi_stage_m": round(r["level_m"], 2) if r["level_m"] else None,
             "travel_time_hours":       alert["travel_time_hours"],
             "eta_delhi":               alert["eta_delhi"],
-            "is_live":                 "WRIS" in (r["source"] or ""),
+            "is_live":                 any(k in (r["source"] or "") for k in ("CWC", "WRIS")),
         }
     except Exception:
         return None
