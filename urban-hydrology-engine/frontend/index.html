@@ -4003,15 +4003,22 @@
           [76.938, 28.481]
         ]]
       };
-      const rainResp = await fetch('/ingest/rain', {
-        method: 'POST',
-        headers: AUTH_HEADERS,
-        body: JSON.stringify({
-          geojson_polygon: CLOUDBURST_POLYGON,
-          intensity_r: 33.6   // 100.9mm ÷ 3hr peak window = 33.6mm/hr
-        })
-      });
-      if (!rainResp.ok) throw new Error(`Rain POST HTTP ${rainResp.status}`);
+      let rainResp, rainAttempts = 0;
+      while (rainAttempts < 4) {
+        rainResp = await fetch('/ingest/rain', {
+          method: 'POST',
+          headers: AUTH_HEADERS,
+          body: JSON.stringify({
+            geojson_polygon: CLOUDBURST_POLYGON,
+            intensity_r: 33.6   // 100.9mm ÷ 3hr peak window = 33.6mm/hr
+          })
+        });
+        if (rainResp.ok) break;
+        rainAttempts++;
+        logConsole(`Rain ingest attempt ${rainAttempts} failed (${rainResp.status}) — retrying...`, 'system');
+        await new Promise(r => setTimeout(r, 3000));
+      }
+      if (!rainResp.ok) throw new Error(`Rain POST failed after 4 attempts: HTTP ${rainResp.status}`);
       const rainData = await rainResp.json();
       logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
 
