@@ -47,16 +47,20 @@ ASYNC_DATABASE_URL = re.sub(
 # Supabase (and other remote hosts) require SSL.
 # Skip SSL only for local Docker/dev connections.
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
-_connect_args = {"sslmode": "require"} if not _is_local else {}
+_connect_args = {
+    "options": "-c statement_timeout=30000",
+    **({"sslmode": "require"} if not _is_local else {}),
+}
 
-# Use NullPool for remote (pgbouncer) connections — pgbouncer handles
-# pooling, so SQLAlchemy must not maintain its own pool.
-_pool_cls = NullPool if not _is_local else None
-_pool_kwargs = {"poolclass": _pool_cls} if _pool_cls else {}
-
+# NullPool: pgbouncer transaction mode handles pooling externally — SQLAlchemy
+# must not maintain its own pool, and must not use prepared statements.
 engine = create_async_engine(
-    ASYNC_DATABASE_URL, echo=False, future=True, connect_args=_connect_args,
-    pool_pre_ping=True, **_pool_kwargs,
+    ASYNC_DATABASE_URL,
+    echo=False,
+    future=True,
+    poolclass=NullPool,
+    connect_args=_connect_args,
+    execution_options={"no_parameters": True},
 )
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
