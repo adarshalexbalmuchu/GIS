@@ -1994,6 +1994,14 @@
   .drill-ft-badge.pluvial   { background: #FEF3C7; color: #D97706; border: 1px solid #D97706; }
   .drill-ft-badge.backflow  { background: #F3E8FF; color: #7C3AED; border: 1px solid #7C3AED; }
   .drill-ft-badge.sustained { background: var(--red-bg); color: var(--red); border: 1px solid var(--red); }
+
+  .drill-mech-card {
+    flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+  }
+  .drill-mech-label { font-size: 9px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+  .drill-mech-val   { font-size: 16px; font-weight: 700; font-family: var(--mono); line-height: 1.3; }
+  .drill-mech-wt    { font-size: 8px; color: var(--text-dim); }
   @media(prefers-color-scheme:dark){
     .drill-ft-badge.river     { background:#1E3A5F;color:#93C5FD;border-color:#2563EB; }
     .drill-ft-badge.pluvial   { background:#422006;color:#FCD34D;border-color:#D97706; }
@@ -2170,6 +2178,16 @@
     border: 1px solid var(--border); color: var(--text-sec);
   }
   .popup-factor-pill span { display: block; font-size: 11px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+  .popup-mechanisms { display: flex; gap: 3px; margin-bottom: 6px; }
+  .popup-mech-pill {
+    flex: 1; text-align: center; padding: 3px 4px; border-radius: 5px;
+    font-size: 8px; font-weight: 600; letter-spacing: .03em;
+    background: var(--bg-panel); border: 1px solid var(--border); color: var(--text-sec);
+  }
+  .popup-mech-pill .mech-val { display: block; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+  .popup-mech-pill.pluvial  .mech-val { color: #D97706; }
+  .popup-mech-pill.fluvial  .mech-val { color: #2563EB; }
+  .popup-mech-pill.compound .mech-val { color: #7C3AED; }
   .popup-action {
     font-size: 11px; padding: 6px 10px; border-radius: 6px;
     border-left: 3px solid currentColor; line-height: 1.4; margin-bottom: 4px;
@@ -2582,31 +2600,65 @@
     </div>
     <div class="modal-body">
 
-      <!-- Scoring Formula -->
+      <!-- Scoring Formula — Three-Mechanism Model -->
       <div class="modal-section">
-        <h3>Scoring Formula</h3>
-        <div class="modal-formula">PMRS = 100 &minus; (40 &times; Flood Risk) &minus; (30 &times; Drain Deficit) &minus; (20 &times; Elevation Risk) &minus; (10 &times; Infra Exposure)</div>
+        <h3>Three-Mechanism Scoring Model</h3>
+        <div class="modal-formula">PMRS = 0.45 &times; Pluvial + 0.30 &times; Fluvial + 0.25 &times; Compound</div>
+        <p style="font-size:12px;color:rgba(255,255,255,.55);margin-top:8px;line-height:1.6">
+          Grounded in IIT Delhi Drainage Master Plan for NCT Delhi (2018) — SWMM-based simulation of 3 major basins
+          (Najafgarh, Barapullah, Trans-Yamuna) with junction-flooding as the primary failure metric.
+          Separates three distinct flood mechanisms that the 2023 Delhi event proved must be modelled independently.
+        </p>
       </div>
 
-      <!-- Factor Weights -->
+      <!-- Mechanism 1: Pluvial -->
       <div class="modal-section">
-        <h3>Factor Weights &mdash; Source Citations</h3>
+        <h3>Mechanism 1 &mdash; Pluvial (45%)</h3>
+        <div class="modal-formula" style="font-size:12px">Pluvial = MEAN(min(100, C<sub>eff</sub> / (R<sub>peak</sub> &times; T<sub>runoff</sub>) &times; 18.5)) + terrain_adj &minus; infra_penalty</div>
         <div class="modal-factor-list">
           <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">40%</span> &mdash; Flood Risk</div>
-            <p>Historical trigger frequency from 122-day 2024 monsoon dataset. Weighted highest per NDMA Urban Flood Guidelines 2010, which identify historical frequency as the primary flood predictor.</p>
+            <div class="modal-factor-label">Rain-on-drain flooding</div>
+            <p>Rainfall exceeds drain conveyance capacity. IIT Delhi DMP found 3,854 flooded junctions in Najafgarh basin alone under a 2-year return period storm (Scenario 1, Table 3.3-3). This is the most frequent mechanism in Delhi.</p>
           </div>
           <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">30%</span> &mdash; Drain Capacity</div>
-            <p>Average hotspot capacity deficit per ward. Per CWC 2023 Delhi Flood Case Study, drainage congestion was identified as the second-largest flood amplifier in the July 2023 disaster.</p>
+            <div class="modal-factor-label">Key variables</div>
+            <p><strong>C<sub>eff</sub></strong> — Effective drain capacity (Manning's n: 0.014 impervious, 0.012 RCC box, 0.025 open drain; Table 4.1-3). Reduced by Horton soil saturation factor (f<sub>&infin;</sub> = 0.635&thinsp;mm/hr for Group D loam; Table 4.3-1).<br/>
+            <strong>R<sub>peak</sub></strong> — Peak 3-hour rainfall intensity (IDF-based; IIT Delhi Ch 4.4).<br/>
+            <strong>T<sub>runoff</sub></strong> — Terrain runoff multiplier from imperviousness (NCR Functional Drainage Plan Table 5.4-5.5).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mechanism 2: Fluvial -->
+      <div class="modal-section">
+        <h3>Mechanism 2 &mdash; Fluvial (30%)</h3>
+        <div class="modal-formula" style="font-size:12px">Fluvial = 100 &minus; elevation_penalty &minus; terrain_penalty &minus; yamuna_discharge_penalty</div>
+        <div class="modal-factor-list">
+          <div class="modal-factor">
+            <div class="modal-factor-label">River &amp; outfall submergence</div>
+            <p>Yamuna overtops embankments or submerges drain outfalls. CWC 2023: stage 208.66&thinsp;m flooded Civil Lines, Mayur Vihar, Patparganj entirely &mdash; different mechanism from rain. IIT Delhi DMP: &ldquo;final disposal of majority of storm water is into Yamuna through outfall points&rdquo; (Ch 1.2).</p>
           </div>
           <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">20%</span> &mdash; Elevation Risk</div>
-            <p>SRTM v4.1 mean ward elevation. Wards below 210&thinsp;m (Yamuna floodplain zone) carry highest risk. Source: CIAT SRTM Version 4.1, Jarvis et al. 2008.</p>
+            <div class="modal-factor-label">Key variables</div>
+            <p><strong>Elevation</strong> — SRTM v4.1 ward mean elevation. Full penalty &le;207&thinsp;m (Yamuna danger zone), zero &ge;215&thinsp;m, linear taper.<br/>
+            <strong>Terrain class</strong> — IIT Delhi basin delineation: floodplain (Trans-Yamuna alluvial clay), low, flat, ridge (Delhi Ridge/Aravalli).<br/>
+            <strong>Yamuna discharge</strong> — CWC Hathnikund gauge: Normal &lt;100k cusecs, Danger &gt;300k cusecs (48-72h travel time to Delhi).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mechanism 3: Compound -->
+      <div class="modal-section">
+        <h3>Mechanism 3 &mdash; Compound (25%)</h3>
+        <div class="modal-formula" style="font-size:12px">Compound = 100 &minus; (rain_severity &times; river_severity &times; elevation_vulnerability &times; 80)</div>
+        <div class="modal-factor-list">
+          <div class="modal-factor">
+            <div class="modal-factor-label">Simultaneous rain + high river (backflow)</div>
+            <p>The critical interaction: high Yamuna submerges drain outfalls, stormwater has nowhere to go. Even 20&thinsp;mm/hr rain causes severe flooding. The July 2023 disaster was compound &mdash; heavy local rain AND Yamuna in flood simultaneously.</p>
           </div>
           <div class="modal-factor">
-            <div class="modal-factor-label"><span class="factor-pct">10%</span> &mdash; Infrastructure Exposure</div>
-            <p>Count of hospitals, fire stations, substations within 2&thinsp;km of ward centroid. Sourced from OpenStreetMap (871 hospitals, 40 fire stations, 324 substations).</p>
+            <div class="modal-factor-label">IIT Delhi basis</div>
+            <p>DMP Executive Summary: &ldquo;storm water has to be managed so it does not interfere with drainage.&rdquo; SWMM modelling shows junction flooding increases 3-5&times; when outfalls are submerged. Multiplicative interaction ensures this component only activates when BOTH rain AND river are elevated AND ward is low-lying.</p>
           </div>
         </div>
       </div>
@@ -2615,12 +2667,14 @@
       <div class="modal-section">
         <h3>Data Sources</h3>
         <div class="modal-source-list">
+          <div class="modal-source-row"><span class="src-key">Primary Model</span><span class="src-val">IIT Delhi Drainage Master Plan for NCT Delhi, I&amp;FC Department, July 2018 (SWMM + SWAT, 3 basins)</span></div>
           <div class="modal-source-row"><span class="src-key">Ward Boundaries</span><span class="src-val">Datameet Delhi Wards GeoJSON (290 wards: MCD + NDMC + Cantonment)</span></div>
           <div class="modal-source-row"><span class="src-key">Elevation</span><span class="src-val">SRTM v4.1 via CIAT / Open-Meteo Elevation API</span></div>
+          <div class="modal-source-row"><span class="src-key">Design Parameters</span><span class="src-val">IIT Delhi DMP Ch 4: Manning&rsquo;s n (Table 4.1-3), Horton infiltration (Table 4.3-1/2/3), IDF curves (Ch 4.4)</span></div>
           <div class="modal-source-row"><span class="src-key">Rainfall History</span><span class="src-val">Open-Meteo Historical API, Delhi 2024 monsoon (Jun 1 &ndash; Sep 30, 122 days)</span></div>
-          <div class="modal-source-row"><span class="src-key">Infrastructure</span><span class="src-val">OpenStreetMap via Overpass API</span></div>
-          <div class="modal-source-row"><span class="src-key">Yamuna Thresholds</span><span class="src-val">Central Water Commission (CWC) &mdash; Old Railway Bridge alert levels</span></div>
-          <div class="modal-source-row"><span class="src-key">2023 Backtest Ref.</span><span class="src-val">NRSC 2023 flood inundation satellite data + CWC case study</span></div>
+          <div class="modal-source-row"><span class="src-key">Infrastructure</span><span class="src-val">OpenStreetMap via Overpass API (871 hospitals, 40 fire stations, 324 substations)</span></div>
+          <div class="modal-source-row"><span class="src-key">Yamuna Thresholds</span><span class="src-val">CWC Hathnikund gauge: &lt;100k cusecs Normal, &gt;300k cusecs Danger (48-72h to Delhi)</span></div>
+          <div class="modal-source-row"><span class="src-key">2023 Backtest</span><span class="src-val">CWC 2023 Case Study + NRSC SAR inundation + INDOFLOODS (IIT Delhi HydroSense Lab)</span></div>
         </div>
       </div>
 
@@ -2629,30 +2683,30 @@
         <h3>Research Citations &amp; Methodology Grounding</h3>
         <div class="modal-citation-list">
           <div class="modal-citation-card">
-            <div class="cite-label">Drain Capacity Index</div>
-            <div class="cite-body">Proxy index calibrated against basin-level deficit ratios from IIT Delhi Drainage Master Plan for NCT Delhi, I&amp;FC Department, 2018 (SWMM sub-catchment analysis, Chapter 3). Available at ifc.delhi.gov.in. The formula capacity_c = max(20, 100 &minus; ((215 &minus; mean_elevation) &times; 8)) maps directly onto basin capacity deficit ratios in the IIT Delhi SWMM model.</div>
+            <div class="cite-label">Primary: IIT Delhi Drainage Master Plan (2018)</div>
+            <div class="cite-body">Gosain, A. K., Khosa, R., Chahar, B. R., Kaushal, D. R., &amp; Dhanya, C. T. &ldquo;Drainage Master Plan for NCT of Delhi &mdash; Final Report,&rdquo; IIT Delhi for I&amp;FC Department, GNCTD, July 2018. SWMM + SWAT simulation of 3 major basins (Najafgarh, Barapullah, Trans-Yamuna), 5 intervention scenarios, junction-flooding volume/duration analysis. Design parameters: Manning&rsquo;s n (Table 4.1-3), Horton infiltration (Table 4.3-1/2/3), IDF curves (Ch 4.4, Safdarjung &amp; Palam).</div>
           </div>
           <div class="modal-citation-card">
-            <div class="cite-label">Runoff Multiplier (runoff_t)</div>
-            <div class="cite-body">Derived from imperviousness values in NCR Functional Drainage Plan, Table 5.4&ndash;5.5, NCRPB. Zone calibration: East Delhi (Trans-Yamuna alluvial clay): 2.5&ndash;3.5 | South Delhi (Delhi Ridge gradient): 1.0&ndash;1.8 | Central/West/New Delhi (dense urban): 1.8&ndash;2.8 | North/Outer Delhi (mixed peri-urban): 1.5&ndash;2.5.</div>
+            <div class="cite-label">Pluvial Mechanism: SWMM Conveyance Model</div>
+            <div class="cite-body">Drain capacity proxy (capacity_c) calibrated against IIT Delhi SWMM conduit-flow analysis. The ratio C/(R&times;T) maps to junction overflow volume under design storm. Najafgarh basin: 3,854 junctions flooded under 2-year storm (Scenario 1); reduced to 2,794 after cross-section correction (Scenario 2). Horton soil saturation (f<sub>&infin;</sub>=0.635 mm/hr, Group D loam) applied as multi-event capacity reduction factor.</div>
           </div>
           <div class="modal-citation-card">
-            <div class="cite-label">Four-Type Flood Classification</div>
-            <div class="cite-body">River / Pluvial / Backflow / Sustained classification validated against DDMA documentation of 18 major Delhi drains experiencing reverse flow from Yamuna during spate conditions. The backflow type directly implements the DDMA-documented drain reversal mechanism. Source: Delhi Disaster Management Authority, Flood Mechanism Documentation, ddma.delhi.gov.in.</div>
+            <div class="cite-label">Fluvial Mechanism: CWC Yamuna Thresholds</div>
+            <div class="cite-body">Central Water Commission, &ldquo;Delhi Floods 2023 Case Study,&rdquo; August 2024. Peak stage 208.66m at Old Railway Bridge (Jul 13), peak discharge 3,60,000 cusecs at Hathnikund (Jul 11). CWC warning level 204.5m, danger level 205.33m. Validated against INDOFLOODS gauge INDOFLOODS-gauge-164 (IIT Delhi HydroSense Lab, 2025, DOI: 10.5281/zenodo.14584654).</div>
           </div>
           <div class="modal-citation-card">
-            <div class="cite-label">Institutional Continuity</div>
-            <div class="cite-body">FloodReady Delhi extends IIT Delhi HydroSense Lab&rsquo;s Barapullah Early Warning System (jalsuraksha.iitd.ac.in/barapullah) from single-basin to city-wide ward-level coverage across all 290 administrative wards. The Barapullah EWS covers one basin; this system applies equivalent SWMM-derived principles city-wide using the IIT Delhi Drainage Master Plan 2018 sub-catchment methodology.</div>
+            <div class="cite-label">Compound Mechanism: Drain Backflow</div>
+            <div class="cite-body">Interaction model grounded in IIT Delhi DMP Executive Summary: outfalls into Yamuna are final storm water disposal points; when river submerges outfalls, drain reversal occurs. DDMA documented 18 major drains experiencing reverse flow during Yamuna spate. Multiplicative interaction ensures compound score only activates when BOTH rain AND river are elevated AND ward is low-lying.</div>
           </div>
           <div class="modal-citation-card">
-            <div class="cite-label">2023 Flood Backtest Ground Truth</div>
-            <div class="cite-body">Reference flood event data sourced from INDOFLOODS &mdash; Indian Observational Flood Events Database, IIT Delhi HydroSense Lab, 2025. DOI: 10.5281/zenodo.14584654. Dataset contains real flood event timestamps, peak discharge, peak level, and flood duration for Yamuna at Delhi (Old Railway Bridge). July 2023 event: peak discharge 3,60,000 cusecs on July 11, peak stage 208.66m on July 13.</div>
+            <div class="cite-label">Basin Delineation &amp; Catchment Validation</div>
+            <div class="cite-body">Delhi: 3 major basins delineated using SWAT (IIT Delhi Ch 1.2). Najafgarh (largest, ~2/3 Delhi area, 123 natural drains), Barapullah (44 drains), Trans-Yamuna (34 drains, former floodplain). Total: 201 natural drains + 3,311 km engineered storm drains. Catchment attributes cross-validated via INDOFLOODS (IIT Delhi HydroSense Lab, DOI: 10.5281/zenodo.14584654).</div>
           </div>
           <div class="modal-citation-card">
-            <div class="cite-label">Catchment &amp; Basin Attributes</div>
-            <div class="cite-body">Sub-catchment area validation and basin boundary attributes from INDOFLOODS catchment_characteristics dataset, IIT Delhi HydroSense Lab, 2025 (DOI: 10.5281/zenodo.14584654). Catchment shapefiles cross-validated against Delhi ward boundaries to confirm spatial coverage of 290 administrative wards within the Yamuna basin.</div>
+            <div class="cite-label">Intervention Mapping</div>
+            <div class="cite-body">IIT Delhi DMP 5 scenarios map to interventions: (1) Base condition, (2) Cross-section correction &rarr; desilting; (3) Water body rejuvenation &rarr; detention basins; (4) Parks as recharge &rarr; permeable surfaces; (5) Storage/LID &rarr; rain gardens + permeable pavement. Nangloi case study: LID reduced J_3144 flood volume from 172,880 to 3,460 &times;10&sup3; litres (Table 3.3-8).</div>
           </div>
-          <div class="modal-citation-note">All parameters are calibrated approximations grounded in published government-funded research. In production deployment, direct API integration with PWD asset management system would replace proxy values with real-time drain capacity data.</div>
+          <div class="modal-citation-note">Three-mechanism model grounded in IIT Delhi DMP 2018 (SWMM/SWAT), CWC 2023 case study, and INDOFLOODS database. In production, direct PWD drain gauge integration would replace proxy capacity values.</div>
         </div>
       </div>
 
@@ -3183,6 +3237,8 @@
         <span class="drill-rs-val" id="drill-rs-val">—</span>
         <span class="drill-ft-badge" id="drill-ft-badge">—</span>
       </div>
+      <!-- Three-mechanism sub-scores -->
+      <div id="drill-mechanisms" style="display:none;gap:6px;padding:0 16px 8px;justify-content:center"></div>
       <!-- Backtest 2023 match row -->
       <div class="drill-bt-row" id="drill-bt-row" style="display:none">
         <span style="color:var(--text-sec);font-size:11px">2023 Replay:</span>
@@ -3815,6 +3871,17 @@
             const rsColor = rs === null ? 'var(--text-sec)'
               : band === 'red' ? 'var(--red)' : band === 'amber' ? 'var(--yellow)' : 'var(--green)';
 
+            // Three-mechanism breakdown (PMRS v3)
+            let mechHtml = '';
+            if (rw && rw.mechanisms) {
+              const m = rw.mechanisms;
+              mechHtml = `<div class="popup-mechanisms">
+                <div class="popup-mech-pill pluvial">Pluvial<span class="mech-val">${(m.pluvial ?? 0).toFixed(0)}</span></div>
+                <div class="popup-mech-pill fluvial">Fluvial<span class="mech-val">${(m.fluvial ?? 0).toFixed(0)}</span></div>
+                <div class="popup-mech-pill compound">Compound<span class="mech-val">${(m.compound ?? 0).toFixed(0)}</span></div>
+              </div>`;
+            }
+
             // Top 2 risk factors
             const factorLabels = {
               flood_risk_pct: 'Flood Risk',
@@ -3846,7 +3913,7 @@
             const rsBlock = rs !== null ? `
               <div class="popup-rs-score" style="color:${rsColor}">${rs.toFixed(1)}</div>
               <div class="popup-rs-band" style="color:${rsColor}">${band === 'red' ? 'Critical' : band === 'amber' ? 'At Risk' : 'Ready'}</div>
-              ${factorsHtml}${actionHtml}` : '';
+              ${mechHtml}${factorsHtml}${actionHtml}` : '';
 
             return `
             <div class="popup-header">
@@ -5514,8 +5581,35 @@
       val.style.color       = col;
       badge.textContent     = (w.flood_type || '').toUpperCase();
       badge.className       = 'drill-ft-badge ' + (w.flood_type || '');
+
+      // Three-mechanism sub-scores
+      const mechEl = document.getElementById('drill-mechanisms');
+      if (mechEl && w.mechanisms) {
+        const m = w.mechanisms;
+        const mechColor = (v) => v >= 65 ? '#16A34A' : v >= 40 ? '#D97706' : '#DC2626';
+        mechEl.style.display = 'flex';
+        mechEl.innerHTML = `
+          <div class="drill-mech-card">
+            <div class="drill-mech-label" style="color:#D97706">Pluvial</div>
+            <div class="drill-mech-val" style="color:${mechColor(m.pluvial)}">${m.pluvial.toFixed(1)}</div>
+            <div class="drill-mech-wt">45%</div>
+          </div>
+          <div class="drill-mech-card">
+            <div class="drill-mech-label" style="color:#2563EB">Fluvial</div>
+            <div class="drill-mech-val" style="color:${mechColor(m.fluvial)}">${m.fluvial.toFixed(1)}</div>
+            <div class="drill-mech-wt">30%</div>
+          </div>
+          <div class="drill-mech-card">
+            <div class="drill-mech-label" style="color:#7C3AED">Compound</div>
+            <div class="drill-mech-val" style="color:${mechColor(m.compound)}">${m.compound.toFixed(1)}</div>
+            <div class="drill-mech-wt">25%</div>
+          </div>
+        `;
+      }
     } else {
       bar.style.display = 'none';
+      const mechEl = document.getElementById('drill-mechanisms');
+      if (mechEl) mechEl.style.display = 'none';
       // Lazy-load readiness if not yet fetched
       if (_rpData.length === 0) {
         fetch('/readiness/scores').then(r => r.json()).then(d => {

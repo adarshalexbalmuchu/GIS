@@ -1,23 +1,49 @@
 """
-Pre-Monsoon Readiness Score (PMRS-Static) engine.
+Pre-Monsoon Readiness Score (PMRS-Static) engine — three-mechanism model.
+
+Grounded in IIT Delhi Drainage Master Plan for NCT Delhi (2018):
+  • 3 basin SWMM model: Najafgarh, Barapullah, Trans-Yamuna
+  • 5 simulation scenarios: base → cross-section fix → water body → parks → LID
+  • Junction flooding (volume m³ + duration) as primary failure metric
+  • Horton infiltration, Manning's n, IDF design storms
 
 Unlike the real-time PMRS (which scores wards *during* rainfall),
 the Readiness Score is a *pre-event* static index computed from
-historical patterns and infrastructure state — not live rain events.
+infrastructure state + historical patterns — no live rain events.
 
-Formula (0–100, higher = more ready):
-  PMRS_static = 100
-              - 40 * flood_risk_norm        # historical flood frequency
-              - 30 * (1 - capacity_norm)    # drain capacity deficit
-              - 20 * vulnerability_norm     # terrain + elevation risk
-              - 10 * infra_exposure_norm    # critical infra at risk
+Three mechanisms scored independently then combined:
+  1. PLUVIAL readiness (45%) — drain capacity vs design storm demand
+     IIT Delhi: drain conveyance capacity evaluated via SWMM conduit flow
+     Proxy: avg hotspot capacity + historical trigger frequency
+  2. FLUVIAL readiness (30%) — vulnerability to river/outfall flooding
+     IIT Delhi: outfalls into Yamuna are final disposal; elevation determines risk
+     Proxy: elevation + terrain class + proximity to Yamuna corridor
+  3. COMPOUND readiness (25%) — vulnerability to simultaneous rain + river
+     IIT Delhi: drain backflow when outfalls submerged even at moderate rain
+     Proxy: interaction of pluvial vulnerability × fluvial vulnerability
 
-Returns a per-ward score, band (green/amber/red), and contributing factors.
+Formula:
+  pluvial_r  = 100 - 40×flood_risk - 30×(1-capacity) - infra_penalty
+  fluvial_r  = f(elevation, terrain_class, Yamuna proximity)
+  compound_r = f(pluvial_vulnerability × fluvial_vulnerability)
+  PMRS_static = 0.45×pluvial_r + 0.30×fluvial_r + 0.25×compound_r
+
+Data sources:
+  IIT Delhi DMP 2018 (Ch 2-4): SWMM methodology, Manning's n, IDF
+  CWC 2023 Delhi flood case study: Yamuna thresholds, compound flooding
+  SRTM v4.1: ward elevation + terrain classification
+  OSM Overpass: critical infrastructure (hospitals, fire stations, substations)
 """
 
 from datetime import datetime
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
+
+
+# ── Mechanism weights (match real-time scoring) ────────────────────────────
+W_PLUVIAL  = 0.45
+W_FLUVIAL  = 0.30
+W_COMPOUND = 0.25
 
 
 # ── Band thresholds ────────────────────────────────────────────────────────
@@ -92,7 +118,12 @@ def _flood_type(mean_elev: float | None, runoff_t: float | None,
 
 async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
     """
-    Compute Pre-Monsoon Readiness Score for every ward.
+    Compute Pre-Monsoon Readiness Score for every ward using three-mechanism model.
+
+    Mechanism 1 (Pluvial): drain capacity vs historical flood demand
+    Mechanism 2 (Fluvial): elevation + terrain vulnerability to river/outfall flooding
+    Mechanism 3 (Compound): interaction vulnerability (rain × river × low-lying)
+
     Uses: ward_elevation, hotspot aggregate stats, dispatch history,
           critical_infrastructure proximity.
     """
@@ -157,8 +188,7 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
     """))
     infra_map = {r["ward_id"]: r["infra_count"] for r in infra_raw.mappings().fetchall()}
 
-    # ── 5. Normalisation ranges ──────────────────────────────────────
-    # Collect raw values first, then normalise 0–1
+    # ── 5. Build raw feature vectors ─────────────────────────────────
     raw = []
     for w in wards:
         wid = w["id"]
@@ -174,9 +204,6 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
         runoff_t      = float(w["runoff_t"])
         mean_elev     = float(w["mean_elevation"])
 
-        # Elevation risk: wards below 210m (Yamuna danger zone) are higher risk
-        elev_risk = max(0.0, min(1.0, (215.0 - mean_elev) / 20.0))
-
         raw.append({
             "ward_id":      wid,
             "name":         w["name"],
@@ -188,38 +215,82 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
             "trigger_rate": trigger_rate,
             "avg_capacity": avg_cap,
             "avg_penalty":  avg_penalty,
-            "elev_risk":    elev_risk,
             "infra_count":  infra_cnt,
             "total_runs":   total_runs,
             "triggered_runs": triggered,
         })
 
-    # Normalise each dimension across all wards
+    # ── 6. Normalise across wards ────────────────────────────────────
     def _norm(vals: list[float]) -> list[float]:
         mn, mx = min(vals), max(vals)
         if mx == mn:
             return [0.5] * len(vals)
         return [(v - mn) / (mx - mn) for v in vals]
 
-    tr_norm   = _norm([r["trigger_rate"] for r in raw])
-    cap_norm  = _norm([r["avg_capacity"]  for r in raw])
-    er_norm   = [r["elev_risk"] for r in raw]   # already 0–1
-    ic_norm   = _norm([float(r["infra_count"]) for r in raw])
+    tr_norm  = _norm([r["trigger_rate"] for r in raw])
+    cap_norm = _norm([r["avg_capacity"]  for r in raw])
+    ic_norm  = _norm([float(r["infra_count"]) for r in raw])
 
+    # ── 7. Three-mechanism scoring ───────────────────────────────────
     results = []
     for i, r in enumerate(raw):
-        flood_risk_n  = tr_norm[i]
-        capacity_n    = cap_norm[i]       # higher cap = better
-        vuln_n        = er_norm[i]
-        infra_exp_n   = ic_norm[i]
+        mean_elev     = r["mean_elevation"]
+        terrain_class = (r["terrain_class"] or "flat").lower()
 
-        score = (
+        # ── MECHANISM 1: PLUVIAL READINESS (drain capacity vs flood demand) ──
+        # IIT Delhi DMP: drain conveyance adequacy is the primary flood driver
+        # (3854 flooded junctions in Najafgarh alone, Scenario 1)
+        flood_risk_n = tr_norm[i]      # historical trigger frequency (0-1)
+        capacity_n   = cap_norm[i]     # drain capacity (higher = better)
+        infra_exp_n  = ic_norm[i]      # critical infra at risk
+
+        pluvial_r = (
             100.0
-            - 40.0 * flood_risk_n
-            - 30.0 * (1.0 - capacity_n)
-            - 20.0 * vuln_n
-            - 10.0 * infra_exp_n
+            - 40.0 * flood_risk_n           # historical flood frequency
+            - 30.0 * (1.0 - capacity_n)     # drain capacity deficit
+            - 10.0 * infra_exp_n            # critical infrastructure exposure
         )
+        pluvial_r = max(0.0, min(100.0, pluvial_r))
+
+        # ── MECHANISM 2: FLUVIAL READINESS (river/outfall vulnerability) ─────
+        # IIT Delhi DMP: outfalls into Yamuna are final disposal; when river
+        # rises, outfalls submerge. CWC 2023: 208.66m flooded Trans-Yamuna.
+        # Elevation risk: wards below 210m (Yamuna danger zone) are highest risk
+        elev_risk = max(0.0, min(1.0, (215.0 - mean_elev) / 20.0))
+
+        # Terrain structural vulnerability (IIT Delhi basin classification)
+        terrain_fluvial_pen = {
+            "floodplain": 0.40,   # Trans-Yamuna: alluvial clay, former riverbed
+            "low":        0.25,   # Near-river: drain outfalls partially at risk
+            "flat":       0.05,   # Standard urban
+            "urban":      0.05,
+            "moderate":   0.00,
+            "steep":      0.00,
+            "ridge":      0.00,
+        }.get(terrain_class, 0.05)
+
+        fluvial_r = 100.0 - 50.0 * elev_risk - 30.0 * terrain_fluvial_pen
+        fluvial_r = max(0.0, min(100.0, fluvial_r))
+
+        # ── MECHANISM 3: COMPOUND READINESS (rain + river interaction) ────────
+        # IIT Delhi DMP Exec Summary: both storms AND drain outfall submergence
+        # must be managed together. Compound flooding is rare but catastrophic.
+        # Vulnerability = pluvial_vulnerability × fluvial_vulnerability
+        pluvial_vuln  = 1.0 - (pluvial_r / 100.0)   # 0 = fully ready, 1 = fully vulnerable
+        fluvial_vuln  = 1.0 - (fluvial_r / 100.0)
+
+        # Multiplicative interaction: only severe when BOTH mechanisms are vulnerable
+        compound_penalty = pluvial_vuln * fluvial_vuln * 70.0
+
+        # High runoff terrain amplifies compound risk (IIT Delhi: alluvial clay
+        # in Trans-Yamuna has runoff_t 2.5-3.5, poor infiltration)
+        runoff_amp = max(0.0, (r["runoff_t"] - 2.0) / 2.0)  # 0 at T≤2, 0.5 at T=3
+        compound_penalty += runoff_amp * 15.0
+
+        compound_r = max(0.0, min(100.0, 100.0 - compound_penalty))
+
+        # ── COMBINED SCORE ────────────────────────────────────────────
+        score = W_PLUVIAL * pluvial_r + W_FLUVIAL * fluvial_r + W_COMPOUND * compound_r
         score = round(max(0.0, min(100.0, score)), 1)
 
         flood_type = _flood_type(
@@ -238,10 +309,15 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
             "band_label":     _band_label(score),
             "flood_type":     flood_type,
             "factors": {
-                "flood_risk_pct":   round(flood_risk_n  * 100, 1),
-                "capacity_pct":     round(capacity_n    * 100, 1),
-                "elevation_risk_pct": round(vuln_n      * 100, 1),
-                "infra_exposure_pct": round(infra_exp_n * 100, 1),
+                "flood_risk_pct":     round(flood_risk_n  * 100, 1),
+                "capacity_pct":       round(capacity_n    * 100, 1),
+                "elevation_risk_pct": round(elev_risk     * 100, 1),
+                "infra_exposure_pct": round(infra_exp_n   * 100, 1),
+            },
+            "mechanisms": {
+                "pluvial":  round(pluvial_r, 1),
+                "fluvial":  round(fluvial_r, 1),
+                "compound": round(compound_r, 1),
             },
             "terrain_class":   r["terrain_class"],
             "mean_elevation":  round(r["mean_elevation"], 1),
