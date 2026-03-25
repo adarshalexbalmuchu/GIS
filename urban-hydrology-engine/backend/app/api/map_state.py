@@ -68,6 +68,7 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
             )
 
             dispatches.append({
+                "ward_id": w["id"],
                 "ward_name": w["name"],
                 "ws_score": score["ws_score"],
                 "dispatch_message": result["dispatch_message"],
