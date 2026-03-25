@@ -48,8 +48,8 @@ ASYNC_DATABASE_URL = re.sub(
 # Skip SSL only for local Docker/dev connections.
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
 _connect_args = {
-    "options": "-c statement_timeout=30000",
     "prepare_threshold": 0,
+    "options": "-c statement_timeout=30000",
     **({"sslmode": "require"} if not _is_local else {}),
 }
 
