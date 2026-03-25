@@ -15,13 +15,17 @@ Scale calibration (PMRS_SCALE = 18.5):
   C=35,  R=33.6, T=1.0 (degraded capacity)        →  raw=1.042 →  score= 19 (critical)
 
 Key changes vs v1:
-  • MEAN not SUM  — removes "more hotspots = safer" artefact
-  • 3-hour window — captures full cloudburst accumulation
-  • SUM(intensity) — accumulated rain load, not just peak event
-  • Terrain adj    — floodplain/low wards penalised; ridge wards get slight bonus
-  • Yamuna penalty — backwater effect reduces effective drainage when river is high
+  • MEAN not SUM    — removes "more hotspots = safer" artefact
+  • 3-hour window   — captures full cloudburst accumulation
+  • MAX(intensity)  — peak drainage demand (rates are not additive; SUM would
+                      misread periodic weather-service events as a cloudburst)
+  • Sat. factor     — multiple events in window reduce effective C by up to 20%
+                      (soil saturation), capturing sustained-rain impact correctly
+  • Terrain adj     — floodplain/low wards penalised; ridge wards get slight bonus
+  • Yamuna penalty  — elevation-weighted backwater effect: full penalty ≤ 207m,
+                      zero penalty ≥ 215m, linear taper between
   • Critical infra  — normalised mean penalty (÷ CRITICAL_SCALE) instead of raw sum
-  • Trigger @ 65   — recalibrated to new scale
+  • Trigger @ 65    — recalibrated to new scale
 """
 
 from datetime import datetime, timedelta
@@ -110,16 +114,21 @@ async def compute_ward_score(
         cutoff_upper = datetime.utcnow()
 
     # ── Hotspots intersecting rain in window ──────────────────────────────────
-    # SUM(intensity_r) = accumulated rain load over the window, not just peak event.
-    # This correctly penalises sustained heavy rain vs a single brief pulse.
+    # MAX(intensity_r): drainage infrastructure must handle the peak rate, not the
+    # sum of rates across multiple events. Summing intensities (rates) is dimensionally
+    # incorrect — it would make periodic weather-service auto-ingest look like a
+    # cloudburst simply because many small events accumulated in the 3-hour window.
+    # COUNT(distinct events) captures event frequency separately for the event_count
+    # saturation factor below.
     rows = await conn.execute(
         text("""
             SELECT
-                h.id                        AS hotspot_id,
+                h.id                            AS hotspot_id,
                 h.capacity_c,
                 h.runoff_t,
                 h.critical_penalty_pc,
-                SUM(re.intensity_r)         AS acc_intensity
+                MAX(re.intensity_r)             AS peak_intensity,
+                COUNT(DISTINCT re.id)           AS event_count
             FROM hotspots h
             JOIN rain_events re
               ON ST_Intersects(h.geom, re.geom)
@@ -136,16 +145,22 @@ async def compute_ward_score(
         return _safe_result(ward_id, ward["name"])
 
     # ── PMRS v2 formula ───────────────────────────────────────────────────────
-    scores:   list[float] = []
+    scores:    list[float] = []
     penalties: list[float] = []
 
     for h in hotspots:
-        r_acc = max(float(h["acc_intensity"]), 0.1)   # accumulated intensity (guard ÷0)
-        t_i   = max(float(h["runoff_t"]),      1.0)   # terrain runoff factor (floor 1.0)
-        c_i   = max(float(h["capacity_c"]),    0.0)   # current drainage capacity
+        r_peak = max(float(h["peak_intensity"]), 0.1)  # peak demand on drainage (mm/hr)
+        t_i    = max(float(h["runoff_t"]),       1.0)  # terrain runoff factor (floor 1.0)
+        c_i    = max(float(h["capacity_c"]),     0.0)  # current drainage capacity
 
-        raw     = c_i / (r_acc * t_i)
-        score_i = min(100.0, raw * PMRS_SCALE)        # cap at 100 per hotspot
+        # Soil saturation factor: multiple rain events in the window mean the
+        # ground is already wet, reducing effective drainage capacity by up to 20%.
+        # Each additional event beyond the first contributes diminishing saturation.
+        event_count  = int(h["event_count"])
+        sat_factor   = max(0.80, 1.0 - (event_count - 1) * 0.05)  # floor at 0.80
+
+        raw     = (c_i * sat_factor) / (r_peak * t_i)
+        score_i = min(100.0, raw * PMRS_SCALE)         # cap at 100 per hotspot
         scores.append(score_i)
         penalties.append(float(h["critical_penalty_pc"]))
 
@@ -156,8 +171,18 @@ async def compute_ward_score(
     # Terrain adjustment (floodplain = large deduction; ridge = small bonus)
     terrain_adj = TERRAIN_ADJ.get(ward["terrain_class"].lower(), 0.0)
 
-    # Yamuna backwater: high river level prevents drain outflow → reduces score
-    yamuna_pen = YAMUNA_PENALTY.get(yamuna_status.upper(), 0.0)
+    # Yamuna backwater penalty — weighted by ward proximity to the river.
+    # Wards below 207m MSL (Yamuna danger zone) are the primary backwater risk;
+    # upland wards above 215m are largely unaffected by river level.
+    raw_yamuna_pen = YAMUNA_PENALTY.get(yamuna_status.upper(), 0.0)
+    mean_elev      = float(ward["mean_elevation"])
+    if mean_elev >= 215.0:
+        yamuna_pen = 0.0                              # upland — no backwater effect
+    elif mean_elev <= 207.0:
+        yamuna_pen = raw_yamuna_pen                   # full penalty: riverbank wards
+    else:
+        # Linear taper: 207m → full penalty, 215m → zero
+        yamuna_pen = raw_yamuna_pen * (215.0 - mean_elev) / 8.0
 
     ws_score = round(mean_score - mean_penalty + terrain_adj - yamuna_pen, 2)
     ws_score = max(ws_score, -999.0)
