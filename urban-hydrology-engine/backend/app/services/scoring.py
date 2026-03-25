@@ -41,6 +41,12 @@ Calibration (PLUVIAL_SCALE = 18.5):
   C=100, R=33.6, T=3.0 (Trans-Yamuna)           → pluvial= 18 (critical)
   C=35,  R=33.6, T=1.0 (silted drain)           → pluvial= 19 (critical)
 
+Compound drain surcharge (new):
+  Cloudburst, 213m elev, Yamuna NORMAL → compound≈83, ws≈55 (yellow)
+  Cloudburst, 210m elev, Yamuna NORMAL → compound≈72, ws≈50 (amber)
+  Cloudburst, 207m floodplain, NORMAL  → compound≈60, ws≈39 (red)
+  Cloudburst + Yamuna DANGER, 207m     → compound≈18, ws≈18 (critical)
+
 Data sources:
   IIT Delhi DMP 2018 (Ch 4): Manning's n Table 4.1-3, Horton Table 4.3-1/2/3
   CWC 2023 Delhi flood case study: Yamuna thresholds
@@ -249,36 +255,33 @@ async def compute_ward_score(
     fluvial_final = max(0.0, min(100.0, 100.0 - elev_yamuna_pen - terrain_fluvial_pen))
 
     # ══════════════════════════════════════════════════════════════════════════
-    # MECHANISM 3: COMPOUND SCORE (simultaneous rain + high river)
-    # IIT Delhi DMP Executive Summary: "storm water has to be managed so it
-    # does not interfere with drainage" — when Yamuna submerges outfalls,
-    # even moderate rain causes severe junction flooding (backflow).
-    # Proxy: interaction of rain intensity × river penalty × low elevation.
+    # MECHANISM 3: COMPOUND SCORE (drain surcharge + river backflow)
+    # IIT Delhi DMP: "storm water has to be managed so it does not interfere
+    # with drainage" — junction overflow occurs when drain capacity is
+    # overwhelmed (surcharging), amplified when outfalls are submerged.
+    # Two compound components:
+    #   a) Drain surcharge: pluvial failure → water backs up at junctions
+    #      (IIT Delhi: 3854 junctions flooded in Najafgarh, 2-yr storm)
+    #   b) River backflow: Yamuna high + drain failure → outfall submergence
+    #      (CWC 2023: 208.66m stage submerged all Trans-Yamuna outfalls)
     # ══════════════════════════════════════════════════════════════════════════
-    # Peak rain intensity across all hotspots in this ward
     max_rain = max(float(h["peak_intensity"]) for h in hotspots)
-
-    # Rain severity normalised to 0-1 (12 mm/hr = design storm, 50+ = extreme)
-    rain_norm = min(1.0, max_rain / 50.0)
-
-    # River severity normalised to 0-1
+    rain_norm  = min(1.0, max_rain / 50.0)
     river_norm = min(1.0, raw_yamuna_pen / 50.0)
+    elev_vuln  = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
 
-    # Elevation vulnerability: 0-1 (207m = max vulnerable, 215m = none)
-    elev_vuln = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
+    # Pluvial system stress: how badly drains are failing (0=safe, 1=total failure)
+    pluvial_stress = max(0.0, 1.0 - pluvial_final / 100.0)
 
-    # Compound interaction: multiplicative — only severe when BOTH rain AND
-    # river are elevated AND ward is low-lying. This correctly models that
-    # compound flooding is rare but catastrophic (IIT Delhi 2023 analysis).
-    compound_penalty = rain_norm * river_norm * elev_vuln * 80.0
+    # (a) Drain surcharge → junction overflow (primary compound mechanism)
+    # When rainfall overwhelms drain capacity, water backs up at junctions.
+    # Elevation modulates: low wards flood first, but all affected wards suffer.
+    drain_surcharge_pen = pluvial_stress * rain_norm * (0.3 + 0.7 * elev_vuln) * 60.0
 
-    # Additional: if rain is high even without Yamuna stress, partial compound
-    # effect from local drain surcharging (IIT Delhi: junctions overflow when
-    # outfalls are restricted even by local tailwater).
-    if rain_norm > 0.5 and elev_vuln > 0.3:
-        local_surcharge = (rain_norm - 0.5) * elev_vuln * 20.0
-        compound_penalty += local_surcharge
+    # (b) River × drain backflow: high river AND failing drains → outfall submergence
+    backflow_pen = pluvial_stress * river_norm * elev_vuln * 60.0
 
+    compound_penalty = drain_surcharge_pen + backflow_pen
     compound_final = max(0.0, min(100.0, 100.0 - compound_penalty))
 
     # ══════════════════════════════════════════════════════════════════════════
@@ -449,14 +452,16 @@ async def score_all_wards_batch(
         }.get(terrain_class, 0.0)
         fluvial_final = max(0.0, min(100.0, 100.0 - elev_yamuna_pen - terrain_fluvial_pen))
 
-        # ── COMPOUND ──────────────────────────────────────────────────────
+        # ── COMPOUND (drain surcharge + river backflow) ────────────────
         max_rain   = max(float(h["peak_intensity"]) for h in hotspots)
         rain_norm  = min(1.0, max_rain / 50.0)
         river_norm = min(1.0, raw_yamuna_pen / 50.0)
         elev_vuln  = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
-        compound_penalty = rain_norm * river_norm * elev_vuln * 80.0
-        if rain_norm > 0.5 and elev_vuln > 0.3:
-            compound_penalty += (rain_norm - 0.5) * elev_vuln * 20.0
+
+        pluvial_stress = max(0.0, 1.0 - pluvial_final / 100.0)
+        drain_surcharge_pen = pluvial_stress * rain_norm * (0.3 + 0.7 * elev_vuln) * 60.0
+        backflow_pen = pluvial_stress * river_norm * elev_vuln * 60.0
+        compound_penalty = drain_surcharge_pen + backflow_pen
         compound_final = max(0.0, min(100.0, 100.0 - compound_penalty))
 
         # ── COMBINED ──────────────────────────────────────────────────────
