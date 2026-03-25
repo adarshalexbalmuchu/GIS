@@ -3955,7 +3955,8 @@
       // Build cycle overrides for immediate map recoloring (before readiness reload)
       _cycleOverrides = {};
       (data.dispatches || []).forEach(d => {
-        _cycleOverrides[d.ward_name] = d.ws_score < 30 ? 'red' : 'amber';
+        // PMRS v2 colour bands: red <40 (critical), amber 40-55 (triggered), yellow 55-65 (at risk)
+        _cycleOverrides[d.ward_name] = d.ws_score < 40 ? 'red' : (d.ws_score < 55 ? 'amber' : 'yellow');
       });
       refreshMapColors();
 

@@ -31,12 +31,21 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
     dispatches: list[dict] = []
     safe_count = 0
 
+    # Fetch current Yamuna alert level once — used in every ward's score
+    yamuna_status = "NORMAL"
+    try:
+        from app.services.yamuna import _cache as _yamuna_cache
+        cached = _yamuna_cache.get("data") or {}
+        yamuna_status = (cached.get("level") or "NORMAL").upper()
+    except Exception:
+        pass
+
     wards = (await conn.execute(
         text("SELECT id, name FROM wards ORDER BY id")
     )).mappings().fetchall()
 
     for w in wards:
-        score = await compute_ward_score(w["id"], conn)
+        score = await compute_ward_score(w["id"], conn, yamuna_status=yamuna_status)
 
         if score["triggered"]:
             hs_rows = await conn.execute(
@@ -64,7 +73,7 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
                 "dispatch_message": result["dispatch_message"],
             })
             result_json = result
-            status = "critical" if score["ws_score"] < 0 else "dispatched"
+            status = "critical" if score["ws_score"] < 40 else "dispatched"
         else:
             result_json = {"message": "Ward score nominal"}
             status = "safe"
@@ -140,12 +149,22 @@ async def run_cycle(_auth=Depends(verify_api_key)):
 # ---------------------------------------------------------------------------
 
 def _ward_color(ws_score: float | None) -> str:
+    """Map PMRS v2 score → colour band.
+
+    Calibrated to PMRS_SCALE=18.5, TRIGGER_SCORE=65:
+      green  ≥ 75 — safe, nominal drainage
+      yellow 55–75 — at risk, monitoring advised
+      orange 40–55 — triggered, dispatch underway
+      red    < 40  — critical / emergency
+    """
     if ws_score is None:
         return "grey"
-    if ws_score >= 80:
+    if ws_score >= 75:
         return "green"
-    if ws_score >= 70:
+    if ws_score >= 55:
         return "yellow"
+    if ws_score >= 40:
+        return "orange"
     return "red"
 
 
@@ -324,6 +343,13 @@ async def reset_city(_auth=Depends(verify_api_key)):
                 "DELETE FROM dispatch_runs "
                 "WHERE created_at > NOW() - INTERVAL '2 hours'"
             ))
+        except Exception:
+            pass
+        # Restore hotspot drainage capacity to full — simulation events
+        # (degrade-polygon, individual sensor events) reduce capacity_c in-place
+        # and must be cleared on reset so the next cloudburst starts from baseline.
+        try:
+            await conn.execute(text("UPDATE hotspots SET capacity_c = 100.0"))
         except Exception:
             pass
 
