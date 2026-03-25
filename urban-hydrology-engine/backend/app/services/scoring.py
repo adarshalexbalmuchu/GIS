@@ -330,3 +330,155 @@ def _unknown_result(ward_id: int) -> dict:
         "triggered":       False,
         "computed_at":     datetime.utcnow(),
     }
+
+
+# ── Batch scoring (used by run_cycle_internal) ────────────────────────────────
+
+async def score_all_wards_batch(
+    conn: AsyncConnection,
+    yamuna_status: str = "NORMAL",
+) -> list[dict]:
+    """
+    Score ALL wards in 3 SQL queries instead of 870+ sequential ones.
+
+    Query 1: all wards + elevation metadata
+    Query 2: hotspot counts per ward (for short-circuit)
+    Query 3: hotspots × rain_events spatial join — ALL wards at once
+
+    Then score each ward in pure Python (no further DB calls).
+    """
+    now = datetime.utcnow()
+    cutoff       = now - timedelta(minutes=RAIN_WINDOW_MIN)
+    cutoff_upper = now
+
+    # ── Query 1: ward metadata ────────────────────────────────────────────
+    ward_rows = (await conn.execute(text("""
+        SELECT w.id, w.name,
+               COALESCE(we.terrain_class, 'flat')   AS terrain_class,
+               COALESCE(we.mean_elevation, 213.0)   AS mean_elevation
+        FROM wards w
+        LEFT JOIN ward_elevation we ON we.ward_id = w.id
+        ORDER BY w.id
+    """))).mappings().fetchall()
+
+    if not ward_rows:
+        return []
+
+    # ── Query 2: hotspot counts per ward ──────────────────────────────────
+    count_rows = (await conn.execute(text(
+        "SELECT ward_id, COUNT(*) AS cnt FROM hotspots GROUP BY ward_id"
+    ))).mappings().fetchall()
+    hotspot_counts = {r["ward_id"]: r["cnt"] for r in count_rows}
+
+    # ── Query 3: ALL hotspots intersecting rain — single spatial join ─────
+    rain_rows = (await conn.execute(text("""
+        SELECT
+            h.ward_id,
+            h.id                            AS hotspot_id,
+            h.capacity_c,
+            h.runoff_t,
+            h.critical_penalty_pc,
+            MAX(re.intensity_r)             AS peak_intensity,
+            COUNT(DISTINCT re.id)           AS event_count
+        FROM hotspots h
+        JOIN rain_events re
+          ON ST_Intersects(h.geom, re.geom)
+         AND re.created_at >= :cutoff
+         AND re.created_at <  :cutoff_upper
+        GROUP BY h.ward_id, h.id, h.capacity_c, h.runoff_t, h.critical_penalty_pc
+    """), {"cutoff": cutoff, "cutoff_upper": cutoff_upper})).mappings().fetchall()
+
+    # Group rain-affected hotspots by ward_id
+    from collections import defaultdict
+    ward_hotspots: dict[int, list] = defaultdict(list)
+    for r in rain_rows:
+        ward_hotspots[r["ward_id"]].append(r)
+
+    # ── Score each ward in Python ─────────────────────────────────────────
+    results = []
+    for w in ward_rows:
+        wid = w["id"]
+
+        # No hotspots at all → safe
+        if hotspot_counts.get(wid, 0) == 0:
+            results.append(_safe_result(wid, w["name"]))
+            continue
+
+        # No rain overlap → safe
+        hotspots = ward_hotspots.get(wid)
+        if not hotspots:
+            results.append(_safe_result(wid, w["name"]))
+            continue
+
+        # Score using same three-mechanism logic
+        mean_elev     = float(w["mean_elevation"])
+        terrain_class = w["terrain_class"].lower()
+
+        # ── PLUVIAL ───────────────────────────────────────────────────────
+        pluvial_scores = []
+        penalties      = []
+        for h in hotspots:
+            r_peak = max(float(h["peak_intensity"]), 0.1)
+            t_i    = max(float(h["runoff_t"]),       1.0)
+            c_i    = max(float(h["capacity_c"]),     0.0)
+            event_count = int(h["event_count"])
+            sat_factor  = max(0.80, 1.0 - (event_count - 1) * 0.05)
+            raw     = (c_i * sat_factor) / (r_peak * t_i)
+            score_i = min(100.0, raw * PLUVIAL_SCALE)
+            pluvial_scores.append(score_i)
+            penalties.append(float(h["critical_penalty_pc"]))
+
+        n = len(pluvial_scores)
+        mean_pluvial = sum(pluvial_scores) / n
+        mean_penalty = (sum(penalties) / n) / CRITICAL_SCALE
+        terrain_adj  = TERRAIN_ADJ.get(terrain_class, 0.0)
+        pluvial_final = max(0.0, min(100.0, mean_pluvial - mean_penalty + terrain_adj))
+
+        # ── FLUVIAL ───────────────────────────────────────────────────────
+        raw_yamuna_pen = YAMUNA_PENALTY.get(yamuna_status.upper(), 0.0)
+        if mean_elev >= 215.0:
+            elev_yamuna_pen = 0.0
+        elif mean_elev <= 207.0:
+            elev_yamuna_pen = raw_yamuna_pen
+        else:
+            elev_yamuna_pen = raw_yamuna_pen * (215.0 - mean_elev) / 8.0
+
+        terrain_fluvial_pen = {
+            "floodplain": 20.0, "low": 10.0, "flat": 0.0,
+            "moderate": 0.0, "steep": 0.0, "ridge": 0.0,
+        }.get(terrain_class, 0.0)
+        fluvial_final = max(0.0, min(100.0, 100.0 - elev_yamuna_pen - terrain_fluvial_pen))
+
+        # ── COMPOUND ──────────────────────────────────────────────────────
+        max_rain   = max(float(h["peak_intensity"]) for h in hotspots)
+        rain_norm  = min(1.0, max_rain / 50.0)
+        river_norm = min(1.0, raw_yamuna_pen / 50.0)
+        elev_vuln  = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
+        compound_penalty = rain_norm * river_norm * elev_vuln * 80.0
+        if rain_norm > 0.5 and elev_vuln > 0.3:
+            compound_penalty += (rain_norm - 0.5) * elev_vuln * 20.0
+        compound_final = max(0.0, min(100.0, 100.0 - compound_penalty))
+
+        # ── COMBINED ──────────────────────────────────────────────────────
+        ws_score = (
+            W_PLUVIAL  * pluvial_final
+            + W_FLUVIAL  * fluvial_final
+            + W_COMPOUND * compound_final
+        )
+        ws_score = round(max(ws_score, 0.0), 2)
+
+        results.append({
+            "ward_id":          wid,
+            "ward_name":        w["name"],
+            "ws_score":         ws_score,
+            "hotspots_in_rain": n,
+            "triggered":        ws_score < TRIGGER_SCORE,
+            "computed_at":      now,
+            "mechanisms": {
+                "pluvial":  round(pluvial_final, 1),
+                "fluvial":  round(fluvial_final, 1),
+                "compound": round(compound_final, 1),
+            },
+        })
+
+    return results

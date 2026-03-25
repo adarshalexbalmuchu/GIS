@@ -14,7 +14,7 @@ from typing import Optional
 
 from app.auth import verify_api_key
 from app.db import async_session, engine
-from app.services.scoring import compute_ward_score
+from app.services.scoring import compute_ward_score, score_all_wards_batch
 from app.services.dispatch_lp import run_dispatch
 from app.services.weather import get_weather_status
 from app.ws import manager as ws_manager
@@ -27,11 +27,15 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 
 async def run_cycle_internal(conn: AsyncConnection) -> dict:
-    """Score all wards and dispatch pumps. Returns summary dict."""
+    """Score all wards (batch) and dispatch pumps. Returns summary dict.
+
+    Optimised: uses score_all_wards_batch() which does 3 SQL queries total
+    instead of 870+ sequential per-ward queries.
+    """
     dispatches: list[dict] = []
     safe_count = 0
 
-    # Fetch current Yamuna alert level once — used in every ward's score
+    # Fetch current Yamuna alert level once
     yamuna_status = "NORMAL"
     try:
         from app.services.yamuna import _cache as _yamuna_cache
@@ -40,12 +44,12 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
     except Exception:
         pass
 
-    wards = (await conn.execute(
-        text("SELECT id, name FROM wards ORDER BY id")
-    )).mappings().fetchall()
+    # ── Batch-score all 290 wards in 3 queries ────────────────────────────
+    all_scores = await score_all_wards_batch(conn, yamuna_status=yamuna_status)
 
-    for w in wards:
-        score = await compute_ward_score(w["id"], conn, yamuna_status=yamuna_status)
+    # ── Dispatch + persist results ────────────────────────────────────────
+    for score in all_scores:
+        wid = score["ward_id"]
 
         if score["triggered"]:
             hs_rows = await conn.execute(
@@ -56,20 +60,20 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
                     ORDER BY priority_weight DESC
                     LIMIT 30
                 """),
-                {"wid": w["id"]},
+                {"wid": wid},
             )
             hotspots = [dict(r) for r in hs_rows.mappings().fetchall()]
 
             result = run_dispatch(
-                ward_id=w["id"],
-                ward_name=w["name"],
+                ward_id=wid,
+                ward_name=score["ward_name"],
                 ws_score=score["ws_score"],
                 hotspots=hotspots,
             )
 
             dispatches.append({
-                "ward_id": w["id"],
-                "ward_name": w["name"],
+                "ward_id": wid,
+                "ward_name": score["ward_name"],
                 "ws_score": score["ws_score"],
                 "dispatch_message": result["dispatch_message"],
             })
@@ -87,7 +91,7 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
                 VALUES (:wid, :ws, :st, :rj, now())
             """),
             {
-                "wid": w["id"],
+                "wid": wid,
                 "ws": score["ws_score"],
                 "st": status,
                 "rj": json.dumps(result_json),
@@ -105,7 +109,7 @@ async def run_cycle_internal(conn: AsyncConnection) -> dict:
 
     return {
         "cycle_completed_at": datetime.utcnow().isoformat(),
-        "wards_scored": len(wards),
+        "wards_scored": len(all_scores),
         "wards_triggered": len(dispatches),
         "dispatches": dispatches,
         "safe_wards": safe_count,
@@ -121,7 +125,7 @@ async def run_cycle(_auth=Depends(verify_api_key)):
     """Score all wards; dispatch pumps where triggered."""
     try:
         async with engine.connect() as conn:
-            await conn.execute(text("SET LOCAL statement_timeout = '20000'"))
+            await conn.execute(text("SET LOCAL statement_timeout = '30000'"))
             result = await run_cycle_internal(conn)
     except Exception as exc:
         err_str = str(exc)
