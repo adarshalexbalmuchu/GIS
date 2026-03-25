@@ -4014,6 +4014,18 @@
     showSpinner('sp-storm', true);
     logConsole('Simulating cloudburst...', 'system');
 
+    const statusEl = document.getElementById('ab-status');
+    const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; };
+
+    // AbortController helper with timeout
+    const fetchWithTimeout = (url, opts, ms = 20000) => {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), ms);
+      return fetch(url, { ...opts, signal: ac.signal }).finally(() => clearTimeout(t));
+    };
+
+    setStatus('⛈ Cloudburst: connecting...');
+
     try {
       // Delhi bounding box — used as fallback if /city/bounds returns 500
       const DELHI_BBOX = {
@@ -4027,7 +4039,7 @@
       let rainPolygon = DELHI_BBOX;
       let hotspotCount = 32826;
       try {
-        const boundsResp = await fetch('/city/bounds');
+        const boundsResp = await fetchWithTimeout('/city/bounds', {}, 10000);
         if (boundsResp.ok) {
           const bounds = await boundsResp.json();
           if (bounds.rain_polygon) rainPolygon = bounds.rain_polygon;
@@ -4046,31 +4058,44 @@
           [76.938, 28.481]
         ]]
       };
+      setStatus('⛈ Cloudburst: sending rain event...');
       let rainResp, rainAttempts = 0;
       while (rainAttempts < 4) {
-        rainResp = await fetch('/ingest/rain', {
-          method: 'POST',
-          headers: AUTH_HEADERS,
-          body: JSON.stringify({
-            geojson_polygon: CLOUDBURST_POLYGON,
-            intensity_r: 33.6   // 100.9mm ÷ 3hr peak window = 33.6mm/hr
-          })
-        });
+        try {
+          rainResp = await fetchWithTimeout('/ingest/rain', {
+            method: 'POST',
+            headers: AUTH_HEADERS,
+            body: JSON.stringify({
+              geojson_polygon: CLOUDBURST_POLYGON,
+              intensity_r: 33.6   // 100.9mm ÷ 3hr peak window = 33.6mm/hr
+            })
+          }, 35000);
+        } catch (fetchErr) {
+          rainAttempts++;
+          setStatus(`⛈ Cloudburst: rain ingest timeout, retry ${rainAttempts}/4...`);
+          console.warn('[Cloudburst] rain fetch error:', fetchErr.message);
+          if (rainAttempts >= 4) throw new Error(`Rain POST failed after 4 attempts: ${fetchErr.message}`);
+          await new Promise(r => setTimeout(r, 3000));
+          continue;
+        }
         if (rainResp.ok) break;
         rainAttempts++;
+        setStatus(`⛈ Cloudburst: rain ingest HTTP ${rainResp.status}, retry ${rainAttempts}/4...`);
         logConsole(`Rain ingest attempt ${rainAttempts} failed (${rainResp.status}) — retrying...`, 'system');
         await new Promise(r => setTimeout(r, 3000));
       }
-      if (!rainResp.ok) throw new Error(`Rain POST failed after 4 attempts: HTTP ${rainResp.status}`);
+      if (!rainResp || !rainResp.ok) throw new Error(`Rain POST failed after 4 attempts: HTTP ${rainResp ? rainResp.status : 'no response'}`);
       const rainData = await rainResp.json();
+      console.log('[Cloudburst] rain event:', rainData);
       logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
 
-      logConsole('Degrading drainage capacity...', 'system');
       const maxHid = hotspotCount || 32826;
+      const TOTAL_SENSORS = 200;
       // Batch into groups of 10 with 300ms pause — prevents Render 503
-      for (let i = 0; i < 200; i += 10) {
+      for (let i = 0; i < TOTAL_SENSORS; i += 10) {
+        setStatus(`⛈ Cloudburst: degrading drainage (${i}/${TOTAL_SENSORS})...`);
         const batch = [];
-        for (let j = i; j < Math.min(i + 10, 200); j++) {
+        for (let j = i; j < Math.min(i + 10, TOTAL_SENSORS); j++) {
           const hid = 1 + Math.floor(Math.random() * maxHid);
           const delta = -(20 + Math.random() * 25);
           batch.push(fetch('/ingest/sensor', {
@@ -4082,13 +4107,16 @@
         await Promise.all(batch);
         await new Promise(r => setTimeout(r, 300));
       }
-      logConsole('30 sensor degradation events pushed', 'triggered');
+      logConsole('Sensor degradation events pushed', 'triggered');
 
+      setStatus('⛈ Cloudburst: running dispatch cycle...');
       logConsole('Auto-triggering scoring cycle...', 'system');
       await runCycle();
 
     } catch (err) {
+      console.error('[Cloudburst] Error:', err);
       logConsole(`API Error: ${err.message}`, 'error');
+      setStatus('⛈ Cloudburst failed — check connection');
     } finally {
       showSpinner('sp-storm', false);
       setButtons(false);
