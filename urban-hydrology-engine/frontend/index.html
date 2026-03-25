@@ -4089,25 +4089,22 @@
       console.log('[Cloudburst] rain event:', rainData);
       logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
 
-      const maxHid = hotspotCount || 32826;
-      const TOTAL_SENSORS = 200;
-      // Batch into groups of 10 with 300ms pause — prevents Render 503
-      for (let i = 0; i < TOTAL_SENSORS; i += 10) {
-        setStatus(`⛈ Cloudburst: degrading drainage (${i}/${TOTAL_SENSORS})...`);
-        const batch = [];
-        for (let j = i; j < Math.min(i + 10, TOTAL_SENSORS); j++) {
-          const hid = 1 + Math.floor(Math.random() * maxHid);
-          const delta = -(20 + Math.random() * 25);
-          batch.push(fetch('/ingest/sensor', {
-            method: 'POST',
-            headers: AUTH_HEADERS,
-            body: JSON.stringify({ hotspot_id: hid, delta_capacity: parseFloat(delta.toFixed(2)) })
-          }));
-        }
-        await Promise.all(batch);
-        await new Promise(r => setTimeout(r, 300));
+      // Degrade ALL hotspots within the rain polygon in one backend query.
+      // Replacing the old 200-random-event loop which only hit 0.6% of hotspots —
+      // not enough to push ward PMRS scores below the 70 trigger threshold.
+      setStatus('⛈ Cloudburst: degrading drainage capacity...');
+      const degradeResp = await fetchWithTimeout('/ingest/degrade-polygon', {
+        method: 'POST',
+        headers: AUTH_HEADERS,
+        body: JSON.stringify({ geojson_polygon: CLOUDBURST_POLYGON, delta_capacity: -65.0 })
+      }, 40000);
+      if (!degradeResp.ok) {
+        console.warn('[Cloudburst] degrade-polygon HTTP', degradeResp.status, '— continuing anyway');
+      } else {
+        const degradeData = await degradeResp.json();
+        console.log('[Cloudburst] degraded:', degradeData);
       }
-      logConsole('Sensor degradation events pushed', 'triggered');
+      logConsole('Drainage capacity degraded across flood zone', 'triggered');
 
       setStatus('⛈ Cloudburst: running dispatch cycle...');
       logConsole('Auto-triggering scoring cycle...', 'system');

@@ -40,3 +40,17 @@ class SensorIngestResponse(BaseModel):
     hotspot_id: int
     new_capacity: float
     message: str
+
+
+# ---------------------------------------------------------------------------
+# Batch polygon degrade (cloudburst simulation)
+# ---------------------------------------------------------------------------
+
+class PolygonDegradeRequest(BaseModel):
+    geojson_polygon: dict
+    delta_capacity: float   # negative value, e.g. -60.0
+
+
+class PolygonDegradeResponse(BaseModel):
+    hotspots_degraded: int
+    message: str

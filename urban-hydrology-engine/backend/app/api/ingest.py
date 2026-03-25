@@ -12,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from app.auth import verify_api_key
 from app.db import async_session, engine
 from app.schemas import (
+    PolygonDegradeRequest,
+    PolygonDegradeResponse,
     RainIngestRequest,
     RainIngestResponse,
     SensorIngestRequest,
@@ -120,4 +122,37 @@ async def ingest_sensor(req: SensorIngestRequest):
         hotspot_id=req.hotspot_id,
         new_capacity=round(new_cap, 2),
         message=f"Capacity updated to {round(new_cap, 2)}",
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /ingest/degrade-polygon
+# ---------------------------------------------------------------------------
+
+@router.post("/ingest/degrade-polygon", response_model=PolygonDegradeResponse)
+async def degrade_polygon(req: PolygonDegradeRequest, _auth=Depends(verify_api_key)):
+    """Degrade capacity of every hotspot within a GeoJSON polygon in one query.
+
+    Used by the cloudburst simulation to ensure enough hotspots are degraded
+    to push ward PMRS scores below the trigger threshold (70).
+    delta_capacity should be negative (e.g. -65.0).
+    """
+    delta = min(req.delta_capacity, -1.0)   # enforce downward-only
+    wkt = shape(req.geojson_polygon).wkt
+    geom_str = f"SRID=4326;{wkt}"
+
+    async with engine.begin() as conn:
+        result = await conn.execute(
+            text("""
+                UPDATE hotspots
+                SET capacity_c = GREATEST(0, LEAST(100, capacity_c + :delta))
+                WHERE ST_Intersects(geom, ST_GeomFromEWKT(:geom))
+            """),
+            {"delta": delta, "geom": geom_str},
+        )
+        updated = result.rowcount
+
+    return PolygonDegradeResponse(
+        hotspots_degraded=updated,
+        message=f"Degraded {updated} hotspots within polygon by {delta} capacity units.",
     )
