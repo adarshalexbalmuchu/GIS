@@ -202,7 +202,7 @@
     font-size: 13px;
     font-weight: 500;
     color: var(--cyan-light);
-    min-width: 60px;
+    min-width: 80px;
     text-align: right;
   }
 
@@ -3349,9 +3349,11 @@
     const istOffset = 5.5 * 60 * 60 * 1000;
     const ist = new Date(now.getTime() + istOffset -
       (now.getTimezoneOffset() * 60 * 1000));
-    const h = String(ist.getHours()).padStart(2, '0');
+    const raw = ist.getHours();
+    const h = raw % 12 || 12;
     const m = String(ist.getMinutes()).padStart(2, '0');
-    document.getElementById('header-clock').textContent = h + ':' + m + ' IST';
+    const ampm = raw < 12 ? 'AM' : 'PM';
+    document.getElementById('header-clock').textContent = h + ':' + m + ' ' + ampm + ' IST';
   }
   updateClock();
   setInterval(updateClock, 30000);
