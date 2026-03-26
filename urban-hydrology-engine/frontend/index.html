@@ -3488,13 +3488,23 @@
   // individual SVG nodes — renders 8000+ dots in <5ms vs 500ms+ for SVG.
   const _hotspotCanvas = L.canvas({ padding: 0.5 });
 
+  let _hotspotAbortCtrl = null;   // cancel in-flight request on next pan
+
   async function loadHotspots() {
+    // Abort any previous in-flight request so only one is ever live at a time.
+    // Without this, rapid panning queues multiple requests on the backend worker
+    // and Render's free tier returns 503 when the worker is already busy.
+    if (_hotspotAbortCtrl) { _hotspotAbortCtrl.abort(); _hotspotAbortCtrl = null; }
     if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
     const z = map.getZoom();
     const b = map.getBounds();
     const url = `/map/hotspots?minx=${b.getWest().toFixed(4)}&miny=${b.getSouth().toFixed(4)}&maxx=${b.getEast().toFixed(4)}&maxy=${b.getNorth().toFixed(4)}`;
+    _hotspotAbortCtrl = new AbortController();
     try {
-      const data = await fetch(url).then(r => r.json());
+      const resp = await fetch(url, { signal: _hotspotAbortCtrl.signal });
+      if (!resp.ok) return;                          // 503/5xx — skip silently
+      const data = await resp.json();
+      _hotspotAbortCtrl = null;
       if (!data.features || data.features.length === 0) return;
       // Radius scales with zoom: tiny at city-wide view, larger when zoomed in
       const radius = z >= 15 ? 4 : z >= 13 ? 3 : z >= 12 ? 2 : 1.5;
@@ -3510,7 +3520,9 @@
           });
         }
       }).addTo(map);
-    } catch(e) { /* hotspots unavailable, skip silently */ }
+    } catch(e) {
+      if (e.name !== 'AbortError') { /* hotspots unavailable, skip silently */ }
+    }
   }
 
   let _hotspotDebounce = null;
@@ -3519,7 +3531,7 @@
     _hotspotDebounce = setTimeout(() => {
       if (map.getZoom() >= 11) loadHotspots();
       else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
-    }, 300);
+    }, 400);
   });
 
   const COLORS_LIGHT = {
