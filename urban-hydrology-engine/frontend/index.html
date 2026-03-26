@@ -4403,7 +4403,7 @@
       if (bResp.ok) {
         const b = await bResp.json();
         map.setView(b.center, 11);
-        loadHotspots();
+        if (map.getZoom() >= 13) loadHotspots();
         document.getElementById('m-wards-online').textContent = b.ward_count || 290;
         logConsole(`City centered: ${b.center[0].toFixed(4)}, ${b.center[1].toFixed(4)}`, 'system');
       }
