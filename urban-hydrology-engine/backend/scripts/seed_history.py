@@ -166,7 +166,8 @@ def main():
             wname = ward_names[wid]
 
             if wid in critical_ids:
-                ws_score = round(random.uniform(-800, -50), 1)
+                # PMRS 0-39: critical (score < 40 threshold, clamped to 0 by engine)
+                ws_score = round(random.uniform(5, 39), 1)
                 pumps = random.randint(10, 15)
                 locs = random.randint(5, 10)
                 dispatch_msg = (
@@ -183,7 +184,8 @@ def main():
                 status = "critical"
 
             elif wid in dispatched_ids:
-                ws_score = round(random.uniform(-49, 69), 1)
+                # PMRS 40-64: triggered/dispatched (score < TRIGGER_SCORE=65 but >= 40)
+                ws_score = round(random.uniform(40, 64), 1)
                 pumps = random.randint(3, 10)
                 locs = random.randint(2, min(pumps, 8))
                 dispatch_msg = (

@@ -117,6 +117,10 @@ async def ingest_sensor(req: SensorIngestRequest):
 
         await session.commit()
 
+    # Invalidate SSI cache so the next /map/state reflects updated system saturation
+    from app.services.ssi import invalidate_ssi_cache
+    invalidate_ssi_cache()
+
     return SensorIngestResponse(
         event_id=event_id,
         hotspot_id=req.hotspot_id,

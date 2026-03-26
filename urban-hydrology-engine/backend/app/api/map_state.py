@@ -268,8 +268,8 @@ _DELHI_FALLBACK_BOUNDS = {
     },
     "city_lat":     28.64,
     "city_lon":     77.19,
-    "ward_count":   0,
-    "hotspot_count": 0,
+    "ward_count":   290,    # 290 real MCD wards imported from Datameet GeoJSON
+    "hotspot_count": 32000, # approximate; real value served from DB in normal operation
 }
 
 @router.get("/city/bounds")

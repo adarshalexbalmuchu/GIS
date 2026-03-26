@@ -42,10 +42,15 @@ Calibration (PLUVIAL_SCALE = 18.5):
   C=35,  R=33.6, T=1.0 (silted drain)           → pluvial= 19 (critical)
 
 Compound drain surcharge (new):
-  Cloudburst, 213m elev, Yamuna NORMAL → compound≈83, ws≈55 (yellow)
-  Cloudburst, 210m elev, Yamuna NORMAL → compound≈72, ws≈50 (amber)
-  Cloudburst, 207m floodplain, NORMAL  → compound≈60, ws≈39 (red)
-  Cloudburst + Yamuna DANGER, 207m     → compound≈18, ws≈18 (critical)
+  Cloudburst, 213m elev, Yamuna NORMAL → compound≈87, ws≈55 (yellow)
+  Cloudburst, 210m elev, Yamuna NORMAL → compound≈68, ws≈50 (amber)
+  Cloudburst, 207m floodplain, NORMAL  → compound≈51, ws≈39 (red)
+  Cloudburst + Yamuna DANGER, 207m     → compound≈14, ws≈18 (critical)
+
+rain_norm denominator = 12 mm/hr (IIT Delhi 2-yr design storm at Safdarjung/Palam).
+  At or above the design storm, compound interaction is fully weighted.
+  At 6 mm/hr (heavy but sub-design), rain_norm = 0.5 — partial compound stress.
+  Saturates at 12 mm/hr: a sustained design-storm event fully activates compound.
 
 Data sources:
   IIT Delhi DMP 2018 (Ch 4): Manning's n Table 4.1-3, Horton Table 4.3-1/2/3
@@ -266,7 +271,10 @@ async def compute_ward_score(
     #      (CWC 2023: 208.66m stage submerged all Trans-Yamuna outfalls)
     # ══════════════════════════════════════════════════════════════════════════
     max_rain = max(float(h["peak_intensity"]) for h in hotspots)
-    rain_norm  = min(1.0, max_rain / 50.0)
+    # rain_norm: saturates at 12 mm/hr (IIT Delhi 2-yr design storm).
+    # At the design storm the compound interaction is fully activated;
+    # sub-design events get proportional weight.
+    rain_norm  = min(1.0, max_rain / 12.0)
     river_norm = min(1.0, raw_yamuna_pen / 50.0)
     elev_vuln  = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
 
@@ -459,7 +467,7 @@ async def score_all_wards_batch(
 
         # ── COMPOUND (drain surcharge + river backflow) ────────────────
         max_rain   = max(float(h["peak_intensity"]) for h in hotspots)
-        rain_norm  = min(1.0, max_rain / 50.0)
+        rain_norm  = min(1.0, max_rain / 12.0)   # saturates at 2-yr design storm
         river_norm = min(1.0, raw_yamuna_pen / 50.0)
         elev_vuln  = max(0.0, min(1.0, (215.0 - mean_elev) / 8.0))
 

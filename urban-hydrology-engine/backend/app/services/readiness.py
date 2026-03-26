@@ -47,20 +47,22 @@ W_COMPOUND = 0.25
 
 
 # ── Band thresholds ────────────────────────────────────────────────────────
-def _band(score: float) -> str:
+def _band_info(score: float) -> tuple[str, str]:
+    """Return (band_colour, band_label) for a readiness score."""
     if score >= 65:
-        return "green"
+        return "green", "Ready"
     if score >= 40:
-        return "amber"
-    return "red"
+        return "amber", "At Risk"
+    return "red", "Critical"
+
+
+# Backward-compatible aliases kept for any callers using the old signatures
+def _band(score: float) -> str:
+    return _band_info(score)[0]
 
 
 def _band_label(score: float) -> str:
-    if score >= 65:
-        return "Ready"
-    if score >= 40:
-        return "At Risk"
-    return "Critical"
+    return _band_info(score)[1]
 
 
 # ── Flood type classification ──────────────────────────────────────────────
@@ -305,8 +307,8 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
             "zone_name":      r["zone_name"] or "—",
             "ward_no":        r["ward_no"] or "—",
             "readiness_score": score,
-            "band":           _band(score),
-            "band_label":     _band_label(score),
+            "band":           _band_info(score)[0],
+            "band_label":     _band_info(score)[1],
             "flood_type":     flood_type,
             "factors": {
                 "flood_risk_pct":     round(flood_risk_n  * 100, 1),

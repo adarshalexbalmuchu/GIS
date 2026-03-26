@@ -224,12 +224,22 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
         all_inserted_ids.append(event_id)
         await conn.commit()
 
-        # Score all wards in 3 queries (batch) with cutoff = event midnight
+        # Score all wards in 3 queries (batch) with cutoff = event midnight.
+        # Map observed Yamuna stage to YAMUNA_PENALTY keys used by scoring engine.
+        # Thresholds from yamuna.py YAMUNA_THRESHOLDS (Old Railway Bridge MSL):
+        #   extreme=208.0m, high_flood=206.0m, danger=205.33m, warning=204.22m
+        def _stage_to_status(level_m: float) -> str:
+            if level_m >= 208.0:  return "EXTREME"
+            if level_m >= 206.0:  return "DANGER"
+            if level_m >= 205.33: return "WARNING"
+            if level_m >= 204.22: return "WATCH"
+            return "NORMAL"
+
         n_triggered = 0
         n_critical  = 0
         all_scores = await score_all_wards_batch(
             conn,
-            yamuna_status="FLOOD" if event["yamuna_level_m"] > 206.5 else "NORMAL",
+            yamuna_status=_stage_to_status(event["yamuna_level_m"]),
             cutoff_override=event_dt,
         )
         for score in all_scores:
