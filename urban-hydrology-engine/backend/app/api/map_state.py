@@ -368,6 +368,9 @@ async def reset_city(_auth=Depends(verify_api_key)):
         except Exception:
             ward_count = hs_count = infra_count = 0
 
+    # Refresh hotspot cache so /map/hotspots reflects restored capacity_c = 100
+    await load_hotspot_cache()
+
     return {"status": "reset", "message": "Simulation cleared"}
 
 

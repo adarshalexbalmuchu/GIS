@@ -152,6 +152,10 @@ async def degrade_polygon(req: PolygonDegradeRequest, _auth=Depends(verify_api_k
         )
         updated = result.rowcount
 
+    # Refresh in-memory hotspot cache so /map/hotspots reflects new capacity_c values
+    from app.api.map_state import load_hotspot_cache
+    await load_hotspot_cache()
+
     return PolygonDegradeResponse(
         hotspots_degraded=updated,
         message=f"Degraded {updated} hotspots within polygon by {delta} capacity units.",
