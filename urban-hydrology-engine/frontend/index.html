@@ -3507,15 +3507,17 @@
       _hotspotAbortCtrl = null;
       if (!data.features || data.features.length === 0) return;
       // Radius scales with zoom: tiny at city-wide view, larger when zoomed in
-      const radius = z >= 15 ? 4 : z >= 13 ? 3 : z >= 12 ? 2 : 1.5;
+      const radius = z >= 15 ? 6 : z >= 13 ? 4.5 : z >= 12 ? 3.5 : 2.5;
       hotspotLayer = L.geoJSON(data, {
         pointToLayer: function(feature, latlng) {
           return L.circleMarker(latlng, {
             renderer: _hotspotCanvas,
             radius: radius,
             fillColor: hotspotColor(feature.properties.capacity_c),
-            color: 'none',
-            fillOpacity: isDark() ? 0.75 : 0.55,
+            color: '#fff',       // thin white ring makes dots pop against any bg
+            weight: 0.6,
+            fillOpacity: 0.88,
+            opacity: 0.5,
             interactive: false,
           });
         }
