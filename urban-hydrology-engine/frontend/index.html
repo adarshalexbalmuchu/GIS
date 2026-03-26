@@ -4166,61 +4166,136 @@
     }
   }
 
+  // ── CLOUDBURST SCENARIOS ─────────────────────────────────────
+  // Each scenario is based on a documented Delhi monsoon event.
+  // Polygons cover the historically affected zone; intensity_r is
+  // derived from IMD-reported totals ÷ 3hr peak window.
+  // delta_capacity is scaled to the event severity.
+  const CLOUDBURST_SCENARIOS = [
+    {
+      id: 'sw2024',
+      label: 'Sep 12 2024 — SW Delhi',
+      badge: 'Extreme · 100.9 mm',
+      badgeClass: 'cb-badge-extreme',
+      desc: 'Malviya Nagar, Mahipalpur, Vasant Kunj, Dwarka. IMD station Safdarjung recorded 100.9mm in 24h — worst September event since 2019.',
+      polygon: { type:'Polygon', coordinates:[[
+        [76.938,28.481],[77.198,28.481],[77.198,28.721],[76.938,28.721],[76.938,28.481]
+      ]]},
+      intensity_r: 33.6,    // 100.9mm ÷ 3hr peak window
+      delta_capacity: -65.0,
+    },
+    {
+      id: 'rohini2023',
+      label: 'Jul 9 2023 — Rohini / North Delhi',
+      badge: 'Heavy · 153 mm',
+      badgeClass: 'cb-badge-extreme',
+      desc: 'North Delhi including Rohini, Pitampura, Bhalaswa. Part of the July 2023 deluge — Delhi\'s highest single-day rainfall in 41 years (153mm at Safdarjung).',
+      polygon: { type:'Polygon', coordinates:[[
+        [77.07,28.62],[77.35,28.62],[77.35,28.83],[77.07,28.83],[77.07,28.62]
+      ]]},
+      intensity_r: 51.0,    // 153mm ÷ 3hr peak window
+      delta_capacity: -72.0,
+    },
+    {
+      id: 'yamuna2023',
+      label: 'Aug 2023 — Yamuna Corridor / East Delhi',
+      badge: 'Heavy · 78 mm',
+      badgeClass: 'cb-badge-heavy',
+      desc: 'Trans-Yamuna floodplain: Patparganj, Geeta Colony, Yamuna Khadar. Yamuna peaked at 208.66m — highest since 1978, inundating low-lying colonies.',
+      polygon: { type:'Polygon', coordinates:[[
+        [77.22,28.55],[77.45,28.55],[77.45,28.72],[77.22,28.72],[77.22,28.55]
+      ]]},
+      intensity_r: 26.0,    // 78mm ÷ 3hr peak window
+      delta_capacity: -52.0,
+    },
+    {
+      id: 'central2021',
+      label: 'Sep 2021 — Central / West Delhi',
+      badge: 'Moderate · 65 mm',
+      badgeClass: 'cb-badge-heavy',
+      desc: 'Shahdara, Wazirpur, Rajouri Garden. Overflowing drains disrupted traffic; low-lying unauthorised colonies flooded for 6–12 hours.',
+      polygon: { type:'Polygon', coordinates:[[
+        [76.97,28.60],[77.22,28.60],[77.22,28.75],[76.97,28.75],[76.97,28.60]
+      ]]},
+      intensity_r: 21.7,    // 65mm ÷ 3hr peak window
+      delta_capacity: -44.0,
+    },
+  ];
+
+  // Promise-based scenario picker — resolves with chosen scenario or null if cancelled
+  let _cbResolve = null;
+
+  function _openCloudburstModal() {
+    return new Promise((resolve) => {
+      _cbResolve = resolve;
+      const list = document.getElementById('cb-scenario-list');
+      list.innerHTML = CLOUDBURST_SCENARIOS.map((s, i) => `
+        <label class="cb-scenario${i === 0 ? ' selected' : ''}" data-id="${s.id}">
+          <input type="radio" name="cb-scenario" value="${s.id}"${i === 0 ? ' checked' : ''}>
+          <div class="cb-scenario-info">
+            <div class="cb-scenario-title">${s.label}</div>
+            <div class="cb-scenario-desc">${s.desc}</div>
+            <span class="cb-badge ${s.badgeClass}">${s.badge}</span>
+          </div>
+        </label>
+      `).join('');
+
+      // Highlight on click
+      list.querySelectorAll('.cb-scenario').forEach(el => {
+        el.addEventListener('click', () => {
+          list.querySelectorAll('.cb-scenario').forEach(x => x.classList.remove('selected'));
+          el.classList.add('selected');
+          el.querySelector('input').checked = true;
+        });
+      });
+
+      document.getElementById('cloudburst-overlay').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  }
+
+  function _cbRejectScenario() {
+    document.getElementById('cloudburst-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    if (_cbResolve) { _cbResolve(null); _cbResolve = null; }
+  }
+
+  function _cbConfirmScenario() {
+    const checked = document.querySelector('input[name="cb-scenario"]:checked');
+    const id = checked ? checked.value : CLOUDBURST_SCENARIOS[0].id;
+    const scenario = CLOUDBURST_SCENARIOS.find(s => s.id === id) || CLOUDBURST_SCENARIOS[0];
+    document.getElementById('cloudburst-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    if (_cbResolve) { _cbResolve(scenario); _cbResolve = null; }
+  }
+
+  // Wire up modal buttons — script is at bottom of body so DOM elements exist already
+  document.getElementById('btn-cb-close').addEventListener('click', _cbRejectScenario);
+  document.getElementById('btn-cb-cancel').addEventListener('click', _cbRejectScenario);
+  document.getElementById('btn-cb-launch').addEventListener('click', _cbConfirmScenario);
+
   // ── SIMULATE CLOUDBURST ───────────────────────────────────────
   async function simulateCloudburst() {
-    if (!confirm('Trigger a cloudburst simulation and auto-run dispatch cycle?')) {
-      return;
-    }
+    const scenario = await _openCloudburstModal();
+    if (!scenario) return;
 
     setButtons(true);
     showSpinner('sp-storm', true);
-    logConsole('Simulating cloudburst...', 'system');
+    logConsole(`Simulating cloudburst: ${scenario.label}`, 'system');
 
     const statusEl = document.getElementById('ab-status');
     const setStatus = (msg) => { if (statusEl) statusEl.textContent = msg; };
 
-    // AbortController helper with timeout
     const fetchWithTimeout = (url, opts, ms = 20000) => {
       const ac = new AbortController();
       const t = setTimeout(() => ac.abort(), ms);
       return fetch(url, { ...opts, signal: ac.signal }).finally(() => clearTimeout(t));
     };
 
-    setStatus('⛈ Cloudburst: connecting...');
+    setStatus(`⛈ ${scenario.label}: connecting...`);
 
     try {
-      // Delhi bounding box — used as fallback if /city/bounds returns 500
-      const DELHI_BBOX = {
-        "type": "Polygon",
-        "coordinates": [[
-          [76.838, 28.404], [77.548, 28.404],
-          [77.548, 28.883], [76.838, 28.883],
-          [76.838, 28.404]
-        ]]
-      };
-      let rainPolygon = DELHI_BBOX;
-      let hotspotCount = 32826;
-      try {
-        const boundsResp = await fetchWithTimeout('/city/bounds', {}, 10000);
-        if (boundsResp.ok) {
-          const bounds = await boundsResp.json();
-          if (bounds.rain_polygon) rainPolygon = bounds.rain_polygon;
-          if (bounds.hotspot_count) hotspotCount = bounds.hotspot_count;
-        }
-      } catch (_) { /* /city/bounds failed — using Delhi fallback polygon */ }
-
-      // Sep 12 2024 cloudburst — 100.9mm, South-West Delhi corridor
-      // Historically: Malviya Nagar, Mahipalpur, Vasant Kunj, Dwarka,
-      // Rohini, Bhalaswa — repeat flood zones every monsoon
-      const CLOUDBURST_POLYGON = {
-        "type": "Polygon",
-        "coordinates": [[
-          [76.938, 28.481], [77.198, 28.481],
-          [77.198, 28.721], [76.938, 28.721],
-          [76.938, 28.481]
-        ]]
-      };
-      setStatus('⛈ Cloudburst: sending rain event...');
+      setStatus(`⛈ ${scenario.label}: sending rain event...`);
       let rainResp, rainAttempts = 0;
       while (rainAttempts < 4) {
         try {
@@ -4228,13 +4303,13 @@
             method: 'POST',
             headers: AUTH_HEADERS,
             body: JSON.stringify({
-              geojson_polygon: CLOUDBURST_POLYGON,
-              intensity_r: 33.6   // 100.9mm ÷ 3hr peak window = 33.6mm/hr
+              geojson_polygon: scenario.polygon,
+              intensity_r: scenario.intensity_r,
             })
           }, 35000);
         } catch (fetchErr) {
           rainAttempts++;
-          setStatus(`⛈ Cloudburst: rain ingest timeout, retry ${rainAttempts}/4...`);
+          setStatus(`⛈ Rain ingest timeout, retry ${rainAttempts}/4...`);
           console.warn('[Cloudburst] rain fetch error:', fetchErr.message);
           if (rainAttempts >= 4) throw new Error(`Rain POST failed after 4 attempts: ${fetchErr.message}`);
           await new Promise(r => setTimeout(r, 3000));
@@ -4242,23 +4317,21 @@
         }
         if (rainResp.ok) break;
         rainAttempts++;
-        setStatus(`⛈ Cloudburst: rain ingest HTTP ${rainResp.status}, retry ${rainAttempts}/4...`);
+        setStatus(`⛈ Rain ingest HTTP ${rainResp.status}, retry ${rainAttempts}/4...`);
         logConsole(`Rain ingest attempt ${rainAttempts} failed (${rainResp.status}) — retrying...`, 'system');
         await new Promise(r => setTimeout(r, 3000));
       }
       if (!rainResp || !rainResp.ok) throw new Error(`Rain POST failed after 4 attempts: HTTP ${rainResp ? rainResp.status : 'no response'}`);
       const rainData = await rainResp.json();
       console.log('[Cloudburst] rain event:', rainData);
-      logConsole(`Rain event: ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
+      logConsole(`Rain event (${scenario.label}): ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
 
-      // Degrade ALL hotspots within the rain polygon in one backend query.
-      // Replacing the old 200-random-event loop which only hit 0.6% of hotspots —
-      // not enough to push ward PMRS scores below the 70 trigger threshold.
-      setStatus('⛈ Cloudburst: degrading drainage capacity...');
+      // Degrade ALL hotspots within the polygon in one backend query.
+      setStatus(`⛈ ${scenario.label}: degrading drainage capacity...`);
       const degradeResp = await fetchWithTimeout('/ingest/degrade-polygon', {
         method: 'POST',
         headers: AUTH_HEADERS,
-        body: JSON.stringify({ geojson_polygon: CLOUDBURST_POLYGON, delta_capacity: -65.0 })
+        body: JSON.stringify({ geojson_polygon: scenario.polygon, delta_capacity: scenario.delta_capacity })
       }, 40000);
       if (!degradeResp.ok) {
         console.warn('[Cloudburst] degrade-polygon HTTP', degradeResp.status, '— continuing anyway');
@@ -4268,8 +4341,9 @@
       }
       logConsole('Drainage capacity degraded across flood zone', 'triggered');
 
-      setStatus('⛈ Cloudburst: running dispatch cycle...');
+      setStatus(`⛈ ${scenario.label}: running dispatch cycle...`);
       logConsole('Auto-triggering scoring cycle...', 'system');
+      showAlert('warn', 'Cloudburst simulation', `${scenario.label} injected — scoring cycle triggered`);
       await runCycle();
 
     } catch (err) {
@@ -6020,10 +6094,9 @@
     await _origRunCycle.apply(this, arguments);
   };
 
-  // Patch simulateCloudburst to show alert
+  // Patch simulateCloudburst — alert is now emitted inside simulateCloudburst itself
   const _origSimulateCloudburst = simulateCloudburst;
   window.simulateCloudburst = async function() {
-    showAlert('warn', 'Cloudburst simulation', 'Extreme rainfall event injected — scoring cycle triggered');
     await _origSimulateCloudburst.apply(this, arguments);
   };
 
