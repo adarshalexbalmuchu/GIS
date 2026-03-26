@@ -376,7 +376,6 @@ async def map_state():
     """Return GeoJSON FeatureCollection of wards + hotspot list."""
     try:
         async with engine.connect() as conn:
-            await conn.execute(text("SET LOCAL statement_timeout = '25000'"))
             # ── Ward features with latest dispatch_run ───────────────────
             ward_rows = await conn.execute(text("""
                 WITH latest_dispatch AS (

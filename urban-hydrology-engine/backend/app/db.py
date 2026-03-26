@@ -48,7 +48,7 @@ ASYNC_DATABASE_URL = re.sub(
 # Skip SSL only for local Docker/dev connections.
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
 _connect_args = {
-    "prepare_threshold": 0,
+    "prepare_threshold": None,
     "options": "-c statement_timeout=30000",
     **({"sslmode": "require"} if not _is_local else {}),
 }
@@ -61,7 +61,6 @@ engine = create_async_engine(
     future=True,
     poolclass=NullPool,
     connect_args=_connect_args,
-    execution_options={"no_parameters": True},
 )
 async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
