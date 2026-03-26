@@ -246,7 +246,7 @@ async def websocket_endpoint(ws: WebSocket):
         while True:
             # Keep connection alive; client can send pings
             await ws.receive_text()
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, Exception):
         ws_manager.disconnect(ws)
 
 

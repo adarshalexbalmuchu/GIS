@@ -86,9 +86,9 @@ def _flood_type(mean_elev: float | None, runoff_t: float | None,
     Pluvial  — default urban rainfall flooding
 
     Falls back to name-based classification when ward_elevation is empty
-    (mean_elev will be 220.0 from COALESCE default).
+    (mean_elev will be 213.0 from COALESCE default).
     """
-    elev = mean_elev if mean_elev is not None else 220.0
+    elev = mean_elev if mean_elev is not None else 213.0
     tc = (terrain_class or "").lower()
     name_lower = ward_name.lower()
     rt = runoff_t if runoff_t is not None else 2.0
@@ -134,7 +134,7 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
     wards_raw = await conn.execute(text("""
         SELECT
             w.id, w.name, w.zone_name, w.ward_no,
-            COALESCE(we.mean_elevation, 220.0)  AS mean_elevation,
+            COALESCE(we.mean_elevation, 213.0)  AS mean_elevation,
             COALESCE(we.runoff_t,       1.5)    AS runoff_t,
             COALESCE(we.mean_slope,     2.0)    AS mean_slope,
             COALESCE(we.terrain_class, 'urban') AS terrain_class

@@ -52,7 +52,7 @@ async def floodline_layer():
                 w.name                              AS ward_name,
                 w.zone_name,
                 ST_AsGeoJSON(w.geom)::json          AS geometry,
-                COALESCE(we.mean_elevation, 220.0)  AS mean_elevation,
+                COALESCE(we.mean_elevation, 213.0)  AS mean_elevation,
                 COALESCE(we.terrain_class, 'urban') AS terrain_class,
                 COALESCE(we.runoff_t, 1.5)          AS runoff_t
             FROM wards w

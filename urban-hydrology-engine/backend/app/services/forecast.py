@@ -3,6 +3,7 @@
 Caches results for 10 minutes.
 """
 
+import os
 from datetime import datetime, timezone, timedelta
 
 import httpx
@@ -11,9 +12,9 @@ import httpx
 _cache: dict = {"data": None, "fetched_at": None}
 _CACHE_TTL = timedelta(minutes=10)
 
-# Delhi coords
-_LAT = 28.65
-_LON = 77.22
+# Delhi coords — use same env vars as weather.py for consistency
+_LAT = float(os.getenv("CITY_LAT", "28.65"))
+_LON = float(os.getenv("CITY_LON", "77.22"))
 _IST = timezone(timedelta(hours=5, minutes=30))
 
 # Risk thresholds (total 6h mm)

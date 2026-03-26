@@ -340,6 +340,7 @@ def _unknown_result(ward_id: int) -> dict:
 async def score_all_wards_batch(
     conn: AsyncConnection,
     yamuna_status: str = "NORMAL",
+    cutoff_override: datetime | None = None,
 ) -> list[dict]:
     """
     Score ALL wards in 3 SQL queries instead of 870+ sequential ones.
@@ -350,9 +351,13 @@ async def score_all_wards_batch(
 
     Then score each ward in pure Python (no further DB calls).
     """
-    now = datetime.utcnow()
-    cutoff       = now - timedelta(minutes=RAIN_WINDOW_MIN)
-    cutoff_upper = now
+    if cutoff_override is not None:
+        cutoff       = cutoff_override
+        cutoff_upper = cutoff_override + timedelta(hours=24)
+    else:
+        now = datetime.utcnow()
+        cutoff       = now - timedelta(minutes=RAIN_WINDOW_MIN)
+        cutoff_upper = now
 
     # ── Query 1: ward metadata ────────────────────────────────────────────
     ward_rows = (await conn.execute(text("""

@@ -186,9 +186,9 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
       - Clean up all inserted backtest rain events by ID when done
       - Return results + precision/recall
     """
-    from app.services.scoring import compute_ward_score
+    from app.services.scoring import score_all_wards_batch
 
-    # ── Fetch all wards ───────────────────────────────────────────────────
+    # ── Fetch all wards (just for ID validation) ──────────────────────────
     ward_rows = await conn.execute(text(
         "SELECT id, name FROM wards ORDER BY id"
     ))
@@ -224,23 +224,24 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
         all_inserted_ids.append(event_id)
         await conn.commit()
 
-        # Score all wards with cutoff = event midnight so noon event is visible
+        # Score all wards in 3 queries (batch) with cutoff = event midnight
         n_triggered = 0
         n_critical  = 0
-        for ward in wards:
-            score = await compute_ward_score(
-                ward_id=ward["id"],
-                conn=conn,
-                cutoff_override=event_dt,
-            )
+        all_scores = await score_all_wards_batch(
+            conn,
+            yamuna_status="FLOOD" if event["yamuna_level_m"] > 206.5 else "NORMAL",
+            cutoff_override=event_dt,
+        )
+        for score in all_scores:
+            wid = score["ward_id"]
             if score["triggered"]:
                 n_triggered += 1
-                ward_triggered_count[ward["id"]] += 1
-            if score["ws_score"] < 0:
+                ward_triggered_count[wid] += 1
+            if score["ws_score"] < 40:
                 n_critical += 1
-                ward_critical_count[ward["id"]] += 1
-            if score["ws_score"] < ward_worst_score[ward["id"]]:
-                ward_worst_score[ward["id"]] = score["ws_score"]
+                ward_critical_count[wid] += 1
+            if score["ws_score"] < ward_worst_score.get(wid, 100.0):
+                ward_worst_score[wid] = score["ws_score"]
 
         event_summaries.append({
             "date":            event["date"],

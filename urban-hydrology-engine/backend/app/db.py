@@ -89,6 +89,10 @@ class Ward(Base):
     hotspots = relationship("Hotspot", back_populates="ward")
     dispatch_runs = relationship("DispatchRun", back_populates="ward")
 
+    __table_args__ = (
+        Index("idx_wards_geom", geom, postgresql_using="gist"),
+    )
+
 
 class Hotspot(Base):
     __tablename__ = "hotspots"
@@ -107,6 +111,7 @@ class Hotspot(Base):
 
     __table_args__ = (
         Index("idx_hotspots_ward_id", ward_id),
+        Index("idx_hotspots_geom", geom, postgresql_using="gist"),
     )
 
 
@@ -120,6 +125,7 @@ class RainEvent(Base):
 
     __table_args__ = (
         Index("idx_rain_events_created_at", created_at),
+        Index("idx_rain_events_geom", geom, postgresql_using="gist"),
     )
 
 
@@ -170,6 +176,7 @@ class CriticalInfrastructure(Base):
 
     __table_args__ = (
         Index("idx_critical_infra_type", facility_type),
+        Index("idx_critical_infra_geom", geom, postgresql_using="gist"),
     )
 
 

@@ -3449,7 +3449,7 @@
   map.on('moveend', function() {
     clearTimeout(_hotspotDebounce);
     _hotspotDebounce = setTimeout(() => {
-      if (map.getZoom() >= 9) loadHotspots();
+      if (map.getZoom() >= 13) loadHotspots();
       else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
     }, 800);
   });
@@ -3951,7 +3951,7 @@
       }).addTo(map);
 
       // Load hotspots via GeoJSON endpoint (no pg_tileserv needed)
-      if (map.getZoom() >= 11) loadHotspots();
+      if (map.getZoom() >= 13) loadHotspots();
 
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
