@@ -309,15 +309,10 @@ async def yamuna_status():
 
 async def self_ping_job():
     """
-    Ping /ping to keep the Render free-tier instance warm.
-    Only fires during active demo hours (6am–10pm IST) to avoid
-    burning quota overnight.
+    Ping /ping to keep the Render free-tier instance warm 24/7.
+    Fires every 13 minutes so the service never hits Render's 15-min
+    inactivity sleep threshold.
     """
-    _IST = timezone(timedelta(hours=5, minutes=30))
-    now_ist = datetime.now(_IST)
-    if not (6 <= now_ist.hour < 22):
-        return  # outside active window — let the dyno sleep
-
     ping_base = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000").rstrip("/")
     url = f"{ping_base}/ping"
     try:
