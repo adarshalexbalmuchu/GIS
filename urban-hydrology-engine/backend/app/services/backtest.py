@@ -273,10 +273,14 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
             )
 
     # ── Clean up all inserted backtest rain events by ID ──────────────────
+    # Use individual named params (IN clause) — avoids asyncpg type-inference
+    # issues with ANY(:list) where the array element type may not be inferred.
     if all_inserted_ids:
+        params      = {f"id{i}": v for i, v in enumerate(all_inserted_ids)}
+        placeholders = ", ".join(f":id{i}" for i in range(len(all_inserted_ids)))
         await conn.execute(
-            text("DELETE FROM rain_events WHERE id = ANY(:ids)"),
-            {"ids": all_inserted_ids},
+            text(f"DELETE FROM rain_events WHERE id IN ({placeholders})"),
+            params,
         )
         await conn.commit()
 
