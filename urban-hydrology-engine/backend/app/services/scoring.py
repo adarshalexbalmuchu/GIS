@@ -363,9 +363,9 @@ async def score_all_wards_batch(
         cutoff       = cutoff_override
         cutoff_upper = cutoff_override + timedelta(hours=24)
     else:
-        now = datetime.utcnow()
-        cutoff       = now - timedelta(minutes=RAIN_WINDOW_MIN)
-        cutoff_upper = now
+        _now         = datetime.utcnow()
+        cutoff       = _now - timedelta(minutes=RAIN_WINDOW_MIN)
+        cutoff_upper = _now
 
     # ── Query 1: ward metadata ────────────────────────────────────────────
     ward_rows = (await conn.execute(text("""
@@ -491,7 +491,7 @@ async def score_all_wards_batch(
             "ws_score":         ws_score,
             "hotspots_in_rain": n,
             "triggered":        ws_score < TRIGGER_SCORE,
-            "computed_at":      now,
+            "computed_at":      datetime.utcnow(),
             "mechanisms": {
                 "pluvial":  round(pluvial_final, 1),
                 "fluvial":  round(fluvial_final, 1),
