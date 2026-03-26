@@ -354,7 +354,7 @@ async def reset_city(_auth=Depends(verify_api_key)):
         # (degrade-polygon, individual sensor events) reduce capacity_c in-place
         # and must be cleared on reset so the next cloudburst starts from baseline.
         try:
-            await conn.execute(text("UPDATE hotspots SET capacity_c = 100.0"))
+            await conn.execute(text("UPDATE hotspots SET capacity_c = baseline_capacity_c"))
         except Exception:
             pass
 

@@ -101,6 +101,7 @@ class Hotspot(Base):
     ward_id = Column(Integer, ForeignKey("wards.id"), nullable=False)
     geom = Column(Geometry(geometry_type="POLYGON", srid=4326), nullable=False)
     capacity_c = Column(Float, nullable=False, default=100.0)
+    baseline_capacity_c = Column(Float, nullable=False, default=70.0)
     runoff_t = Column(Float, nullable=False, default=1.0)
     priority_weight = Column(Float, nullable=False, default=1.0)
     critical_penalty_pc = Column(Float, nullable=False, default=0.0)
@@ -209,3 +210,27 @@ async def init_db() -> None:
     # Separate transaction for table creation so PostGIS types are visible
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Migration: add baseline_capacity_c to existing deployments
+    # Uses zone midpoints derived from the PWD drain classification ranges
+    # used in import_delhi_wards.py — realistic pre-monsoon baseline per zone.
+    async with engine.begin() as conn:
+        await conn.execute(sa_text("""
+            ALTER TABLE hotspots
+            ADD COLUMN IF NOT EXISTS baseline_capacity_c FLOAT NOT NULL DEFAULT 70.0
+        """))
+        # Populate from zone_name midpoints for any rows still at the default (70.0)
+        await conn.execute(sa_text("""
+            UPDATE hotspots
+            SET baseline_capacity_c = CASE zone_name
+                WHEN 'New Delhi'     THEN 82.5
+                WHEN 'South Delhi'   THEN 70.0
+                WHEN 'Central Delhi' THEN 65.0
+                WHEN 'West Delhi'    THEN 60.0
+                WHEN 'North Delhi'   THEN 55.0
+                WHEN 'East Delhi'    THEN 50.0
+                WHEN 'Outer Delhi'   THEN 45.0
+                ELSE 60.0
+            END
+            WHERE baseline_capacity_c = 70.0
+        """))

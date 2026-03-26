@@ -245,7 +245,9 @@ def main():
             pw   = round(random.uniform(0.5, 2.0), 2)
             crit = round(random.uniform(50, 200), 2) if random.random() < 0.08 else 0.0
 
-            hotspot_batch.append((ward_id, wkt, cap, roff, pw, crit, zone))
+            # baseline_capacity_c = cap (same as initial capacity_c)
+            # Reset restores to this value, not 100
+            hotspot_batch.append((ward_id, wkt, cap, cap, roff, pw, crit, zone))
 
         # Flush batch periodically
         if len(hotspot_batch) >= BATCH_CHUNK:
@@ -289,7 +291,7 @@ def _insert_hotspots(cur, rows):
     psycopg2.extras.execute_values(
         cur,
         """INSERT INTO hotspots
-           (ward_id, geom, capacity_c, runoff_t, priority_weight, critical_penalty_pc, zone_name)
+           (ward_id, geom, capacity_c, baseline_capacity_c, runoff_t, priority_weight, critical_penalty_pc, zone_name)
            VALUES %s""",
         rows,
         page_size=500,
