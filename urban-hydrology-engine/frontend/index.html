@@ -3820,7 +3820,7 @@
     // Summary text
     const worstDateStr = d.worst_date || '—';
     const worstDisplay = d.worst_score !== null
-      ? (d.worst_score <= -999 ? 'CRITICAL' : d.worst_score)
+      ? (d.worst_score < 40 ? `CRITICAL (${d.worst_score})` : d.worst_score)
       : '—';
     document.getElementById('drill-summary').innerHTML =
       `Triggered <strong>${d.times_triggered_30d}</strong> times in last 30 days. ` +
@@ -4125,12 +4125,12 @@
 
       for (const d of data.dispatches) {
         const ws = d.ws_score;
-        const type = ws < 0 ? 'critical' : 'triggered';
+        const type = ws < 40 ? 'critical' : 'triggered';
         const m = d.dispatch_message.match(/(\d+) pumps to (\d+) locations/);
         const pumps = m ? m[1] : '?';
         const locs = m ? m[2] : '?';
-        const prefix = ws < 0 ? 'CRITICAL | ' : '';
-        const scoreLabel = ws <= -999 ? 'CRITICAL' : ws.toFixed(1);
+        const prefix = ws < 40 ? 'CRITICAL | ' : '';
+        const scoreLabel = ws < 40 ? `CRITICAL (${ws.toFixed(1)})` : ws.toFixed(1);
         logConsole(`${prefix}${d.ward_name} | PMRS ${scoreLabel} | ${pumps} pumps → ${locs} locations`, type);
       }
       logConsole(`Cycle complete — ${data.wards_triggered} triggered, ${data.safe_wards} safe`, 'system');
@@ -5567,7 +5567,7 @@
       const isMissed = w.match === 'false_negative';
       const scoreHtml = isMissed
         ? `<span style="color:var(--red);font-size:11px;font-family:var(--mono)">Not triggered</span>`
-        : `<span class="bt-ward-score">${w.worst_score <= -999 ? 'CRIT' : w.worst_score.toFixed(1)}</span>`;
+        : `<span class="bt-ward-score" style="${w.worst_score < 40 ? 'color:var(--red)' : ''}">${w.worst_score < 40 ? 'CRIT' : w.worst_score.toFixed(1)}</span>`;
       return `
         <div class="bt-ward-row" onclick="rpWardClick(${w.ward_id},'${w.ward_name.replace(/'/g,"\\'")}')">
           <div class="bt-match-dot ${DOT_CLASS[w.match] || 'tn-dot'}"></div>

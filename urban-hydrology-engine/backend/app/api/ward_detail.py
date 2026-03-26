@@ -116,7 +116,7 @@ async def ward_detail(ward_id: int, days: int = Query(30, ge=1, le=365)):
             },
             "score_history": score_history,
             "worst_score": round(worst_score, 1) if worst_score is not None else None,
-            "worst_score_display": "CRITICAL" if (worst_score is not None and worst_score <= -999) else (
+            "worst_score_display": "CRITICAL" if (worst_score is not None and worst_score < 40) else (
                 str(round(worst_score, 1)) if worst_score is not None else None
             ),
             "worst_date": worst_date,

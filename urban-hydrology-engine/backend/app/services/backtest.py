@@ -204,85 +204,90 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
     event_summaries = []
     all_inserted_ids: list[int] = []
 
-    for event in EVENTS_2023:
-        # Event date at midnight — used as cutoff_override so the scoring
-        # engine's  re.created_at >= cutoff  window includes the noon event.
-        event_dt = datetime.strptime(event["date"], "%Y-%m-%d")
+    try:
+        for event in EVENTS_2023:
+            # Event date at midnight — used as cutoff_override so the scoring
+            # engine's  re.created_at >= cutoff  window includes the noon event.
+            event_dt = datetime.strptime(event["date"], "%Y-%m-%d")
 
-        # Polygon: peak/recession events use the Yamuna corridor;
-        # pre-peak urban rain uses a broader north/central Delhi polygon.
-        if event["yamuna_level_m"] > 206.5:
-            poly = _yamuna_corridor_polygon()
-        else:
-            poly = _north_central_delhi_polygon()
+            # Polygon: peak/recession events use the Yamuna corridor;
+            # pre-peak urban rain uses a broader north/central Delhi polygon.
+            if event["yamuna_level_m"] > 206.5:
+                poly = _yamuna_corridor_polygon()
+            else:
+                poly = _north_central_delhi_polygon()
 
-        # Insert rain event at noon on the event date
-        event_noon = event_dt.replace(hour=12)
-        event_id = await _insert_backtest_rain(
-            conn, poly, event["intensity_r"], event_noon
-        )
-        all_inserted_ids.append(event_id)
-        await conn.commit()
-
-        # Score all wards in 3 queries (batch) with cutoff = event midnight.
-        # Map observed Yamuna stage to YAMUNA_PENALTY keys used by scoring engine.
-        # Thresholds from yamuna.py YAMUNA_THRESHOLDS (Old Railway Bridge MSL):
-        #   extreme=208.0m, high_flood=206.0m, danger=205.33m, warning=204.22m
-        def _stage_to_status(level_m: float) -> str:
-            if level_m >= 208.0:  return "EXTREME"
-            if level_m >= 206.0:  return "DANGER"
-            if level_m >= 205.33: return "WARNING"
-            if level_m >= 204.22: return "WATCH"
-            return "NORMAL"
-
-        n_triggered = 0
-        n_critical  = 0
-        all_scores = await score_all_wards_batch(
-            conn,
-            yamuna_status=_stage_to_status(event["yamuna_level_m"]),
-            cutoff_override=event_dt,
-        )
-        for score in all_scores:
-            wid = score["ward_id"]
-            if score["triggered"]:
-                n_triggered += 1
-                ward_triggered_count[wid] += 1
-            if score["ws_score"] < 40:
-                n_critical += 1
-                ward_critical_count[wid] += 1
-            if score["ws_score"] < ward_worst_score.get(wid, 100.0):
-                ward_worst_score[wid] = score["ws_score"]
-
-        event_summaries.append({
-            "date":            event["date"],
-            "label":           event["label"],
-            "rain_mm":         event["rain_mm"],
-            "yamuna_m":        event["yamuna_level_m"],
-            "intensity_r":     event["intensity_r"],
-            "wards_triggered": n_triggered,
-            "wards_critical":  n_critical,
-            "peak":            event.get("peak", False),
-        })
-
-        if progress_cb:
-            pct = int((len(event_summaries) / len(EVENTS_2023)) * 80)
-            await progress_cb(
-                f"{event['date']} scored — {n_triggered} wards triggered, "
-                f"{n_critical} critical",
-                pct
+            # Insert rain event at noon on the event date
+            event_noon = event_dt.replace(hour=12)
+            event_id = await _insert_backtest_rain(
+                conn, poly, event["intensity_r"], event_noon
             )
+            all_inserted_ids.append(event_id)
+            await conn.commit()
 
-    # ── Clean up all inserted backtest rain events by ID ──────────────────
-    # Use individual named params (IN clause) — avoids asyncpg type-inference
-    # issues with ANY(:list) where the array element type may not be inferred.
-    if all_inserted_ids:
-        params      = {f"id{i}": v for i, v in enumerate(all_inserted_ids)}
-        placeholders = ", ".join(f":id{i}" for i in range(len(all_inserted_ids)))
-        await conn.execute(
-            text(f"DELETE FROM rain_events WHERE id IN ({placeholders})"),
-            params,
-        )
-        await conn.commit()
+            # Score all wards in 3 queries (batch) with cutoff = event midnight.
+            # Map observed Yamuna stage to YAMUNA_PENALTY keys used by scoring engine.
+            # Thresholds from yamuna.py YAMUNA_THRESHOLDS (Old Railway Bridge MSL):
+            #   extreme=208.0m, high_flood=206.0m, danger=205.33m, warning=204.22m
+            def _stage_to_status(level_m: float) -> str:
+                if level_m >= 208.0:  return "EXTREME"
+                if level_m >= 206.0:  return "DANGER"
+                if level_m >= 205.33: return "WARNING"
+                if level_m >= 204.22: return "WATCH"
+                return "NORMAL"
+
+            n_triggered = 0
+            n_critical  = 0
+            all_scores = await score_all_wards_batch(
+                conn,
+                yamuna_status=_stage_to_status(event["yamuna_level_m"]),
+                cutoff_override=event_dt,
+            )
+            for score in all_scores:
+                wid = score["ward_id"]
+                if score["triggered"]:
+                    n_triggered += 1
+                    ward_triggered_count[wid] += 1
+                if score["ws_score"] < 40:
+                    n_critical += 1
+                    ward_critical_count[wid] += 1
+                if score["ws_score"] < ward_worst_score.get(wid, 100.0):
+                    ward_worst_score[wid] = score["ws_score"]
+
+            event_summaries.append({
+                "date":            event["date"],
+                "label":           event["label"],
+                "rain_mm":         event["rain_mm"],
+                "yamuna_m":        event["yamuna_level_m"],
+                "intensity_r":     event["intensity_r"],
+                "wards_triggered": n_triggered,
+                "wards_critical":  n_critical,
+                "peak":            event.get("peak", False),
+            })
+
+            if progress_cb:
+                pct = int((len(event_summaries) / len(EVENTS_2023)) * 80)
+                await progress_cb(
+                    f"{event['date']} scored — {n_triggered} wards triggered, "
+                    f"{n_critical} critical",
+                    pct
+                )
+
+    finally:
+        # Always clean up inserted backtest rain events, even if scoring crashes.
+        # Use individual named params — avoids asyncpg type-inference issues
+        # with ANY(:list) where the array element type may not be inferred.
+        if all_inserted_ids:
+            try:
+                params       = {f"id{i}": v for i, v in enumerate(all_inserted_ids)}
+                placeholders = ", ".join(f":id{i}" for i in range(len(all_inserted_ids)))
+                await conn.execute(
+                    text(f"DELETE FROM rain_events WHERE id IN ({placeholders})"),
+                    params,
+                )
+                await conn.commit()
+            except Exception:
+                pass  # best-effort; log will surface original error
 
     # ── Build per-ward result ─────────────────────────────────────────────
     ward_results = []
