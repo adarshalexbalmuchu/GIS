@@ -30,8 +30,9 @@ async def _get_scores(force: bool = False) -> list[dict]:
         _cache["scores"] = scores
         _cache["ts"] = now
         return scores
-    except Exception:
+    except Exception as exc:
         # DB hiccup — return last good scores if cached, else empty list
+        print(f"[readiness] compute_readiness_scores failed: {exc}")
         return _cache["scores"] or []
 
 

@@ -107,7 +107,7 @@ async def on_startup():
     global _tile_client
     _tile_client = httpx.AsyncClient(base_url=TILESERV_ORIGIN, timeout=10)
 
-    max_retries = 15
+    max_retries = 30
     for attempt in range(1, max_retries + 1):
         try:
             await init_db()
@@ -121,7 +121,7 @@ async def on_startup():
                     "Set DATABASE_URL in the Render dashboard and redeploy."
                 )
                 break
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
 
     # Pre-load hotspot centroids into memory (avoids per-request PostGIS calls)
     try:
@@ -141,21 +141,19 @@ async def on_startup():
     except Exception as exc:
         print(f"Auto-seed check failed (non-fatal): {exc}")
 
-    # One-shot elevation seed: set SEED_ELEVATION=1 in Render env vars,
-    # redeploy, then remove the var and redeploy again.
-    if os.getenv("SEED_ELEVATION") == "1":
-        try:
-            import threading
-            import sys
-            scripts_dir = os.path.join(os.path.dirname(__file__), "..", "scripts")
-            if os.path.abspath(scripts_dir) not in sys.path:
-                sys.path.insert(0, os.path.abspath(scripts_dir))
-            from seed_elevation_static import main as seed_elev
-            elev_thread = threading.Thread(target=seed_elev, daemon=True)
-            elev_thread.start()
-            print("[startup] Elevation seed launched in background thread")
-        except Exception as exc:
-            print(f"Elevation seed failed (non-fatal): {exc}")
+    # Always seed elevation if the table is empty (idempotent upsert).
+    try:
+        import threading
+        import sys
+        scripts_dir = os.path.join(os.path.dirname(__file__), "..", "scripts")
+        if os.path.abspath(scripts_dir) not in sys.path:
+            sys.path.insert(0, os.path.abspath(scripts_dir))
+        from seed_elevation_static import main as seed_elev
+        elev_thread = threading.Thread(target=seed_elev, daemon=True)
+        elev_thread.start()
+        print("[startup] Elevation seed launched in background thread")
+    except Exception as exc:
+        print(f"Elevation seed failed (non-fatal): {exc}")
 
     # Start weather polling
     interval = int(os.getenv("RAIN_POLL_INTERVAL_SECONDS", "600"))

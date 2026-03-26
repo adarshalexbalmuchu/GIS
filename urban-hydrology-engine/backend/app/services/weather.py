@@ -81,6 +81,37 @@ async def _fetch_owm(client: httpx.AsyncClient) -> dict | None:
         return None
 
 
+# ── Open-Meteo fallback (free, no API key) ────────────────────────────────
+# WMO weather code → human-readable description
+_WMO_CODES = {
+    0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+    45: "Fog", 48: "Rime fog",
+    51: "Light drizzle", 53: "Drizzle", 55: "Dense drizzle",
+    61: "Light rain", 63: "Rain", 65: "Heavy rain",
+    71: "Light snow", 73: "Snow", 75: "Heavy snow",
+    80: "Light showers", 81: "Showers", 82: "Heavy showers",
+    95: "Thunderstorm", 96: "Thunderstorm + hail", 99: "Severe thunderstorm",
+}
+
+async def _fetch_open_meteo(client: httpx.AsyncClient) -> dict | None:
+    """Fetch current weather from Open-Meteo (free, no key)."""
+    try:
+        resp = await client.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": CITY_LAT,
+                "longitude": CITY_LON,
+                "current": "temperature_2m,weather_code,rain,wind_speed_10m,relative_humidity_2m",
+                "timezone": "Asia/Kolkata",
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        return resp.json()
+    except Exception:
+        return None
+
+
 # ── Main fetch ────────────────────────────────────────────────────────────
 async def fetch_delhi_rainfall() -> list[dict]:
     """
@@ -96,6 +127,11 @@ async def fetch_delhi_rainfall() -> list[dict]:
 
         # ── OWM ────────────────────────────────────────────────────────────
         owm_data = await _fetch_owm(client)
+
+        # ── Open-Meteo fallback (free) for condition + temp when OWM unavailable
+        open_meteo_data = None
+        if not owm_data:
+            open_meteo_data = await _fetch_open_meteo(client)
 
     # ── Build unified status ───────────────────────────────────────────────
     # Prefer IMD for local mm/hr; OWM for condition, temp, area polygon.
@@ -144,6 +180,30 @@ async def fetch_delhi_rainfall() -> list[dict]:
                 intensity = owm_intensity
             rainfall_src = "IMD/OWM"
 
+    elif open_meteo_data:
+        # Free fallback — use Open-Meteo for condition + temperature
+        cur = open_meteo_data.get("current", {})
+        wcode = cur.get("weather_code", 0)
+        condition_desc = _WMO_CODES.get(wcode, "Unknown")
+        temp_c = cur.get("temperature_2m")
+        om_rain = cur.get("rain", 0.0)
+        if om_rain and om_rain > 0:
+            is_raining = True
+            if local_mm_hr is None:
+                local_mm_hr  = round(om_rain, 2)
+                intensity    = om_rain
+                rainfall_src = "Open-Meteo"
+            rain_polygon = {
+                "type": "Polygon",
+                "coordinates": [[
+                    [CITY_LON - RAIN_COVERAGE, CITY_LAT - RAIN_COVERAGE],
+                    [CITY_LON + RAIN_COVERAGE, CITY_LAT - RAIN_COVERAGE],
+                    [CITY_LON + RAIN_COVERAGE, CITY_LAT + RAIN_COVERAGE],
+                    [CITY_LON - RAIN_COVERAGE, CITY_LAT + RAIN_COVERAGE],
+                    [CITY_LON - RAIN_COVERAGE, CITY_LAT - RAIN_COVERAGE],
+                ]],
+            }
+
     _last_status = {
         "condition":            condition_desc,
         "temp_c":               temp_c,
@@ -151,7 +211,8 @@ async def fetch_delhi_rainfall() -> list[dict]:
         "is_raining":           is_raining,
         "last_checked":         datetime.utcnow().isoformat(),
         "source":               "IMD/OWM" if owm_data and imd_mm_hr is not None
-                                else ("IMD" if imd_mm_hr is not None else "OpenWeatherMap"),
+                                else ("IMD" if imd_mm_hr is not None
+                                else ("Open-Meteo" if open_meteo_data else "OpenWeatherMap")),
         "local_rainfall_mm_hr": local_mm_hr,
         "rainfall_source":      rainfall_src,
     }

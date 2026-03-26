@@ -11,6 +11,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hydro -d hydrology"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
 
   backend:
     build: ./backend
@@ -25,7 +31,8 @@ services:
       RAIN_POLL_INTERVAL_SECONDS: "600"
       RAIN_COVERAGE_DEGREES: "0.15"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - ./frontend:/app/frontend

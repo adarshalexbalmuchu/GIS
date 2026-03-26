@@ -130,7 +130,7 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
           critical_infrastructure proximity.
     """
 
-    await conn.execute(text("SET LOCAL statement_timeout = '25000'"))
+    await conn.execute(text("SET LOCAL statement_timeout = '120000'"))
 
     # ── 1. Ward list with elevation ──────────────────────────────────
     wards_raw = await conn.execute(text("""
@@ -174,18 +174,14 @@ async def compute_readiness_scores(conn: AsyncConnection) -> list[dict]:
     hist_map = {r["ward_id"]: dict(r) for r in hist_raw.mappings().fetchall()}
 
     # ── 4. Critical infra exposure per ward ─────────────────────────
+    # Use geometry-based ST_DWithin (degrees) instead of geography cast
+    # to avoid extremely slow geography operations under amd64 emulation.
+    # 0.02 degrees ≈ ~2.2 km at Delhi's latitude (28.6°N).
     infra_raw = await conn.execute(text("""
         SELECT w.id AS ward_id, COUNT(ci.id) AS infra_count
         FROM wards w
         LEFT JOIN critical_infrastructure ci
-          ON ST_DWithin(
-              ST_SetSRID(ST_MakePoint(
-                  ST_X(ST_Centroid(w.geom)),
-                  ST_Y(ST_Centroid(w.geom))
-              ), 4326)::geography,
-              ci.geom::geography,
-              2000
-          )
+          ON ST_DWithin(w.geom, ci.geom, 0.02)
         GROUP BY w.id
     """))
     infra_map = {r["ward_id"]: r["infra_count"] for r in infra_raw.mappings().fetchall()}

@@ -2259,13 +2259,12 @@
   body.present-mode #floodline-legend { bottom: 20px; }
 
   #present-btn {
-    position: fixed; top: calc(var(--header-h) + 12px); left: 16px; z-index: 999;
-    padding: 5px 11px; border-radius: 7px; font-size: 11px; font-weight: 600;
-    background: var(--navy, #1B2A4A); color: #fff; border: none; cursor: pointer;
-    display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 8px rgba(0,0,0,.3);
-    transition: opacity .2s;
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    background: var(--navy-light, #2D3E5F); color: #fff; border: 1px solid rgba(255,255,255,.15);
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    transition: opacity .2s, background .2s; white-space: nowrap;
   }
-  body.present-mode #present-btn { background: rgba(0,0,0,.6); }
+  body.present-mode #present-btn { background: var(--cyan); color: var(--navy); border-color: var(--cyan); }
   #present-btn:hover { opacity: .85; }
 
   /* ── Ward comparison panel ──────────────────────────────────── */
@@ -2575,8 +2574,10 @@
     <div class="stat-pill">
       Pumps <span class="pill-val" id="m-pumps">0</span>
     </div>
-    <div class="stat-pill warn" id="pill-weather" style="display:none">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="20"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="16" x2="16" y2="20"/></svg>
+    <div class="stat-pill" id="pill-weather" style="display:none">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" id="weather-icon-rain" style="display:none"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="20"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="16" x2="16" y2="20"/></svg>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" id="weather-icon-sun" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" id="weather-icon-cloud"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
       <span class="pill-val" id="pill-weather-text"></span>
     </div>
   </div>
@@ -2596,6 +2597,10 @@
              onfocus="wardSearch(this.value)">
       <div id="ward-search-results"></div>
     </div>
+    <button id="present-btn" onclick="togglePresentMode()" title="Toggle presentation mode">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Present
+    </button>
     <button id="btn-methodology" onclick="openMethodologyModal()" title="Methodology &amp; data sources" aria-label="Open methodology info">ⓘ</button>
     <button id="btn-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
       <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z"/></svg>
@@ -3158,11 +3163,7 @@
 </div>
 
 
-<!-- Presentation mode button -->
-<button id="present-btn" onclick="togglePresentMode()" title="Toggle presentation mode">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-  Present
-</button>
+<!-- Presentation mode button moved to header -->
 
 
 <!-- Footer bar -->
@@ -4358,6 +4359,13 @@
       showAlert('warn', 'Cloudburst simulation', `${scenario.label} injected — scoring cycle triggered`);
       await runCycle();
 
+      // Refresh hotspot layer to show degraded capacities on map
+      if (map.getZoom() >= 11) loadHotspots();
+
+      // Force-refresh readiness scores (bypass 5-min cache) so panel shows impact
+      try { await fetch('/readiness/refresh', { method: 'POST', headers: POST_AUTH }); } catch(_) {}
+      await loadReadiness();
+
     } catch (err) {
       console.error('[Cloudburst] Error:', err);
       logConsole(`API Error: ${err.message}`, 'error');
@@ -4391,6 +4399,8 @@
       syncStats(0, 0);
 
       await refreshMap();
+      // Reload hotspots to show restored baseline capacities
+      if (map.getZoom() >= 11) loadHotspots();
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
     } finally {
@@ -4411,18 +4421,35 @@
       const w = await resp.json();
       const pill = document.getElementById('pill-weather');
       const pillText = document.getElementById('pill-weather-text');
+      const iconRain = document.getElementById('weather-icon-rain');
+      const iconSun = document.getElementById('weather-icon-sun');
+      const iconCloud = document.getElementById('weather-icon-cloud');
       if (!w.last_checked || w.condition === 'unknown') {
         pill.style.display = 'none';
         return;
       }
+
+      // Always show weather in header
+      pill.style.display = 'inline-flex';
+
+      // Build display text: condition + temp
+      const cond = w.condition.charAt(0).toUpperCase() + w.condition.slice(1);
+      const temp = w.temp_c != null ? `${Math.round(w.temp_c)}°C` : '';
       if (w.is_raining) {
-        // Show rain pill with intensity — the only weather info worth surfacing in header
-        pill.style.display = 'inline-flex';
-        pillText.textContent = `${w.intensity_r}mm/hr`;
-        pill.title = `${w.condition} · ${w.intensity_r}mm/hr · checked ${w.last_checked.slice(11,16)}`;
+        pill.classList.add('warn');
+        pillText.textContent = `${cond} · ${w.intensity_r}mm/hr${temp ? ' · ' + temp : ''}`;
+        iconRain.style.display = ''; iconSun.style.display = 'none'; iconCloud.style.display = 'none';
       } else {
-        pill.style.display = 'none';
+        pill.classList.remove('warn');
+        pillText.textContent = temp ? `${cond} · ${temp}` : cond;
+        // Pick icon based on condition
+        const condLower = w.condition.toLowerCase();
+        const isCloudy = condLower.includes('cloud') || condLower.includes('overcast') || condLower.includes('fog');
+        iconRain.style.display = 'none';
+        iconSun.style.display = isCloudy ? 'none' : '';
+        iconCloud.style.display = isCloudy ? '' : 'none';
       }
+      pill.title = `Delhi: ${cond}${temp ? ' · ' + temp : ''}${w.is_raining ? ' · ' + w.intensity_r + 'mm/hr' : ''} · Source: ${w.source} · ${w.last_checked.slice(11,16)} UTC`;
     } catch (_) {}
   }
 
@@ -4502,6 +4529,8 @@
           logConsole(`Live push: ${msg.wards_triggered} wards triggered, ${msg.safe_wards} safe`, 'system');
           await refreshMap();
           await refreshWeatherStatus();
+          // Refresh hotspot layer to reflect any capacity changes
+          if (map.getZoom() >= 11) loadHotspots();
         }
 
         else if (msg.type === 'backtest_progress') {

@@ -23,9 +23,18 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 from sqlalchemy.pool import NullPool
+from sqlalchemy.schema import CreateIndex
 from geoalchemy2 import Geometry
+
+# Make CREATE INDEX idempotent — prevents DuplicateTable errors when
+# create_all partially commits DDL (common on ARM-emulated PostGIS).
+@compiles(CreateIndex)
+def _create_index_if_not_exists(element, compiler, **kw):
+    text = compiler.visit_create_index(element, **kw)
+    return text.replace("CREATE INDEX", "CREATE INDEX IF NOT EXISTS")
 
 
 # ---------------------------------------------------------------------------
@@ -49,7 +58,7 @@ ASYNC_DATABASE_URL = re.sub(
 _is_local = any(h in DATABASE_URL for h in ("localhost", "127.0.0.1", "@db:"))
 _connect_args = {
     "prepare_threshold": None,
-    "options": "-c statement_timeout=30000",
+    "options": "-c statement_timeout=120000",
     **({"sslmode": "require"} if not _is_local else {}),
 }
 
