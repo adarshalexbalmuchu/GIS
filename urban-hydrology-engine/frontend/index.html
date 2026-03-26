@@ -3492,25 +3492,27 @@
 
   async function loadHotspots() {
     // Abort any previous in-flight request so only one is ever live at a time.
-    // Without this, rapid panning queues multiple requests on the backend worker
-    // and Render's free tier returns 503 when the worker is already busy.
-    if (_hotspotAbortCtrl) { _hotspotAbortCtrl.abort(); _hotspotAbortCtrl = null; }
+    if (_hotspotAbortCtrl) { _hotspotAbortCtrl.abort(); }
+    // IMPORTANT: capture in a local so the retry check uses THIS call's
+    // controller, not the global which may have been replaced by the next call.
+    const ctrl = new AbortController();
+    _hotspotAbortCtrl = ctrl;
+
     if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
     const z = map.getZoom();
     const b = map.getBounds();
     const url = `/map/hotspots?minx=${b.getWest().toFixed(4)}&miny=${b.getSouth().toFixed(4)}&maxx=${b.getEast().toFixed(4)}&maxy=${b.getNorth().toFixed(4)}`;
-    _hotspotAbortCtrl = new AbortController();
     try {
-      let resp = await fetch(url, { signal: _hotspotAbortCtrl.signal });
-      // On 503 (Render cold-start wake-up) wait 4s and retry once
+      let resp = await fetch(url, { signal: ctrl.signal });
+      // On 503 (Render cold-start wake-up) wait 2s and retry once
       if (resp.status === 503) {
-        await new Promise(r => setTimeout(r, 4000));
-        if (_hotspotAbortCtrl.signal.aborted) return;
-        resp = await fetch(url, { signal: _hotspotAbortCtrl.signal });
+        await new Promise(r => setTimeout(r, 2000));
+        if (ctrl.signal.aborted) return;   // user panned during wait — give up
+        resp = await fetch(url, { signal: ctrl.signal });
       }
-      if (!resp.ok) return;                          // still failing — skip
+      if (!resp.ok) return;
       const data = await resp.json();
-      _hotspotAbortCtrl = null;
+      if (ctrl.signal.aborted) return;     // aborted while parsing JSON
       if (!data.features || data.features.length === 0) return;
       // Radius scales with zoom: tiny at city-wide view, larger when zoomed in
       const radius = z >= 15 ? 6 : z >= 13 ? 4.5 : z >= 12 ? 3.5 : 2.5;
@@ -3520,7 +3522,7 @@
             renderer: _hotspotCanvas,
             radius: radius,
             fillColor: hotspotColor(feature.properties.capacity_c),
-            color: '#fff',       // thin white ring makes dots pop against any bg
+            color: '#fff',
             weight: 0.6,
             fillOpacity: 0.88,
             opacity: 0.5,
@@ -3534,13 +3536,15 @@
   }
 
   let _hotspotDebounce = null;
-  map.on('moveend', function() {
+  function _scheduleHotspots() {
     clearTimeout(_hotspotDebounce);
     _hotspotDebounce = setTimeout(() => {
       if (map.getZoom() >= 11) loadHotspots();
       else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
-    }, 400);
-  });
+    }, 350);
+  }
+  map.on('moveend', _scheduleHotspots);
+  map.on('zoomend', _scheduleHotspots);   // belt-and-suspenders for zoom
 
   const COLORS_LIGHT = {
     green:  '#dcfce7',
