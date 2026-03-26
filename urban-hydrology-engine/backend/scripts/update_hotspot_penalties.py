@@ -1,10 +1,20 @@
 """
-update_hotspot_penalties.py — Recalculate hotspot critical_penalty_pc
-from real OSM infrastructure proximity.
+update_hotspot_penalties.py — Recalculate hotspot critical_penalty_pc and
+priority_weight from real OSM infrastructure proximity.
 
-Runs 7 tiers HIGHEST FIRST using ST_DWithin with ::geography cast
+critical_penalty_pc: 7 tiers HIGHEST FIRST using ST_DWithin with ::geography cast
 for accurate metre-based distances. The WHERE critical_penalty_pc = 0
 guard prevents lower tiers from overwriting higher ones.
+
+priority_weight: reflects emergency service criticality.
+  hospital 100m  → 2.0  (highest — flood near hospital is life-critical)
+  substation 100m → 1.8  (power loss amplifies all other risks)
+  fire_station 100m → 1.5  (response capacity at risk)
+  hospital 250m  → 1.6
+  substation 250m → 1.4
+  fire_station 250m → 1.3
+  any infra 500m → 1.2
+  no proximity   → 1.0  (default)
 
 Usage:
     docker-compose exec backend python scripts/update_hotspot_penalties.py
@@ -19,15 +29,15 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL", "postgresql://hydro:hydro123@db:5432/hydrology"
 )
 
-# (tier_name, facility_type_or_'any', distance_m, penalty_value)
+# (tier_name, facility_type_or_None, distance_m, penalty_value, priority_weight)
 TIERS = [
-    ("hospital 100m",    "hospital",     100, 200),
-    ("substation 100m",  "substation",   100, 150),
-    ("fire stn 100m",    "fire_station", 100, 100),
-    ("hospital 250m",    "hospital",     250, 100),
-    ("substation 250m",  "substation",   250,  75),
-    ("fire stn 250m",    "fire_station", 250,  50),
-    ("any 500m",         None,           500,  25),
+    ("hospital 100m",    "hospital",     100, 200, 2.0),
+    ("substation 100m",  "substation",   100, 150, 1.8),
+    ("fire stn 100m",    "fire_station", 100, 100, 1.5),
+    ("hospital 250m",    "hospital",     250, 100, 1.6),
+    ("substation 250m",  "substation",   250,  75, 1.4),
+    ("fire stn 250m",    "fire_station", 250,  50, 1.3),
+    ("any 500m",         None,           500,  25, 1.2),
 ]
 
 
@@ -35,21 +45,23 @@ def main():
     conn = psycopg2.connect(DATABASE_URL)
     cur = conn.cursor()
 
-    # ── Reset all penalties to 0 first ──────────────────────────
-    print("Updating hotspot penalties from real OSM data...\n")
-    print("  Resetting all critical_penalty_pc to 0...")
-    cur.execute("UPDATE hotspots SET critical_penalty_pc = 0")
+    # ── Reset to defaults first ──────────────────────────────────
+    print("Updating hotspot penalties and priority weights from real OSM data...\n")
+    print("  Resetting all critical_penalty_pc to 0, priority_weight to 1.0...")
+    cur.execute("UPDATE hotspots SET critical_penalty_pc = 0, priority_weight = 1.0")
     conn.commit()
 
     total_start = time.time()
 
-    for tier_name, facility_type, distance_m, penalty in TIERS:
+    for tier_name, facility_type, distance_m, penalty, pw in TIERS:
         t0 = time.time()
         print(f"  Tier ({tier_name}): computing ST_DWithin {distance_m}m ...", end="", flush=True)
 
         if facility_type is not None:
             cur.execute(f"""
-                UPDATE hotspots SET critical_penalty_pc = {penalty}
+                UPDATE hotspots
+                SET critical_penalty_pc = {penalty},
+                    priority_weight = {pw}
                 WHERE critical_penalty_pc = 0
                 AND id IN (
                     SELECT DISTINCT h.id FROM hotspots h
@@ -60,7 +72,9 @@ def main():
         else:
             # "any" facility type
             cur.execute(f"""
-                UPDATE hotspots SET critical_penalty_pc = {penalty}
+                UPDATE hotspots
+                SET critical_penalty_pc = {penalty},
+                    priority_weight = {pw}
                 WHERE critical_penalty_pc = 0
                 AND id IN (
                     SELECT DISTINCT h.id FROM hotspots h
@@ -72,7 +86,7 @@ def main():
         updated = cur.rowcount
         conn.commit()
         elapsed = time.time() - t0
-        print(f" updated {updated:>5d} hotspots → penalty {penalty:>3d}  ({elapsed:.1f}s)")
+        print(f" updated {updated:>5d} hotspots → penalty {penalty:>3d}, weight {pw}  ({elapsed:.1f}s)")
 
     # ── Summary ─────────────────────────────────────────────────
     total_elapsed = time.time() - total_start
@@ -102,6 +116,16 @@ def main():
         elif penalty_val == 150: label = "(real substation proximity)"
         elif penalty_val == 0: label = "(genuinely non-critical)"
         print(f"  penalty={int(penalty_val):>3d}: {cnt:>6d}  {label}")
+
+    print("\nPriority weight distribution:")
+    cur.execute("""
+        SELECT priority_weight, COUNT(*) AS cnt
+        FROM hotspots
+        GROUP BY priority_weight
+        ORDER BY priority_weight DESC
+    """)
+    for pw_val, cnt in cur.fetchall():
+        print(f"  weight={pw_val}: {cnt:>6d}")
 
     cur.close()
     conn.close()

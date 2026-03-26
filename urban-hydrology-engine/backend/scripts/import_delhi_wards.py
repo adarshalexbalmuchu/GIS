@@ -242,8 +242,8 @@ def main():
             area_rank = idx / max(1, total_pts - 1)
             cap  = _drain_capacity_for_zone(zone, area_rank)
             roff = _runoff_for_zone(zone)
-            pw   = round(random.uniform(0.5, 2.0), 2)
-            crit = round(random.uniform(50, 200), 2) if random.random() < 0.08 else 0.0
+            pw   = 1.0   # default; update_hotspot_penalties.py sets real proximity-based values
+            crit = 0.0   # default; update_hotspot_penalties.py sets real OSM proximity penalties
 
             # baseline_capacity_c = cap (same as initial capacity_c)
             # Reset restores to this value, not 100

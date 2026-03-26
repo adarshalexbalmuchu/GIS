@@ -119,13 +119,11 @@
     background: var(--navy);
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 0 24px;
     gap: 12px;
     border-bottom: 1px solid var(--navy-light);
     z-index: 100;
     position: relative;
-    overflow: hidden;
   }
   #header .brand {
     display: flex;
@@ -197,6 +195,7 @@
     gap: 16px;
     flex-shrink: 1;
     min-width: 0;
+    margin-left: auto;
   }
   #m-weather {
     font-size: 12px;
@@ -871,7 +870,7 @@
 
   /* ── Laptop / MacBook (1280–1440px) ─────────────────────── */
   @media (max-width: 1440px) {
-    #header { padding: 0 16px; gap: 10px; overflow: hidden; }
+    #header { padding: 0 16px; gap: 10px; }
     .header-stats { gap: 6px; }
     .stat-pill { padding: 4px 10px; font-size: 11px; }
     /* Hide the long coverage pill on smaller laptops */
@@ -880,22 +879,21 @@
     .cd-num { font-size: 18px; }
     .cd-sep { font-size: 16px; }
     .cd-title { font-size: 10px; }
-    #ward-search-wrap { width: 160px; }
-    #m-weather { max-width: 160px; font-size: 11px; }
-    .header-right { gap: 10px; }
-    #btn-methodology span { display: inline; }
+    #ward-search-wrap { width: 160px; min-width: 120px; }
+    #m-weather { max-width: 140px; font-size: 11px; }
+    .header-right { gap: 8px; }
   }
 
   @media (max-width: 1280px) {
-    #header { padding: 0 12px; }
+    #header { padding: 0 12px; gap: 8px; }
     .header-stats .stat-pill:last-child { display: none; }
     #countdown-widget { gap: 4px; padding: 3px 8px; }
     .cd-num { font-size: 16px; }
     .cd-sep { font-size: 14px; margin-bottom: 4px; }
-    .cd-title { font-size: 9px; }
-    #ward-search-wrap { width: 140px; }
+    .cd-title { display: none; }
+    #ward-search-wrap { width: 130px; min-width: 100px; }
     #m-weather { display: none; }
-    .header-right { gap: 8px; }
+    .header-right { gap: 6px; }
     #btn-methodology { font-size: 11px; padding: 0 8px; }
   }
 
@@ -1035,6 +1033,7 @@
     transition: all .2s;
     flex-shrink: 0;
     white-space: nowrap;
+    overflow: hidden;
   }
   #btn-methodology:hover {
     background: rgba(0,188,212,.12);
@@ -1211,6 +1210,65 @@
     padding-top: 10px;
     margin-top: 4px;
   }
+
+  /* ── Cloudburst scenario modal ───────────────────────────── */
+  #cloudburst-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.65);
+    z-index: 9001;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #cloudburst-overlay.open { display: flex; }
+  #cloudburst-modal {
+    background: var(--navy);
+    border: 1px solid var(--navy-light);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.6);
+    overflow: hidden;
+  }
+  #cloudburst-modal .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--navy-light);
+  }
+  #cloudburst-modal .modal-header h2 { font-size: 15px; font-weight: 700; color: #fff; }
+  #cloudburst-modal .modal-header h2 span { color: #F87171; }
+  .cb-scenario-list { padding: 16px 24px; display: flex; flex-direction: column; gap: 10px; }
+  .cb-scenario {
+    display: flex; gap: 12px; padding: 14px 16px;
+    border-radius: 8px; border: 1.5px solid var(--navy-light);
+    cursor: pointer; transition: border-color .15s, background .15s;
+    align-items: flex-start;
+  }
+  .cb-scenario:hover { border-color: #EF4444; background: rgba(239,68,68,.07); }
+  .cb-scenario.selected { border-color: #EF4444; background: rgba(239,68,68,.12); }
+  .cb-scenario input[type=radio] { margin-top: 3px; accent-color: #EF4444; flex-shrink: 0; }
+  .cb-scenario-info { flex: 1; }
+  .cb-scenario-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+  .cb-scenario-desc { font-size: 11.5px; color: rgba(255,255,255,.5); line-height: 1.4; }
+  .cb-badge {
+    font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+    white-space: nowrap; margin-top: 5px; display: inline-block;
+  }
+  .cb-badge-extreme  { background: rgba(220,38,38,.3);  color: #FCA5A5; }
+  .cb-badge-heavy    { background: rgba(217,119,6,.3);   color: #FCD34D; }
+  .cb-badge-moderate { background: rgba(37,99,235,.3);   color: #93C5FD; }
+  .cb-modal-footer {
+    display: flex; gap: 10px; justify-content: flex-end;
+    padding: 16px 24px; border-top: 1px solid var(--navy-light);
+  }
+  .btn-cb-close {
+    background: none; border: 1px solid rgba(255,255,255,.15); border-radius: 6px;
+    width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: rgba(255,255,255,.5); font-size: 16px; transition: all .2s; flex-shrink: 0;
+  }
+  .btn-cb-close:hover { background: rgba(255,255,255,.08); color: #fff; }
 
   /* ── Loading skeleton states ─────────────────────────────── */
   @keyframes skeleton-pulse {
@@ -2029,10 +2087,10 @@
 
   /* Countdown widget — lives in header */
   #countdown-widget {
-    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    display: flex; align-items: center; gap: 10px; flex-shrink: 1;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
     border-radius: 10px; padding: 5px 12px; pointer-events: none;
-    transition: opacity .3s;
+    transition: opacity .3s; min-width: 0;
   }
   #countdown-widget.hidden { opacity: 0; }
   .cd-unit { text-align: center; }
@@ -2068,7 +2126,7 @@
   /* Ward search — lives in header-right */
   #ward-search-wrap {
     position: relative;
-    display: flex; flex-direction: column; gap: 4px; width: 200px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 4px; width: 200px; flex-shrink: 1; min-width: 120px;
   }
   #ward-search {
     width: 100%; padding: 7px 12px; font-size: 12px;
@@ -3271,6 +3329,28 @@
           </a>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     CLOUDBURST SCENARIO MODAL
+     ════════════════════════════════════════════════════════════════ -->
+<div id="cloudburst-overlay">
+  <div id="cloudburst-modal" role="dialog" aria-modal="true" aria-labelledby="cb-modal-title">
+    <div class="modal-header">
+      <h2 id="cb-modal-title">⛈ <span>Cloudburst</span> Simulation — Choose Scenario</h2>
+      <button class="btn-cb-close" id="btn-cb-close" aria-label="Cancel">&#x2715;</button>
+    </div>
+    <div class="cb-scenario-list" id="cb-scenario-list">
+      <!-- Populated by JS -->
+    </div>
+    <div class="cb-modal-footer">
+      <button class="btn btn-ghost" id="btn-cb-cancel">Cancel</button>
+      <button class="btn btn-danger" id="btn-cb-launch">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Launch Simulation
+      </button>
     </div>
   </div>
 </div>
