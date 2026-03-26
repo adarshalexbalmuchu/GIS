@@ -119,8 +119,8 @@
     background: var(--navy);
     display: flex;
     align-items: center;
-    padding: 0 24px;
-    gap: 12px;
+    padding: 0 20px;
+    gap: 8px;
     border-bottom: 1px solid var(--navy-light);
     z-index: 100;
     position: relative;
@@ -192,18 +192,10 @@
   .header-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
     flex-shrink: 1;
     min-width: 0;
     margin-left: auto;
-  }
-  #m-weather {
-    font-size: 12px;
-    color: rgba(255,255,255,.6);
-    max-width: 280px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   #header-clock {
     font-family: var(--mono);
@@ -870,31 +862,25 @@
 
   /* ── Laptop / MacBook (1280–1440px) ─────────────────────── */
   @media (max-width: 1440px) {
-    #header { padding: 0 16px; gap: 10px; }
+    #header { padding: 0 16px; gap: 8px; }
     .header-stats { gap: 6px; }
     .stat-pill { padding: 4px 10px; font-size: 11px; }
-    /* Hide the long coverage pill on smaller laptops */
-    .header-stats .stat-pill:last-child { display: none; }
-    #countdown-widget { gap: 6px; padding: 4px 10px; }
-    .cd-num { font-size: 18px; }
-    .cd-sep { font-size: 16px; }
-    .cd-title { font-size: 10px; }
-    #ward-search-wrap { width: 160px; min-width: 120px; }
-    #m-weather { max-width: 140px; font-size: 11px; }
+    #countdown-widget { gap: 5px; padding: 3px 9px; }
+    .cd-num { font-size: 15px; }
+    .cd-sep { font-size: 13px; }
+    .cd-title { font-size: 9px; }
+    #ward-search-wrap { width: 150px; min-width: 110px; }
     .header-right { gap: 8px; }
   }
 
   @media (max-width: 1280px) {
-    #header { padding: 0 12px; gap: 8px; }
-    .header-stats .stat-pill:last-child { display: none; }
+    #header { padding: 0 12px; gap: 6px; }
     #countdown-widget { gap: 4px; padding: 3px 8px; }
-    .cd-num { font-size: 16px; }
-    .cd-sep { font-size: 14px; margin-bottom: 4px; }
+    .cd-num { font-size: 14px; }
+    .cd-sep { font-size: 12px; margin-bottom: 3px; }
     .cd-title { display: none; }
-    #ward-search-wrap { width: 130px; min-width: 100px; }
-    #m-weather { display: none; }
+    #ward-search-wrap { width: 120px; min-width: 90px; }
     .header-right { gap: 6px; }
-    #btn-methodology { font-size: 11px; padding: 0 8px; }
   }
 
   /* ── Tablet / iPad (portrait + landscape) ─────────────────── */
@@ -945,7 +931,6 @@
     #history-header { padding: 10px 16px; }
     #history-header .h-title { font-size: 13px; }
     .map-legend { font-size: 11px; padding: 10px 12px; }
-    #m-weather { max-width: 180px; font-size: 11px; }
     #header-clock { font-size: 12px; }
   }
 
@@ -957,7 +942,6 @@
       --panel-w: 280px;
     }
     #header .brand-text h1 { font-size: 12px; }
-    #m-weather { display: none; }
     .btn {
       min-height: 36px;
       padding: 6px 9px;
@@ -1022,18 +1006,16 @@
     background: none;
     border: 1px solid rgba(0,188,212,.5);
     border-radius: 6px;
-    height: 32px;
-    padding: 0 10px;
-    display: flex; align-items: center; gap: 5px;
+    width: 32px; height: 32px;
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     color: var(--cyan-light);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 500;
     font-family: var(--font);
     transition: all .2s;
     flex-shrink: 0;
-    white-space: nowrap;
-    overflow: hidden;
   }
   #btn-methodology:hover {
     background: rgba(0,188,212,.12);
@@ -2087,20 +2069,20 @@
 
   /* Countdown widget — lives in header */
   #countdown-widget {
-    display: flex; align-items: center; gap: 10px; flex-shrink: 1;
+    display: flex; align-items: center; gap: 7px; flex-shrink: 1;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
-    border-radius: 10px; padding: 5px 12px; pointer-events: none;
+    border-radius: 8px; padding: 4px 10px; pointer-events: none;
     transition: opacity .3s; min-width: 0;
   }
   #countdown-widget.hidden { opacity: 0; }
   .cd-unit { text-align: center; }
-  .cd-num  { font-size: 22px; font-weight: 700; font-family: var(--mono);
+  .cd-num  { font-size: 17px; font-weight: 700; font-family: var(--mono);
              color: var(--cyan); line-height: 1; }
-  .cd-lbl  { font-size: 9px; color: var(--text-dim); text-transform: uppercase;
+  .cd-lbl  { font-size: 8px; color: var(--text-dim); text-transform: uppercase;
              letter-spacing: .06em; margin-top: 1px; }
-  .cd-sep  { font-size: 20px; font-weight: 300; color: var(--text-dim);
-             margin-bottom: 6px; }
-  .cd-title { font-size: 11px; font-weight: 600; color: var(--text-sec);
+  .cd-sep  { font-size: 15px; font-weight: 300; color: var(--text-dim);
+             margin-bottom: 4px; }
+  .cd-title { font-size: 10px; font-weight: 600; color: var(--text-sec);
               white-space: nowrap; }
   .cd-urgent { color: var(--red) !important; }
 
@@ -2264,7 +2246,6 @@
 
   /* In present mode hide only the non-essential header-right items */
   body.present-mode #ward-search-wrap,
-  body.present-mode #m-weather,
   body.present-mode #btn-methodology { display: none !important; }
 
   /* Yamuna strip floats as an overlay in present mode */
@@ -2595,30 +2576,27 @@
       Pumps <span class="pill-val" id="m-pumps">0</span>
     </div>
     <div class="stat-pill warn" id="pill-weather" style="display:none">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="20"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="16" x2="16" y2="20"/></svg>
       <span class="pill-val" id="pill-weather-text"></span>
-    </div>
-    <div class="stat-pill" title="System coverage across all three civic bodies">
-      <span class="pill-val">290</span> Wards &middot; <span class="pill-val">32,826+</span> Hotspots &middot; 871 Hospitals
     </div>
   </div>
   <!-- Pre-Monsoon Countdown -->
-  <div id="countdown-widget">
-    <div class="cd-title" id="cd-title">Pre-Monsoon Countdown</div>
+  <div id="countdown-widget" title="Days until monsoon onset (Jun 15)">
+    <div class="cd-title" id="cd-title">Monsoon in</div>
     <div class="cd-unit"><div class="cd-num" id="cd-days">—</div><div class="cd-lbl">days</div></div>
     <div class="cd-sep">:</div>
-    <div class="cd-unit"><div class="cd-num" id="cd-hours">—</div><div class="cd-lbl">hours</div></div>
+    <div class="cd-unit"><div class="cd-num" id="cd-hours">—</div><div class="cd-lbl">hrs</div></div>
     <div class="cd-sep">:</div>
-    <div class="cd-unit"><div class="cd-num" id="cd-mins">—</div><div class="cd-lbl">mins</div></div>
+    <div class="cd-unit"><div class="cd-num" id="cd-mins">—</div><div class="cd-lbl">min</div></div>
   </div>
   <div class="header-right">
     <div id="ward-search-wrap">
-      <input id="ward-search" type="text" placeholder="🔍 Search ward…"
+      <input id="ward-search" type="text" placeholder="Search ward…"
              oninput="wardSearch(this.value)" onblur="setTimeout(()=>wardSearchClose(),200)"
              onfocus="wardSearch(this.value)">
       <div id="ward-search-results"></div>
     </div>
-    <span id="m-weather">Loading weather...</span>
-    <button id="btn-methodology" onclick="openMethodologyModal()" title="Methodology & data sources" aria-label="Open methodology info">ⓘ Methodology</button>
+    <button id="btn-methodology" onclick="openMethodologyModal()" title="Methodology &amp; data sources" aria-label="Open methodology info">ⓘ</button>
     <button id="btn-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
       <svg id="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3c0 0 0 0 0 0A7 7 0 0 0 21 12.79z"/></svg>
       <svg id="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>
@@ -4397,25 +4375,18 @@
       const resp = await fetch('/weather/status');
       if (!resp.ok) return;
       const w = await resp.json();
-      const el = document.getElementById('m-weather');
       const pill = document.getElementById('pill-weather');
       const pillText = document.getElementById('pill-weather-text');
-      // If weather hasn't been fetched yet, show loading state
       if (!w.last_checked || w.condition === 'unknown') {
-        el.style.color = 'rgba(255,255,255,.4)';
-        el.innerHTML = 'Checking weather…';
         pill.style.display = 'none';
         return;
       }
-      const ts = w.last_checked.slice(11, 16);
       if (w.is_raining) {
-        el.style.color = 'var(--cyan-light)';
-        el.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="20"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="16" y1="16" x2="16" y2="20"/></svg>${w.condition} | ${w.intensity_r}mm/hr | ${ts}`;
+        // Show rain pill with intensity — the only weather info worth surfacing in header
         pill.style.display = 'inline-flex';
         pillText.textContent = `${w.intensity_r}mm/hr`;
+        pill.title = `${w.condition} · ${w.intensity_r}mm/hr · checked ${w.last_checked.slice(11,16)}`;
       } else {
-        el.style.color = 'rgba(255,255,255,.55)';
-        el.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-1px;margin-right:4px"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>${w.condition || 'Clear'} | ${ts}`;
         pill.style.display = 'none';
       }
     } catch (_) {}
