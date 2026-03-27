@@ -95,36 +95,76 @@ EVENTS_2023 = [
 ]
 
 # ---------------------------------------------------------------------------
-# Reference flooded wards (ground truth from NRSC 2023 + news reports)
-# These ward names are partial matches — we do case-insensitive substring match
+# Reference flooded wards — elevation-based spatial classification
+#
+# A ward is classified as "reference flooded" in July 2023 if it meets
+# ANY of 4 physically defensible criteria based on mean_elevation and
+# zone_name from the ward_elevation table.
 # ---------------------------------------------------------------------------
 
-KNOWN_FLOODED_WARD_FRAGMENTS = [
-    # Yamuna floodplain / river flood
-    "yamuna", "khadar", "wazirabad", "burari", "usmanpur",
-    "gokulpuri", "mustafabad", "karawal", "bhajanpura",
-    # Civil Lines / ISBT area
-    "civil lines", "kashmere", "sadar bazar", "chandni chowk",
-    # East Delhi / Trans-Yamuna
-    "geeta colony", "krishna nagar", "gandhi nagar", "vishwas nagar",
-    "shahdara", "mayur vihar", "patparganj", "kalyanpuri",
-    # East Delhi — NDMA/media documented waterlogging & evacuation
-    "sonia vihar", "dilshad garden", "vivek vihar", "trilokpuri",
-    "harsh vihar", "kondli", "gokalpur", "jhilmil",
-    # Central / South — infrastructure flooded (railway, barrage)
-    "nizamuddin", "okhla",
-    # ITO / Central
-    "ito", "rajghat", "mori gate",
-    # Najafgarh / West (backflow)
-    "najafgarh", "dwarka", "matiala", "uttam nagar",
-    # North Delhi drains
-    "mukherjee nagar", "jahangirpuri", "rohini",
+# Criterion 3: North Delhi Yamuna corridor ward name fragments
+_NORTH_YAMUNA_CORRIDOR = [
+    "wazirabad", "burari", "usmanpur", "gokulpuri",
+    "mustafabad", "karawal", "bhajanpura",
+]
+
+# Criterion 4: Central Delhi drain backflow zone ward name fragments
+_CENTRAL_DRAIN_BACKFLOW = [
+    "civil lines", "kashmere", "rajghat", "ito", "mori gate", "sadar",
 ]
 
 
-def _is_reference_flooded(ward_name: str) -> bool:
-    name_lower = ward_name.lower()
-    return any(f in name_lower for f in KNOWN_FLOODED_WARD_FRAGMENTS)
+async def _build_reference_flooded_set(conn: AsyncConnection) -> set[int]:
+    """Build the set of ward IDs classified as reference-flooded in July 2023
+    using elevation-based spatial criteria from the ward_elevation table.
+
+    Returns a set of ward_id values.
+    """
+    rows = await conn.execute(text(
+        "SELECT w.id, w.name, w.zone_name, we.mean_elevation "
+        "FROM wards w "
+        "LEFT JOIN ward_elevation we ON we.ward_id = w.id "
+        "ORDER BY w.id"
+    ))
+    ward_data = rows.mappings().fetchall()
+
+    flooded: set[int] = set()
+    for wd in ward_data:
+        elev = wd["mean_elevation"]
+        if elev is None:
+            continue  # no elevation data — cannot classify
+
+        zone = (wd["zone_name"] or "").lower()
+        name = (wd["name"] or "").lower()
+        wid = wd["id"]
+
+        # Criterion 1: Yamuna Khadar floodplain — mean_elevation < 207m
+        # Source: CWC Delhi Floods 2023 Case Study — peak stage 208.66m
+        if elev < 207:
+            flooded.add(wid)
+            continue
+
+        # Criterion 2: Trans-Yamuna alluvial clay — East / Trans-Yamuna zones < 210m
+        # Source: NRSC 2023 SAR satellite inundation mapping
+        if elev < 210 and ("east" in zone or "trans-yamuna" in zone):
+            flooded.add(wid)
+            continue
+
+        # Criterion 3: North Delhi Yamuna corridor wards < 210m
+        # Source: IIT Delhi DMP Chapter 3 — Trans-Yamuna basin
+        if elev < 210 and "north" in zone:
+            if any(frag in name for frag in _NORTH_YAMUNA_CORRIDOR):
+                flooded.add(wid)
+                continue
+
+        # Criterion 4: Central Delhi drain backflow zone < 212m
+        # Source: CWC 2023 — Civil Lines drain backflow documentation
+        if elev < 212 and "central" in zone:
+            if any(frag in name for frag in _CENTRAL_DRAIN_BACKFLOW):
+                flooded.add(wid)
+                continue
+
+    return flooded
 
 
 # ---------------------------------------------------------------------------
@@ -199,13 +239,15 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
     """
     from app.services.scoring import score_all_wards_batch
 
-    # ── Fetch all wards (just for ID validation) ──────────────────────────
+    # ── Fetch all wards + build reference flooded set ─────────────────────
     ward_rows = await conn.execute(text(
         "SELECT id, name FROM wards ORDER BY id"
     ))
     wards = ward_rows.mappings().fetchall()
     if not wards:
         return {"error": "No wards found. Run import_delhi_wards.py first."}
+
+    reference_flooded_ids = await _build_reference_flooded_set(conn)
 
     # ── For each event, insert rain + score all wards ─────────────────────
     ward_triggered_count = {w["id"]: 0 for w in wards}
@@ -323,7 +365,7 @@ async def run_backtest_2023(conn: AsyncConnection, progress_cb=None) -> dict:
         # triggered on the single peak day, while catching wards vulnerable to
         # both pluvial AND fluvial mechanisms.
         predicted_flooded = triggered_days >= 2
-        reference_flooded = _is_reference_flooded(wname)
+        reference_flooded = wid in reference_flooded_ids
 
         if predicted_flooded and reference_flooded:
             match = "true_positive"

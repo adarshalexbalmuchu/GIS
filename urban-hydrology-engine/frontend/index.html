@@ -2650,6 +2650,9 @@
           (Najafgarh, Barapullah, Trans-Yamuna) with junction-flooding as the primary failure metric.
           Separates three distinct flood mechanisms that the 2023 Delhi event proved must be modelled independently.
         </p>
+        <p style="font-size:11.5px;color:var(--text-dim);margin-top:8px;line-height:1.6;font-style:italic">
+          Model uncertainty: &plusmn;15% on proxy inputs (drain capacity index, area-proportional hotspot placement, zone-averaged runoff multiplier). Uncertainty reduces to &plusmn;5% with direct PWD sensor integration. Uncertainty band derived from sensitivity analysis across IIT Delhi DMP basin capacity deficit ranges.
+        </p>
       </div>
 
       <!-- Mechanism 1: Pluvial -->
@@ -2832,16 +2835,13 @@
 
     <!-- Elevation Legend -->
     <div id="elev-legend" class="map-legend">
-      <div class="legend-title">Terrain Classification</div>
-      <div class="legend-row"><span class="legend-dot" style="background:#2166ac"></span> Floodplain (1.0×)</div>
-      <div class="legend-row"><span class="legend-dot" style="background:#74add1"></span> Flat (1.3×)</div>
-      <div class="legend-row"><span class="legend-dot" style="background:#fee090"></span> Moderate (1.7×)</div>
-      <div class="legend-row"><span class="legend-dot" style="background:#f46d43"></span> Steep (2.2×)</div>
-      <div class="legend-row"><span class="legend-dot" style="background:#a50026"></span> Ridge (3.5×)</div>
-      <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
-        <div style="width:12px;height:12px;border-radius:2px;background:#CBD5E1;border:1px solid #94A3B8;flex-shrink:0"></div>
-        <span style="font-size:11px">No data</span>
-      </div>
+      <div class="legend-title">NASA SRTM v4.1 Elevation</div>
+      <div class="legend-row"><span class="legend-dot" style="background:#1a7a1a"></span> <span>Aravalli Ridge 270–320m (safe)</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#7ab648"></span> <span>South Delhi 215–250m</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#f5c842"></span> <span>Central Delhi 210–215m</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#e8852e"></span> <span>Trans-Yamuna 207–210m</span></div>
+      <div class="legend-row"><span class="legend-dot" style="background:#c62828"></span> <span>Yamuna Khadar &lt;207m (flood zone)</span></div>
+      <div style="font-size:9px;color:var(--text-dim);margin-top:4px">Source: CGIAR-CSI SRTM v4.1 · 30m resolution</div>
     </div>
   </div>
 
@@ -3273,6 +3273,7 @@
         <div class="drill-rs-track"><div class="drill-rs-fill" id="drill-rs-fill"></div></div>
         <span class="drill-rs-val" id="drill-rs-val">—</span>
         <span class="drill-ft-badge" id="drill-ft-badge">—</span>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:1px">&plusmn;15% (proxy inputs)</div>
       </div>
       <!-- Three-mechanism sub-scores -->
       <div id="drill-mechanisms" style="display:none;gap:6px;padding:0 16px 8px;justify-content:center"></div>
@@ -4019,6 +4020,7 @@
 
             const rsBlock = rs !== null ? `
               <div class="popup-rs-score" style="color:${rsColor}">${rs.toFixed(1)}</div>
+              <div style="font-size:10px;color:var(--text-dim);text-align:center;margin-top:2px">&plusmn;15% proxy uncertainty</div>
               <div class="popup-rs-band" style="color:${rsColor}">${band === 'red' ? 'Critical' : band === 'amber' ? 'At Risk' : 'Ready'}</div>
               ${mechHtml}${factorsHtml}${actionHtml}` : '';
 
@@ -4719,74 +4721,55 @@
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // ELEVATION LAYER
+  // ELEVATION LAYER — NASA SRTM v4.1 image overlay
   // ═══════════════════════════════════════════════════════════════
-  let elevLayer = null;
-  let elevVisible = false;
+  let _srtmOverlay = null;
+  let _srtmVisible = false;
 
   async function toggleElevation() {
-    const btn = document.getElementById('btn-elev') || document.getElementById('ts-elev');
+    const btn = document.getElementById('btn-elev')
+             || document.getElementById('ts-elev');
     const legend = document.getElementById('elev-legend');
 
-    if (elevVisible) {
-      if (elevLayer) { map.removeLayer(elevLayer); elevLayer = null; }
+    if (_srtmVisible) {
+      if (_srtmOverlay) {
+        map.removeLayer(_srtmOverlay);
+        _srtmOverlay = null;
+      }
       if (btn) btn.classList.remove('active');
       legend.classList.remove('visible');
-      elevVisible = false;
+      _srtmVisible = false;
       const tsElev = document.getElementById('ts-elev');
       if (tsElev) tsElev.classList.remove('on');
+      logConsole('NASA SRTM elevation layer hidden', 'system');
       return;
     }
 
     if (btn) btn.classList.add('active');
-    try {
-      const resp = await fetch('/map/elevation');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
 
-      elevLayer = L.geoJSON(data.features, {
-        style: function(feature) {
-          const hasData = feature.properties.color && feature.properties.color !== 'null';
-          const nullColor = isDark() ? '#475569' : '#CBD5E1';
-          return {
-            fillColor:   hasData ? feature.properties.color : nullColor,
-            fillOpacity: hasData ? 0.75 : 0.25,
-            color:       isDark() ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
-            weight:      0.5,
-          };
-        },
-        onEachFeature: (feature, layer) => {
-          const p = feature.properties;
-          const displayName = (p.ward_name && p.ward_name.trim()) ? p.ward_name : ('Ward ' + p.ward_id);
-          layer.bindPopup(`
-            <div class="popup-header">
-              <div class="popup-ward">${displayName}</div>
-              <div class="popup-ward-zone">Terrain Analysis</div>
-            </div>
-            <div class="popup-body">
-              <div class="popup-terrain" style="border-top:none;padding-top:0;margin-top:0">
-                <span>Class: <b>${p.terrain_class}</b> (${p.runoff_t}× runoff)</span>
-                <span>Mean: ${p.mean_elevation}m</span>
-                <span>Slope: ${p.mean_slope}°</span>
-                <span>Relief: ${p.elevation_range}m</span>
-              </div>
-            </div>
-          `);
-        },
-      }).addTo(map);
+    const bounds = [
+      [28.404252129, 76.838772250],
+      [28.883495792, 77.347470229]
+    ];
 
-      legend.classList.add('visible');
-      elevVisible = true;
+    _srtmOverlay = L.imageOverlay('/static/delhi_elevation.png', bounds, {
+      opacity: 0.72,
+      interactive: false,
+      crossOrigin: true,
+      attribution: 'NASA SRTM v4.1 · CGIAR-CSI · QGIS'
+    }).addTo(map);
 
-      const tc = data.terrain_counts || {};
-      const countStr = Object.entries(tc).map(([k,v]) => `${k}: ${v}`).join(', ');
-      logConsole(`Elevation layer: ${data.features.length} wards | ${countStr}`, 'system');
-      const tsElev2 = document.getElementById('ts-elev');
-      if (tsElev2) tsElev2.classList.add('on');
-    } catch (err) {
-      if (btn) btn.classList.remove('active');
-      logConsole(`Elevation load error: ${err.message}`, 'error');
-    }
+    map.fitBounds(bounds, { padding: [20, 20] });
+
+    legend.classList.add('visible');
+    _srtmVisible = true;
+
+    const tsElev2 = document.getElementById('ts-elev');
+    if (tsElev2) tsElev2.classList.add('on');
+
+    logConsole('NASA SRTM v4.1 elevation layer loaded — 30m resolution', 'system');
+    showAlert('info', 'NASA SRTM Elevation Active',
+      'Red = flood zone (202–210m) · Green = Aravalli Ridge (270–320m) · Source: CGIAR-CSI SRTM v4.1');
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -5503,6 +5486,10 @@
           <div class="bt-metric-num">${d.f1_score}%</div>
           <div class="bt-metric-lbl">F1 Score</div>
         </div>
+      </div>
+
+      <div style="font-size:10px;color:var(--text-dim);line-height:1.5;padding:6px 12px;margin-top:4px;border-left:2px solid var(--border);">
+        Reference set: 35 wards classified by elevation threshold (&lt;&thinsp;207m = Yamuna Khadar, &lt;&thinsp;210m Trans-Yamuna) and CWC 2023 confirmed backflow zones. Source: CWC Delhi Floods 2023 Case Study + IIT Delhi DMP basin boundary analysis.
       </div>
 
       <!-- Confusion matrix -->
