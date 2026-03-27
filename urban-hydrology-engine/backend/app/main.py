@@ -8,6 +8,7 @@ import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket, WebSocketDisconnect
@@ -28,6 +29,12 @@ from app.ws import manager as ws_manager
 load_dotenv()
 
 app = FastAPI(title="Urban Hydrology Engine")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 app.include_router(ingest_router)
 app.include_router(map_state_router)
 app.include_router(ward_detail_router)

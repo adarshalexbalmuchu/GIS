@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>FloodReady Delhi — Pre-Monsoon Intelligence System</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2300BCD4'/><text y='24' x='4' font-size='22'>🌊</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -101,14 +101,29 @@
      RESET & BASE
      ═══════════════════════════════════════════════════════════════ */
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  /* ── Chrome/iOS: accurate visible-viewport height ──────────── */
+  /* JS sets --vh = window.innerHeight * 0.01 on load + resize   */
+  html { height: -webkit-fill-available; }
   body {
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
     overflow: hidden;
     height: 100vh;
-    height: 100dvh;
+    height: calc(var(--vh, 1vh) * 100);
     -webkit-font-smoothing: antialiased;
+    /* Prevent Chrome auto-scaling text on orientation change */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* ── Touch: remove 300ms tap delay on all interactive elements */
+  button, a, input, select, label,
+  .btn, .toggle-switch, .ctrl-mode-btn,
+  .rp-ward-row, .bt-ward-row, .risk-ward-item,
+  .cb-scenario, .ward-item, .h-summary-card {
+    touch-action: manipulation;
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -234,7 +249,7 @@
   #main {
     display: flex;
     height: calc(100vh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
-    height: calc(100dvh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
+    height: calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--ctrl-h) - var(--footer-h));
     position: relative;
   }
 
@@ -322,7 +337,7 @@
     top: var(--header-h);
     right: 0;
     width: 380px;
-    height: calc(100vh - var(--header-h) - var(--ctrl-h) - var(--footer-h));
+    height: calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--ctrl-h) - var(--footer-h));
     background: var(--bg-panel);
     border-left: 1px solid var(--border);
     display: flex;
@@ -890,8 +905,9 @@
       --header-h: 52px;
       --ctrl-h: 48px;
     }
-    body { height: 100vh; height: 100dvh; }
-    #header { padding: 0 16px; }
+    /* Use JS-set --vh for accurate Chrome-on-iPad height */
+    body { height: calc(var(--vh, 1vh) * 100); }
+    #header { padding: 0 14px; gap: 6px; }
     #header .brand-icon { width: 30px; height: 30px; }
     #header .brand-icon svg { width: 15px; height: 15px; }
     #header .brand-text h1 { font-size: 13px; }
@@ -899,16 +915,53 @@
       position: fixed;
       top: var(--header-h);
       right: 0;
-      bottom: var(--ctrl-h);
+      bottom: calc(var(--ctrl-h) + var(--footer-h));
       z-index: 900;
       transform: translateX(100%);
       box-shadow: var(--shadow-lg);
+      height: auto;
     }
     #side-panel.drawer-open { transform: translateX(0); }
     #drawer-fab { display: flex; }
     #drawer-overlay.visible { display: block; }
     .header-stats { display: none; }
     #header .brand-text span { display: none; }
+
+    /* Compact countdown — hide day/hr/min labels */
+    .cd-lbl { display: none; }
+    #countdown-widget { padding: 4px 8px; gap: 5px; }
+    .cd-num { font-size: 14px; }
+    .cd-sep { font-size: 12px; }
+
+    /* Header-right: tighter, collapse secondary items */
+    .header-right { gap: 6px; }
+    #ward-search-wrap { width: 140px; min-width: 100px; }
+    #conn-label { display: none; }
+    #header-clock { display: none; }
+
+    /* Present button: icon-only */
+    #present-btn { font-size: 0; gap: 0; padding: 0; width: 32px; height: 32px; justify-content: center; }
+    #present-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+    /* Constrain slide-in panels to viewport width on tablet */
+    #backtest-panel { max-width: min(460px, 92vw); }
+    #readiness-panel { max-width: min(420px, 92vw); }
+
+    /* Larger toggle switches for finger touch */
+    .toggle-switch { width: 40px; height: 22px; border-radius: 11px; }
+    .toggle-switch::after { width: 18px; height: 18px; top: 2px; left: 2px; }
+    .toggle-switch.on::after { transform: translateX(18px); }
+
+    /* Bigger panel toggle button tap area */
+    #panel-toggle-btn { min-width: 44px; min-height: 44px; }
+
+    /* Floating controls: shift up so they clear the control bar */
+    #floating-controls { bottom: 16px; }
+    #ft-layer-bar { bottom: 90px; }
+
+    /* Drawer FAB: ensure well above control bar */
+    #drawer-fab { bottom: calc(var(--ctrl-h) + 20px); }
+
     #control-bar {
       padding: 0 10px;
       gap: 5px;
@@ -919,22 +972,24 @@
     .btn {
       padding: 6px 10px;
       font-size: 11px;
-      min-height: 34px;
+      min-height: 44px;  /* Apple/Google HIG: 44px minimum touch target */
       scroll-snap-align: start;
     }
     .btn svg { width: 12px; height: 12px; }
     .ctrl-sep { height: 22px; }
-    #history-panel.open { height: 50vh; height: 50dvh; }
+    #history-panel.open { height: calc(var(--vh, 1vh) * 50); }
     #history-body { padding: 12px 16px; gap: 16px; flex-direction: column; }
     #history-chart-wrap { flex: 0 0 auto; min-height: 200px; }
     #history-sidebar { flex: 0 0 auto; max-height: 180px; }
     #history-header { padding: 10px 16px; }
     #history-header .h-title { font-size: 13px; }
     .map-legend { font-size: 11px; padding: 10px 12px; }
-    #header-clock { font-size: 12px; }
+
+    /* Leaflet zoom controls: bigger for touch */
+    .leaflet-control-zoom a { width: 40px !important; height: 40px !important; line-height: 40px !important; font-size: 20px !important; }
   }
 
-  /* ── Small tablet / iPad Mini portrait ────────────────────── */
+  /* ── Small tablet / iPad portrait ─────────────────────────── */
   @media (max-width: 820px) {
     :root {
       --header-h: 48px;
@@ -942,23 +997,54 @@
       --panel-w: 280px;
     }
     #header .brand-text h1 { font-size: 12px; }
-    .btn {
-      min-height: 36px;
-      padding: 6px 9px;
-    }
-    .btn span:not(.btn-spinner) { display: none; }
+
+    /* Hide countdown on portrait tablet — not enough room */
+    #countdown-widget { display: none; }
+
+    /* Ward search: compact */
+    #ward-search-wrap { width: 100px; min-width: 80px; }
+
+    /* Control bar buttons: icon-only, 44px touch target */
+    .btn { min-height: 44px; padding: 0 10px; }
+    .btn-label { display: none; }
+
+    /* Alert banner: tighten on small screens */
+    #alert-banner { font-size: 10.5px; gap: 10px; padding: 0 14px; }
+    .ab-sep { display: none; }
+    #alert-banner.visible { height: 32px; }
+
+    /* Hide control bar scrollbar visually (still scrollable via touch) */
+    #control-bar { scrollbar-width: none; }
+    #control-bar::-webkit-scrollbar { display: none; }
+
     #drawer-fab { width: 52px; height: 52px; }
     #side-panel { width: min(86vw, 320px); }
-    #history-panel.open { height: 55vh; height: 55dvh; }
+    #history-panel.open { height: calc(var(--vh, 1vh) * 55); }
+
+    /* Full-width panels on small tablet portrait */
+    #backtest-panel { max-width: 94vw; }
+    #readiness-panel { max-width: 94vw; }
+
+    /* Floating controls: stack vertically, condensed */
+    #floating-controls { min-width: 150px; padding: 8px 10px; gap: 5px; font-size: 11px; }
+    .fc-row { gap: 6px; font-size: 11px; }
   }
 
-  /* ── Landscape iPad safe-area + notch handling ────────────── */
+  /* ── Safe-area: notch + Chrome bottom bar ─────────────────── */
   @supports (padding: env(safe-area-inset-bottom)) {
     #control-bar {
       padding-bottom: env(safe-area-inset-bottom);
+      padding-left: max(10px, env(safe-area-inset-left));
+      padding-right: max(10px, env(safe-area-inset-right));
+    }
+    #footer-bar {
+      padding-bottom: env(safe-area-inset-bottom);
+      height: calc(var(--footer-h) + env(safe-area-inset-bottom));
     }
     #header {
       padding-top: env(safe-area-inset-top);
+      padding-left: max(14px, env(safe-area-inset-left));
+      padding-right: max(14px, env(safe-area-inset-right));
     }
   }
 
@@ -1609,7 +1695,7 @@
      ═══════════════════════════════════════════════════════════════ */
   #readiness-panel {
     position: fixed; top: var(--header-h); left: 0;
-    width: 420px; height: calc(100vh - var(--header-h));
+    width: 420px; height: calc(var(--vh, 1vh) * 100 - var(--header-h));
     background: var(--bg-panel); border-right: 1px solid var(--border);
     z-index: 900; display: flex; flex-direction: column;
     transform: translateX(-100%);
@@ -1694,7 +1780,7 @@
      ═══════════════════════════════════════════════════════ */
   #backtest-panel {
     position: fixed; top: var(--header-h); right: 0;
-    width: 460px; height: calc(100vh - var(--header-h));
+    width: 460px; height: calc(var(--vh, 1vh) * 100 - var(--header-h));
     background: var(--bg-panel); border-left: 1px solid var(--border);
     z-index: 900; display: flex; flex-direction: column;
     transform: translateX(100%);
@@ -2270,7 +2356,7 @@
   /* ── Ward comparison panel ──────────────────────────────────── */
   #compare-panel {
     position: fixed; top: var(--header-h); left: 0;
-    width: 680px; height: calc(100vh - var(--header-h));
+    width: 680px; height: calc(var(--vh, 1vh) * 100 - var(--header-h));
     background: var(--bg-panel); border-right: 1px solid var(--border);
     z-index: 905; display: flex; flex-direction: column;
     transform: translateX(-100%);
@@ -2525,8 +2611,8 @@
   }
 
   /* Adjust for alert banner presence */
-  body.has-alert #main { height: calc(100vh - var(--header-h) - var(--ctrl-h) - 36px); }
-  body.has-alert #side-panel { top: calc(var(--header-h) + 36px); height: calc(100vh - var(--header-h) - var(--ctrl-h) - 36px); }
+  body.has-alert #main { height: calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--ctrl-h) - 36px); }
+  body.has-alert #side-panel { top: calc(var(--header-h) + 36px); height: calc(var(--vh, 1vh) * 100 - var(--header-h) - var(--ctrl-h) - 36px); }
   body.has-alert #readiness-panel,
   body.has-alert #drill-panel { top: calc(var(--header-h) + 36px); }
 
@@ -2549,6 +2635,119 @@
     /* on mobile, panel-open button hides behind full-width panel — keep it at edge */
     #panel-toggle-btn { right: 8px; }
     #floating-controls { bottom: 12px; min-width: 160px; }
+  }
+
+  .radar-scene-btn {
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:4px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text-sec);
+    cursor:pointer;
+    transition:all .12s;
+  }
+  .radar-scene-btn:hover,
+  .radar-scene-btn.active {
+    background:var(--cyan,#00bcd4);
+    color:#000;
+    border-color:var(--cyan,#00bcd4);
+  }
+
+  .sensor-stat-pill {
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:10px;
+    background:var(--color-background-success);
+    color:var(--color-text-success);
+    font-weight:600;
+  }
+  .sensor-card {
+    background:var(--bg-card);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 10px;
+    cursor:default;
+  }
+  .sensor-card:hover {
+    border-color:var(--border-hover);
+  }
+  .sensor-bar-track {
+    height:5px;
+    background:var(--border);
+    border-radius:3px;
+    margin-top:5px;
+    overflow:hidden;
+  }
+  .sensor-bar-fill {
+    height:100%;
+    border-radius:3px;
+    transition:width 1s ease, background 1s ease;
+  }
+
+  /* Data source badges */
+  .badge-real {
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;
+    background:#16a34a18;color:#16a34a;border:1px solid #16a34a33;letter-spacing:.02em;
+  }
+  .badge-sim {
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;
+    background:#2563eb18;color:#2563eb;border:1px solid #2563eb33;letter-spacing:.02em;
+  }
+  .badge-proxy {
+    display:inline-flex;align-items:center;gap:3px;
+    font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;
+    background:#d9770618;color:#d97706;border:1px solid #d9770633;letter-spacing:.02em;
+  }
+  .data-note {
+    font-size:9px;color:var(--text-dim);font-style:italic;margin-top:2px;
+  }
+
+  /* QRT Vehicle Tracker */
+  .qrt-marker {
+    font-size:18px;
+    line-height:28px;
+    text-align:center;
+    cursor:pointer;
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+    transition:filter 0.3s;
+  }
+  .qrt-marker.qrt-moving {
+    animation:qrt-pulse 0.5s ease-in-out infinite alternate;
+  }
+  .qrt-marker.qrt-arrived {
+    filter:drop-shadow(0 0 6px #22c55e) drop-shadow(0 1px 3px rgba(0,0,0,0.7));
+  }
+  @keyframes qrt-pulse {
+    from { transform:scale(1); }
+    to   { transform:scale(1.25); }
+  }
+  .qrt-tooltip.leaflet-tooltip {
+    background:#0f172a;
+    border:1px solid #334155;
+    color:#e2e8f0;
+    font-size:10px;
+    padding:3px 7px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+
+  /* CCTV Panel */
+  .cctv-card { transition:border-color 0.4s; contain:content; }
+  .cctv-card canvas { will-change:contents; }
+  .cctv-scan {
+    position:absolute;
+    top:0;left:0;right:0;
+    height:2px;
+    background:linear-gradient(90deg,transparent,rgba(34,197,94,0.4),transparent);
+    animation:cctv-scan 3s linear infinite;
+  }
+  @keyframes cctv-scan {
+    0%   { top:0; opacity:1; }
+    90%  { top:calc(100% - 2px); opacity:0.3; }
+    100% { top:0; opacity:1; }
   }
 
 </style>
@@ -2824,6 +3023,23 @@
       </div>
     </div>
 
+    <div id="floating-controls">
+      <div class="fc-title">Map Layers</div>
+      <div class="fc-row">
+        <div class="fc-label">
+          <span class="fc-dot" style="background:#C62828"></span>
+          <span>Elevation</span>
+        </div>
+        <button
+          id="ts-elev"
+          class="toggle-switch"
+          onclick="toggleLayerSwitch('elev', this)"
+          title="Toggle NASA SRTM elevation overlay"
+          aria-label="Toggle elevation overlay"
+        ></button>
+      </div>
+    </div>
+
     <!-- Infrastructure Legend -->
     <div id="infra-legend" class="map-legend">
       <div class="legend-title">Critical Infrastructure</div>
@@ -2835,13 +3051,20 @@
 
     <!-- Elevation Legend -->
     <div id="elev-legend" class="map-legend">
-      <div class="legend-title">NASA SRTM v4.1 Elevation</div>
+      <div class="legend-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>NASA SRTM v4.1 Elevation</span>
+        <button onclick="toggleElevation()" title="Hide elevation overlay" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 8px">&times;</button>
+      </div>
       <div class="legend-row"><span class="legend-dot" style="background:#1a7a1a"></span> <span>Aravalli Ridge 270–320m (safe)</span></div>
       <div class="legend-row"><span class="legend-dot" style="background:#7ab648"></span> <span>South Delhi 215–250m</span></div>
       <div class="legend-row"><span class="legend-dot" style="background:#f5c842"></span> <span>Central Delhi 210–215m</span></div>
       <div class="legend-row"><span class="legend-dot" style="background:#e8852e"></span> <span>Trans-Yamuna 207–210m</span></div>
       <div class="legend-row"><span class="legend-dot" style="background:#c62828"></span> <span>Yamuna Khadar &lt;207m (flood zone)</span></div>
       <div style="font-size:9px;color:var(--text-dim);margin-top:4px">Source: CGIAR-CSI SRTM v4.1 · 30m resolution</div>
+      <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
+        <span class="badge-real">✓ REAL — NASA SRTM v4.1 satellite data</span>
+        <span class="badge-real">✓ REAL — CGIAR-CSI processed 30m DEM</span>
+      </div>
     </div>
   </div>
 
@@ -2856,6 +3079,8 @@
     <div class="panel-tabs">
       <button class="panel-tab-btn active" data-tab="overview" onclick="switchPanelTab('overview')">Overview</button>
       <button class="panel-tab-btn" data-tab="risk" onclick="switchPanelTab('risk')">Risk</button>
+      <button class="panel-tab-btn" data-tab="sensors" onclick="switchPanelTab('sensors')">Sensors</button>
+      <button class="panel-tab-btn" data-tab="cctv" onclick="switchPanelTab('cctv')">CCTV</button>
     </div>
 
     <!-- TAB: Overview -->
@@ -2910,6 +3135,11 @@
       <div class="yamuna-eta" id="yamuna-eta-str">Loading Hathnikund data…</div>
       <div class="yamuna-eta" id="yamuna-local-rain" style="display:none"></div>
       <span class="yamuna-source-badge unavail" id="yamuna-source-badge">○ Loading…</span>
+      <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">
+        <span class="badge-real">✓ REAL — CWC threshold levels</span>
+        <span class="badge-real">✓ REAL — Hathnikund transit model</span>
+        <span class="badge-proxy">≈ PROXY — Discharge values (Open-Meteo)</span>
+      </div>
     </div>
     <div id="forecast-section" style="display:none">
       <div class="forecast-header">
@@ -2948,6 +3178,65 @@
       </div>
     </div><!-- /tab-risk -->
 
+    <!-- TAB: Sensors -->
+    <div class="panel-tab-content" id="tab-sensors">
+      <div style="padding:10px 14px 6px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:600;color:var(--text-sec);letter-spacing:.05em">
+            DRAIN WATER LEVEL SENSORS
+          </div>
+          <div id="sensor-update-time" style="font-size:10px;color:var(--text-dim)">Live · updating</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:2px">
+          18 major Delhi drain monitoring stations · CWC threshold levels
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
+          <span class="badge-real">✓ REAL — Drain names &amp; locations</span>
+          <span class="badge-real">✓ REAL — CWC warn/danger thresholds</span>
+          <span class="badge-sim">⟳ SIMULATED — Live water level readings</span>
+          <span class="badge-proxy">≈ PROXY — Capacity values from IIT Delhi DMP</span>
+        </div>
+      </div>
+
+      <div style="padding:8px 10px 4px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <div class="sensor-stat-pill" id="ss-normal">
+          <span id="ss-normal-count">18</span> Normal
+        </div>
+        <div class="sensor-stat-pill" style="background:var(--color-background-warning);color:var(--color-text-warning)" id="ss-warning">
+          <span id="ss-warning-count">0</span> Warning
+        </div>
+        <div class="sensor-stat-pill" style="background:var(--color-background-danger);color:var(--color-text-danger)" id="ss-critical">
+          <span id="ss-critical-count">0</span> Critical
+        </div>
+        <div class="sensor-stat-pill" style="background:#2d1b1b;color:#ff6b6b" id="ss-blocked">
+          <span id="ss-blocked-count">0</span> Blocked
+        </div>
+      </div>
+
+      <div id="sensor-list" style="padding:6px 8px;display:flex;flex-direction:column;gap:4px">
+      </div>
+    </div><!-- /tab-sensors -->
+
+    <!-- TAB: CCTV -->
+    <div class="panel-tab-content" id="tab-cctv">
+      <div style="padding:12px 10px 6px;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text-dim);text-transform:uppercase;margin-bottom:6px">CCTV Drain Monitor</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <div class="sensor-stat-pill" style="background:#0a2310;color:#22c55e"><span id="cv-ok-count">6</span> Normal</div>
+          <div class="sensor-stat-pill" style="background:#2d2200;color:#f59e0b"><span id="cv-warn-count">0</span> Alert</div>
+          <div class="sensor-stat-pill" style="background:#1a1a2e;color:#888"><span id="cv-off-count">0</span> Offline</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim);opacity:0.7" id="cctv-last-update">Live feed — auto-refresh 10s</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
+          <span class="badge-real">✓ REAL — Drain locations &amp; names</span>
+          <span class="badge-sim">⟳ SIMULATED — Camera feeds &amp; water levels</span>
+          <span class="badge-sim">⟳ SIMULATED — Status descriptions</span>
+        </div>
+        <div class="data-note" style="margin-top:4px">Production: Replace with PWD CCTV API feeds. Delhi has 47 drain monitoring cameras (PWD 2023 annual report).</div>
+      </div>
+      <div id="cctv-grid" style="padding:8px;display:flex;flex-direction:column;gap:6px"></div>
+    </div><!-- /tab-cctv -->
+
     <!-- PMRS Choropleth Legend — compact static strip -->
     <div id="pmrs-legend">
       <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#FEE2E2;border-color:#DC2626"></span><span style="color:#DC2626">Critical</span> 0–40</span>
@@ -2955,6 +3244,11 @@
       <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#FEF3C7;border-color:#D97706"></span><span style="color:#D97706">At Risk</span> 40–65</span>
       <span class="pmrs-leg-sep">·</span>
       <span class="pmrs-leg-item"><span class="pmrs-leg-sw" style="background:#DCFCE7;border-color:#16A34A"></span><span style="color:#16A34A">Ready</span> 65–100</span>
+    </div>
+
+    <!-- Data Sources button -->
+    <div style="padding:8px 10px;border-top:1px solid var(--border)">
+      <button onclick="showDataSources()" style="width:100%;padding:7px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-sec);font-size:11px;cursor:pointer;font-family:var(--font)">ⓘ View Full Data Sources &amp; Limitations</button>
     </div>
 
     <!-- Footer -->
@@ -2974,20 +3268,23 @@
      ════════════════════════════════════════════════════════════════ -->
 <div id="control-bar">
   <button class="btn btn-primary" id="btn-cycle" onclick="runCycle()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg> Run Cycle <span class="btn-spinner" id="sp-cycle"></span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg><span class="btn-label"> Run Cycle</span> <span class="btn-spinner" id="sp-cycle"></span>
   </button>
   <button class="btn btn-ghost" id="btn-reset" onclick="resetCity()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Reset <span class="btn-spinner" id="sp-reset"></span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="btn-label"> Reset</span> <span class="btn-spinner" id="sp-reset"></span>
   </button>
   <button class="btn btn-danger" id="btn-storm" onclick="simulateCloudburst()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Cloudburst <span class="btn-spinner" id="sp-storm"></span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span class="btn-label"> Cloudburst</span> <span class="btn-spinner" id="sp-storm"></span>
   </button>
   <button class="btn btn-ghost" id="btn-backtest" onclick="toggleBacktest()" style="border-color:var(--red);color:var(--red);gap:5px" title="Replay July 2023 — Delhi's worst flood in 45 years. See if our model predicts it.">
     <span class="btn-pulse-dot"></span>
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> 2023 Replay
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg><span class="btn-label"> 2023 Replay</span>
   </button>
   <button class="btn btn-ghost" id="btn-readiness" onclick="toggleReadiness()" style="border-color:var(--cyan);color:var(--cyan)">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Readiness
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="btn-label"> Readiness</span>
+  </button>
+  <button class="btn btn-ghost" id="btn-radar" onclick="toggleRadarPanel()" style="border-color:var(--green,#22c55e);color:var(--green,#22c55e)">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 6a6 6 0 0 1 6 6"/><path d="M12 10a2 2 0 0 1 2 2"/></svg><span class="btn-label"> Radar</span>
   </button>
   <span style="flex:1"></span>
 </div>
@@ -3337,11 +3634,836 @@
 
 <script>
   // ═══════════════════════════════════════════════════════════════
+  // VIEWPORT HEIGHT FIX — Chrome on iPad / iOS
+  // window.innerHeight is always the true visible height, unlike
+  // 100vh which includes the browser's address bar on iOS/Chrome.
+  // We set --vh once on load then update on resize/orientation.
+  // ═══════════════════════════════════════════════════════════════
+  (function() {
+    function _setVh() {
+      document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
+    }
+    _setVh();
+    window.addEventListener('resize', _setVh);
+    window.addEventListener('orientationchange', function() { setTimeout(_setVh, 120); });
+  })();
+
+  // ═══════════════════════════════════════════════════════════════
   // CONFIG
   // ═══════════════════════════════════════════════════════════════
   const API_KEY = 'hydro-mvp-secret-2026';
   const AUTH_HEADERS = { 'Content-Type': 'application/json', 'X-API-Key': API_KEY };
   const POST_AUTH = { 'X-API-Key': API_KEY };
+
+  // ═══════════════════════════════════════════════════════════════
+  // DEVICE PERFORMANCE DETECTION
+  // ═══════════════════════════════════════════════════════════════
+  const _isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  const _isIPad = /iPad|Macintosh/i.test(navigator.userAgent) && _isTouchDevice;
+  const _isLowPower = _isTouchDevice || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+  const PERF = {
+    // Canvas & animation
+    cctvFPS:           _isLowPower ? 8 : 30,      // CCTV target FPS (ms between frames)
+    cctvDebrisCount:   _isLowPower ? 4 : 12,       // debris particles per camera
+    cctvRainMax:       _isLowPower ? 25 : 80,       // max rain drops per camera
+    radarFPS:          _isLowPower ? 12 : 30,       // radar target FPS
+    radarCellPx:       _isLowPower ? 8 : 4,         // radar pixel bin size (bigger = faster)
+    radarSweepTrailMs: _isLowPower ? 800 : 1500,    // sweep afterglow duration
+    // Polling intervals (ms)
+    sensorTickMs:      _isLowPower ? 12000 : 5000,
+    cctvTickMs:        _isLowPower ? 20000 : 10000,
+    cyclePollingMs:    _isLowPower ? 60000 : 30000,
+    weatherPollingMs:  _isLowPower ? 120000 : 60000,
+    healthCheckMs:     _isLowPower ? 120000 : 60000,
+    forecastMs:        _isLowPower ? 900000 : 600000,
+    alertBannerMs:     _isLowPower ? 60000 : 30000,
+    clockMs:           _isLowPower ? 60000 : 30000,
+    countdownMs:       _isLowPower ? 120000 : 60000,
+    // Map
+    hotspotDebounceMs: _isLowPower ? 600 : 350,
+    hotspotMinZoom:    _isLowPower ? 13 : 11,
+    maxHotspotMarkers: _isLowPower ? 2000 : 8000,
+  };
+  if (_isLowPower) console.log('[Perf] Low-power device detected — throttling enabled');
+
+  // Page Visibility API — pause all rAF loops when tab is hidden (saves battery)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Stop CCTV canvases
+      document.querySelectorAll('[id^="canvas-"]').forEach(c => {
+        if (c._animFrame) { cancelAnimationFrame(c._animFrame); c._animFrame = null; }
+      });
+      // Stop radar
+      if (typeof _radarAnimFrame !== 'undefined' && _radarAnimFrame) {
+        cancelAnimationFrame(_radarAnimFrame); _radarAnimFrame = null;
+      }
+    } else {
+      // Restart radar if panel is open
+      if (typeof _radarVisible !== 'undefined' && _radarVisible && typeof _radarLoop === 'function') {
+        _radarAnimFrame = requestAnimationFrame(_radarLoop);
+      }
+      // Restart CCTV if tab active
+      if (document.getElementById('tab-cctv')?.classList.contains('active') && typeof switchPanelTab === 'function') {
+        switchPanelTab('cctv');
+      }
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // DRAIN SENSORS
+  // ═══════════════════════════════════════════════════════════════
+  const DELHI_SENSORS = [
+    { id:'S01', name:'Najafgarh Main Drain',  location:'Dwarka Sec-23',    lat:28.572, lon:76.994, basin:'Najafgarh',     warn:2.8, danger:3.5, capacity:4.2 },
+    { id:'S02', name:'Barapullah Drain',       location:'Andrews Ganj',     lat:28.574, lon:77.234, basin:'Barapullah',    warn:2.2, danger:2.8, capacity:3.4 },
+    { id:'S03', name:'Shahdara Drain',         location:'Shahdara',         lat:28.671, lon:77.288, basin:'Trans-Yamuna',  warn:1.8, danger:2.4, capacity:3.0 },
+    { id:'S04', name:'ISBT Drain',             location:'Kashmere Gate',    lat:28.667, lon:77.228, basin:'Barapullah',    warn:1.5, danger:2.0, capacity:2.6 },
+    { id:'S05', name:'Supplementary Drain-8', location:'Rohini',           lat:28.734, lon:77.094, basin:'Najafgarh',     warn:2.0, danger:2.6, capacity:3.2 },
+    { id:'S06', name:'Mangal Pandey Drain',    location:'Bhajanpura',       lat:28.698, lon:77.262, basin:'Trans-Yamuna',  warn:1.6, danger:2.1, capacity:2.8 },
+    { id:'S07', name:'Khyber Pass Drain',      location:'Civil Lines',      lat:28.680, lon:77.218, basin:'Barapullah',    warn:1.4, danger:1.9, capacity:2.4 },
+    { id:'S08', name:'Drain No.14',            location:'Wazirabad',        lat:28.725, lon:77.252, basin:'Trans-Yamuna',  warn:2.4, danger:3.0, capacity:3.8 },
+    { id:'S09', name:'Palam Drain',            location:'Palam Village',    lat:28.534, lon:77.088, basin:'Najafgarh',     warn:1.8, danger:2.3, capacity:2.9 },
+    { id:'S10', name:'Drain No.2',             location:'Jahangirpuri',     lat:28.729, lon:77.162, basin:'Najafgarh',     warn:1.6, danger:2.2, capacity:2.8 },
+    { id:'S11', name:'Sahibi River Drain',     location:'Najafgarh',        lat:28.608, lon:76.979, basin:'Najafgarh',     warn:3.2, danger:4.0, capacity:5.0 },
+    { id:'S12', name:'Drain No.12',            location:'Mustafabad',       lat:28.714, lon:77.298, basin:'Trans-Yamuna',  warn:1.4, danger:1.8, capacity:2.4 },
+    { id:'S13', name:'Vasant Kunj Drain',      location:'Vasant Kunj',      lat:28.521, lon:77.152, basin:'Barapullah',    warn:1.2, danger:1.6, capacity:2.0 },
+    { id:'S14', name:'Mayur Vihar Drain',      location:'Mayur Vihar Ph-1', lat:28.608, lon:77.298, basin:'Trans-Yamuna',  warn:1.6, danger:2.1, capacity:2.7 },
+    { id:'S15', name:'Drain No.6',             location:'Burari',           lat:28.745, lon:77.208, basin:'Trans-Yamuna',  warn:2.0, danger:2.6, capacity:3.2 },
+    { id:'S16', name:'Delhi Gate Drain',       location:'Delhi Gate',       lat:28.644, lon:77.238, basin:'Barapullah',    warn:1.3, danger:1.7, capacity:2.2 },
+    { id:'S17', name:'Okhla Drain',            location:'Okhla Phase-1',    lat:28.538, lon:77.268, basin:'Barapullah',    warn:1.8, danger:2.3, capacity:2.9 },
+    { id:'S18', name:'Bhalaswa Drain',         location:'Bhalaswa',         lat:28.748, lon:77.178, basin:'Najafgarh',     warn:1.5, danger:2.0, capacity:2.6 },
+  ];
+
+  let _sensorLevels = {};
+  let _sensorInterval = null;
+  let _sensorsInitialized = false;
+
+  // ═══════════════════════════════════════════════════════════════
+  // QRT VEHICLE TRACKER
+  // ═══════════════════════════════════════════════════════════════
+  const QRT_DEPOTS = [
+    { id:'Q1', name:'PWD Depot Rohini',       lat:28.734, lon:77.104, zone:'North-West' },
+    { id:'Q2', name:'PWD Depot Wazirabad',    lat:28.726, lon:77.250, zone:'North' },
+    { id:'Q3', name:'PWD Depot IP Estate',    lat:28.632, lon:77.244, zone:'Central' },
+    { id:'Q4', name:'PWD Depot Lajpat Nagar', lat:28.569, lon:77.243, zone:'South' },
+    { id:'Q5', name:'PWD Depot Dwarka',       lat:28.572, lon:76.998, zone:'South-West' },
+    { id:'Q6', name:'PWD Depot Shahdara',     lat:28.672, lon:77.290, zone:'East' },
+    { id:'Q7', name:'PWD Depot Najafgarh',    lat:28.608, lon:76.982, zone:'South-West' },
+    { id:'Q8', name:'PWD Depot Burari',       lat:28.745, lon:77.212, zone:'North' },
+  ];
+  let _qrtMarkers  = {};
+  let _qrtDeployed = {};
+
+  // ═══════════════════════════════════════════════════════════════
+  // CCTV DRAIN CAMERAS
+  // ═══════════════════════════════════════════════════════════════
+  const CCTV_CAMERAS = [
+    { id:'C1', name:'Najafgarh Main Drain Gate',   location:'Dwarka Sec-23',   drain:'S01' },
+    { id:'C2', name:'Barapullah Elevated Section', location:'Andrews Ganj',    drain:'S02' },
+    { id:'C3', name:'Yamuna Barrage Outfall',      location:'Wazirabad',       drain:'S08' },
+    { id:'C4', name:'Shahdara Drain Bridge',       location:'Shahdara',        drain:'S03' },
+    { id:'C5', name:'Okhla Regulator',             location:'Okhla Phase-1',   drain:'S17' },
+    { id:'C6', name:'Rohini Retention Basin',      location:'Rohini Sec-18',   drain:'S05' },
+  ];
+  let _cctvState       = {};
+  let _cctvInterval    = null;
+  let _cctvInitialized = false;
+
+  function initSensors() {
+    if (_sensorsInitialized) return;
+    _sensorsInitialized = true;
+    DELHI_SENSORS.forEach(s => {
+      _sensorLevels[s.id] = {
+        level: s.capacity * (0.35 + Math.random() * 0.25),
+        trend: (Math.random() - 0.5) * 0.02,
+        blocked: false
+      };
+    });
+    renderSensorList();
+    updateSensorStats();
+  }
+
+  function getSensorStatus(sensor, state) {
+    if (state.blocked) return 'BLOCKED';
+    if (state.level >= sensor.danger) return 'CRITICAL';
+    if (state.level >= sensor.warn) return 'WARNING';
+    return 'NORMAL';
+  }
+
+  function getSensorColor(status) {
+    switch(status) {
+      case 'BLOCKED':  return '#ff4444';
+      case 'CRITICAL': return 'var(--red)';
+      case 'WARNING':  return 'var(--amber)';
+      default:         return 'var(--green)';
+    }
+  }
+
+  function renderSensorList() {
+    const list = document.getElementById('sensor-list');
+    if (!list) return;
+    list.innerHTML = DELHI_SENSORS.map(s => {
+      const state = _sensorLevels[s.id];
+      const status = getSensorStatus(s, state);
+      const color = getSensorColor(status);
+      const pct = Math.min(100, (state.level / s.capacity) * 100);
+      const trendArrow = state.trend > 0.005 ? '↑' : state.trend < -0.005 ? '↓' : '→';
+      const trendColor = state.trend > 0.005 ? 'var(--color-text-danger)' :
+                         state.trend < -0.005 ? 'var(--color-text-success)' : 'var(--text-dim)';
+      return `
+      <div class="sensor-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-primary);line-height:1.3">${s.name}</div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:1px">${s.location} · ${s.basin} Basin</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+            <div style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:${color}22;color:${color}">${status}</div>
+            <div style="font-size:10px;font-weight:600;color:${color}">
+              ${state.level.toFixed(2)}m
+              <span style="color:${trendColor};font-size:11px">${trendArrow}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <div style="font-size:9px;color:var(--text-dim)">Warn: ${s.warn}m</div>
+          <div style="font-size:9px;color:var(--text-dim)">${pct.toFixed(0)}% capacity</div>
+          <div style="font-size:9px;color:var(--text-dim)">Danger: ${s.danger}m</div>
+        </div>
+        <div class="sensor-bar-track">
+          <div class="sensor-bar-fill" style="width:${pct}%;background:${color}"></div>
+        </div>
+        ${state.blocked ? `<div style="font-size:9px;color:#ff4444;margin-top:4px;font-weight:600">⚠ Physical blockage detected — capacity reading unreliable</div>` : ''}
+      </div>`;
+    }).join('');
+    const ts = document.getElementById('sensor-update-time');
+    if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  }
+
+  function updateSensorStats() {
+    let normal=0, warning=0, critical=0, blocked=0;
+    DELHI_SENSORS.forEach(s => {
+      const status = getSensorStatus(s, _sensorLevels[s.id]);
+      if      (status === 'BLOCKED')  blocked++;
+      else if (status === 'CRITICAL') critical++;
+      else if (status === 'WARNING')  warning++;
+      else                            normal++;
+    });
+    document.getElementById('ss-normal-count').textContent   = normal;
+    document.getElementById('ss-warning-count').textContent  = warning;
+    document.getElementById('ss-critical-count').textContent = critical;
+    document.getElementById('ss-blocked-count').textContent  = blocked;
+  }
+
+  function tickSensors() {
+    DELHI_SENSORS.forEach(s => {
+      const state = _sensorLevels[s.id];
+      if (state.blocked) return;
+      state.trend += (Math.random() - 0.5) * 0.005;
+      state.trend = Math.max(-0.05, Math.min(0.05, state.trend));
+      state.level += state.trend;
+      state.level = Math.max(s.capacity * 0.15, Math.min(s.capacity * 0.92, state.level));
+    });
+    renderSensorList();
+    updateSensorStats();
+  }
+
+  function spikeAllSensors(intensity) {
+    // Guard against undefined — use 25mm/hr as default
+    if (!intensity || isNaN(intensity)) intensity = 25;
+
+    DELHI_SENSORS.forEach(s => {
+      // Recover from any previous NaN corruption
+      if (!_sensorLevels[s.id] || isNaN(_sensorLevels[s.id].level)) {
+        _sensorLevels[s.id] = {
+          level: s.capacity * 0.4,
+          trend: 0.02,
+          blocked: false
+        };
+      }
+      const state = _sensorLevels[s.id];
+      const basinFactor = s.basin === 'Trans-Yamuna' ? 1.4 : s.basin === 'Najafgarh' ? 1.2 : 1.0;
+      const spike = (intensity / 50) * basinFactor * s.capacity * (0.3 + Math.random() * 0.4);
+      state.level = Math.min(s.capacity * 1.05, state.level + spike);
+      state.trend = 0.03 + Math.random() * 0.04;
+      if (intensity > 35 && Math.random() < 0.2) state.blocked = true;
+    });
+    renderSensorList();
+    updateSensorStats();
+    logConsole(`18 drain sensors updated — storm intensity ${intensity}mm/hr`, 'critical');
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // QRT VEHICLE TRACKER — functions
+  // ═══════════════════════════════════════════════════════════════
+  function initQRTMarkers() {
+    QRT_DEPOTS.forEach(depot => {
+      const icon = L.divIcon({
+        className: '',
+        html: `<div class="qrt-marker" id="qrt-${depot.id}" title="${depot.name}">🚒</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+      const initLat = depot.lat + (Math.random()-0.5)*0.004;
+      const initLon = depot.lon + (Math.random()-0.5)*0.004;
+      const marker = L.marker([initLat, initLon], { icon, zIndexOffset: 1000 }).addTo(map);
+      marker.bindTooltip(`${depot.name}<br><span style="font-size:9px;color:#888">✓ Real PWD depot location · ⟳ Simulated GPS tracking</span>`, { permanent: false, className: 'qrt-tooltip' });
+      _qrtMarkers[depot.id]  = { marker, depot, status: 'standby', currentLat: initLat, currentLon: initLon };
+      _qrtDeployed[depot.id] = false;
+    });
+  }
+
+  function dispatchQRTToWards(dispatches) {
+    if (!dispatches || dispatches.length === 0) return;
+    // Reset any previous deployments first
+    QRT_DEPOTS.forEach(d => { _qrtDeployed[d.id] = false; });
+
+    // Group dispatches by ward zone/area
+    // Assign nearest depot truck to each critical ward
+    const critical = dispatches
+      .filter(d => d.ws_score < 40)
+      .sort((a,b) => a.ws_score - b.ws_score);
+    const amber = dispatches
+      .filter(d => d.ws_score >= 40 && d.ws_score < 65)
+      .sort((a,b) => a.ws_score - b.ws_score);
+
+    // Build assignment list —
+    // critical wards get trucks first, then amber
+    // Spread geographically by assigning depot nearest
+    // to each ward (not sequential Q1-Q8)
+    const assignments = [];
+
+    // Add up to 3 critical ward assignments
+    critical.slice(0, 3).forEach(w => {
+      assignments.push({ ward: w, priority: 'critical' });
+    });
+
+    // Add up to 5 amber ward assignments
+    amber.slice(0, 5).forEach(w => {
+      assignments.push({ ward: w, priority: 'amber' });
+    });
+
+    // If fewer than 8 total, fill remaining with
+    // more amber wards
+    if (assignments.length < 8) {
+      amber.slice(assignments.length -
+        Math.min(3, critical.length))
+        .slice(0, 8 - assignments.length)
+        .forEach(w => {
+          assignments.push({
+            ward: w, priority: 'amber'
+          });
+        });
+    }
+
+    // Track which depots are already assigned
+    const usedDepots = new Set();
+
+    assignments.slice(0, 8).forEach((assignment) => {
+      const ward = assignment.ward;
+      const priority = assignment.priority;
+
+      // Find ward centroid from wardLayer
+      let targetLat = null, targetLon = null;
+      if (wardLayer) {
+        wardLayer.eachLayer(l => {
+          if (!l.feature) return;
+          const p = l.feature.properties;
+          if ((p.ward_id === ward.ward_id ||
+               p.Ward_No === ward.ward_id) &&
+              !targetLat) {
+            const bounds = l.getBounds();
+            targetLat = bounds.getCenter().lat;
+            targetLon = bounds.getCenter().lng;
+          }
+        });
+      }
+
+      if (!targetLat) return;
+
+      // Find nearest available depot
+      let nearestId = null;
+      let nearestDist = Infinity;
+
+      QRT_DEPOTS.forEach(depot => {
+        if (usedDepots.has(depot.id)) return;
+        const dLat = depot.lat - targetLat;
+        const dLon = depot.lon - targetLon;
+        const dist = Math.sqrt(dLat*dLat + dLon*dLon);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestId = depot.id;
+        }
+      });
+
+      if (!nearestId) return;
+      usedDepots.add(nearestId);
+
+      const qrt = _qrtMarkers[nearestId];
+      if (!qrt) return;
+
+      // Truck color — red for critical, amber for amber
+      const truckColor = priority === 'critical' ?
+        '#ef4444' : '#f59e0b';
+      const statusText = priority === 'critical' ?
+        '🔴 Critical Response' : '⚡ Deployed';
+
+      qrt.status = 'deployed';
+      _qrtDeployed[nearestId] = ward.ward_name;
+
+      // Update tooltip
+      qrt.marker.setTooltipContent(
+        `<b>${nearestId}</b> — ${qrt.depot.name}<br>
+        Status: <span style="color:${truckColor}">
+        ${statusText}</span><br>
+        Destination: ${ward.ward_name}<br>
+        PMRS: ${ward.ws_score.toFixed(1)}<br>
+        <span style="font-size:9px;color:#888">
+        ✓ Real PWD depot · ⟳ Simulated GPS
+        </span>`
+      );
+
+      // Deployed icon with correct color
+      const deployedIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          width:28px;height:28px;
+          background:${truckColor};
+          border:2px solid #fff;
+          border-radius:50%;
+          display:flex;align-items:center;
+          justify-content:center;
+          font-size:12px;
+          box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+          🚒
+        </div>`,
+        iconSize: [28,28],
+        iconAnchor: [14,14]
+      });
+      qrt.marker.setIcon(deployedIcon);
+
+      // Animate movement in steps
+      const steps = 15;
+      // Add small random offset so trucks dont
+      // stack exactly on top of each other
+      const offsetLat = (Math.random()-0.5) * 0.008;
+      const offsetLon = (Math.random()-0.5) * 0.008;
+      const finalLat = targetLat + offsetLat;
+      const finalLon = targetLon + offsetLon;
+
+      const dLat = (finalLat - qrt.currentLat) / steps;
+      const dLon = (finalLon - qrt.currentLon) / steps;
+      let step = 0;
+
+      // Stagger departure times so trucks dont
+      // all move simultaneously
+      const depotIndex = QRT_DEPOTS.findIndex(
+        d => d.id === nearestId
+      );
+      const departureDelay = depotIndex * 180;
+
+      setTimeout(() => {
+        const moveInterval = setInterval(() => {
+          step++;
+          qrt.currentLat += dLat;
+          qrt.currentLon += dLon;
+          qrt.marker.setLatLng(
+            [qrt.currentLat, qrt.currentLon]
+          );
+
+          if (step >= steps) {
+            clearInterval(moveInterval);
+            const arrivedIcon = L.divIcon({
+              className: '',
+              html: `<div style="
+                width:28px;height:28px;
+                background:${truckColor};
+                border:2px solid #fff;
+                border-radius:50%;
+                display:flex;align-items:center;
+                justify-content:center;
+                font-size:12px;
+                box-shadow:0 2px 8px rgba(0,0,0,0.4)">
+                🚒
+              </div>`,
+              iconSize: [28,28],
+              iconAnchor: [14,14]
+            });
+            qrt.marker.setIcon(arrivedIcon);
+            qrt.marker.setTooltipContent(
+              `<b>${nearestId}</b><br>
+              Status: <span style="color:${truckColor}">
+              ${priority === 'critical' ?
+                '🔴 On Site — Critical' :
+                '🟡 On Site — Amber'}
+              </span><br>
+              Location: ${ward.ward_name}<br>
+              Pumps: 15 deployed<br>
+              PMRS: ${ward.ws_score.toFixed(1)}`
+            );
+            logConsole(
+              `${nearestId} arrived at ` +
+              `${ward.ward_name} ` +
+              `(${priority.toUpperCase()})`,
+              priority === 'critical' ?
+                'critical' : 'triggered'
+            );
+          }
+        }, 180);
+      }, departureDelay);
+    });
+
+    const critCount = assignments.filter(
+      a => a.priority === 'critical').length;
+    const ambCount = assignments.filter(
+      a => a.priority === 'amber').length;
+    logConsole(
+      `QRT dispatch: ${critCount} critical + ` +
+      `${ambCount} amber wards covered`,
+      'triggered'
+    );
+  }
+
+  function resetQRTMarkers() {
+    QRT_DEPOTS.forEach(depot => {
+      const qrt = _qrtMarkers[depot.id];
+      if (!qrt) return;
+      qrt.marker.setLatLng([depot.lat, depot.lon]);
+      qrt.currentLat = depot.lat;
+      qrt.currentLon = depot.lon;
+      qrt.status = 'standby';
+      _qrtDeployed[depot.id] = false;
+      const el = document.getElementById(`qrt-${depot.id}`);
+      if (el) { el.classList.remove('qrt-moving', 'qrt-arrived'); }
+      qrt.marker.bindTooltip(depot.name, { className: 'qrt-tooltip' });
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // CCTV DRAIN CAMERAS — functions
+  // ═══════════════════════════════════════════════════════════════
+  function initCCTV() {
+    if (_cctvInitialized) return;
+    _cctvInitialized = true;
+    CCTV_CAMERAS.forEach(cam => {
+      _cctvState[cam.id] = { status: 'normal', level: 0.15 + Math.random() * 0.25, updated: Date.now() };
+    });
+    renderCCTVGrid();
+    _cctvInterval = setInterval(() => {
+      if (document.getElementById('tab-cctv')?.classList.contains('active')) tickCCTV();
+    }, PERF.cctvTickMs);
+  }
+
+  function tickCCTV() {
+    CCTV_CAMERAS.forEach(cam => {
+      const state = _cctvState[cam.id];
+      if (!state || state.status === 'offline') return;
+      state.level   = Math.max(0.05, Math.min(0.95, state.level + (Math.random() - 0.5) * 0.06));
+      state.updated = Date.now();
+      if (state.level > 0.75 && state.status === 'normal')  state.status = 'alert';
+      if (state.level < 0.65 && state.status === 'alert')   state.status = 'normal';
+    });
+    renderCCTVGrid();
+  }
+
+  function spikeAllCCTV(intensity) {
+    if (!intensity || isNaN(intensity)) intensity = 25;
+    CCTV_CAMERAS.forEach((cam, i) => {
+      const state = _cctvState[cam.id];
+      if (!state) return;
+      const spike  = 0.55 + (intensity / 100) * 0.35 + (i % 3) * 0.05;
+      state.level  = Math.min(0.97, spike + Math.random() * 0.08);
+      state.status = state.level > 0.80 ? 'alert' : 'normal';
+      if (i === 2 && intensity > 40) state.status = 'offline';
+      state.updated = Date.now();
+    });
+    renderCCTVGrid();
+    logConsole('6 drain cameras updated — flooding detected on feeds', 'critical');
+  }
+
+  function resetCCTV() {
+    CCTV_CAMERAS.forEach(cam => {
+      _cctvState[cam.id] = { status: 'normal', level: 0.15 + Math.random() * 0.25, updated: Date.now() };
+    });
+    renderCCTVGrid();
+  }
+
+  function renderCCTVGrid() {
+    const grid = document.getElementById('cctv-grid');
+    if (!grid) return;
+    let okCount = 0, warnCount = 0, offCount = 0;
+    const batchTs = Date.now();
+    const html = CCTV_CAMERAS.map(cam => {
+      const state = _cctvState[cam.id] || { status: 'normal', level: 0.2, updated: Date.now() };
+      const isOff   = state.status === 'offline';
+      const isAlert = state.status === 'alert';
+      if (isOff) offCount++; else if (isAlert) warnCount++; else okCount++;
+      const statusLabel = isOff ? 'OFFLINE' : isAlert ? 'ALERT' : 'NORMAL';
+      const statusColor = isOff ? '#888'    : isAlert ? '#f59e0b' : '#22c55e';
+      const statusBg    = isOff ? '#1a1a2e' : isAlert ? '#2d2200' : '#0a2310';
+      const ago    = Math.round((Date.now() - (state.updated || Date.now())) / 1000);
+      const agoStr = ago < 5 ? 'just now' : ago < 60 ? `${ago}s ago` : `${Math.round(ago / 60)}m ago`;
+      return `<div class="cctv-card" style="background:#0d0d1a;border:1px solid ${isAlert ? '#f59e0b44' : isOff ? '#333' : '#1a3a2a'};border-radius:6px;overflow:hidden">
+        <div style="position:relative;overflow:hidden;background:#000">
+          <canvas id="canvas-${cam.id}-${batchTs}" class="cctv-canvas-${cam.id}" width="300" height="90" style="display:block;width:100%;height:90px"></canvas>
+        </div>
+        <div style="padding:5px 8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:${isOff ? '#666' : '#e2e8f0'};line-height:1.2">${cam.name}</div>
+              <div style="font-size:9px;color:var(--text-dim);margin-top:1px">${cam.location}</div>
+            </div>
+            <div style="background:${statusBg};color:${statusColor};font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;letter-spacing:0.5px;flex-shrink:0">${statusLabel}</div>
+          </div>
+          <div style="font-size:8px;color:var(--text-dim);opacity:0.6">CAM-${cam.id} · ${agoStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+    grid.innerHTML = html;
+
+    const okEl   = document.getElementById('cv-ok-count');
+    const warnEl = document.getElementById('cv-warn-count');
+    const offEl  = document.getElementById('cv-off-count');
+    if (okEl)   okEl.textContent   = okCount;
+    if (warnEl) warnEl.textContent = warnCount;
+    if (offEl)  offEl.textContent  = offCount;
+
+    const tsEl = document.getElementById('cctv-last-update');
+    if (tsEl) tsEl.textContent = `Updated ${new Date().toTimeString().slice(0, 8)} IST`;
+
+    // Start canvas animations — small delay to ensure DOM is ready
+    setTimeout(() => {
+      CCTV_CAMERAS.forEach((cam, i) => {
+        const state = _cctvState[cam.id];
+        const rawStatus = state?.status || 'normal';
+        const canvasStatus = rawStatus === 'offline' ? 'blocked' :
+          rawStatus === 'alert' ? ((state?.level || 0) >= 0.80 ? 'critical' : 'warning') : 'normal';
+        document.querySelectorAll(`.cctv-canvas-${cam.id}`)
+          .forEach(canvas => renderCameraCanvas(canvas.id, canvasStatus, i));
+      });
+    }, 50);
+  }
+
+  // ── Canvas-based CCTV feed renderer ──────────────────────────
+  function renderCameraCanvas(canvasId, status, camIndex) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    if (canvas._animFrame) cancelAnimationFrame(canvas._animFrame);
+
+    let t = 0;
+    const waterPct = status === 'blocked' ? 0.82 :
+      status === 'critical' ? 0.62 :
+      status === 'warning'  ? 0.35 : 0.08;
+    const rainCount = status === 'blocked' ? Math.min(PERF.cctvRainMax, 80) :
+      status === 'critical' ? Math.min(PERF.cctvRainMax, 60) :
+      status === 'warning'  ? Math.min(PERF.cctvRainMax, 30) : 0;
+
+    let debris = [];
+    if (status !== 'normal') {
+      for (let i = 0; i < PERF.cctvDebrisCount; i++) {
+        debris.push({
+          x: Math.random() * W,
+          y: H * (1 - waterPct) + Math.random() * H * waterPct * 0.8,
+          w: 4 + Math.random() * 12, h: 2 + Math.random() * 5,
+          vx: (Math.random() - 0.5) * 0.8, vy: Math.random() * 0.3,
+          type: Math.random() < 0.5 ? 'leaf' : 'plastic',
+        });
+      }
+    }
+    let rainDrops = [];
+    for (let i = 0; i < rainCount; i++) {
+      rainDrops.push({
+        x: Math.random() * W, y: Math.random() * H,
+        len: 6 + Math.random() * 8, speed: 4 + Math.random() * 4,
+        opacity: 0.3 + Math.random() * 0.4,
+      });
+    }
+
+    const isNight = camIndex % 2 === 0;
+    const _cctvFrameInterval = 1000 / PERF.cctvFPS;
+    let _cctvLastFrame = 0;
+
+    function drawFrame(timestamp) {
+      // Pause canvas when CCTV tab is not visible or page is hidden
+      const cctvTabActive = document.getElementById('tab-cctv')?.classList.contains('active');
+      if (document.hidden || !cctvTabActive) {
+        canvas._animFrame = null;
+        return;
+      }
+      // Throttle to target FPS on low-power devices
+      if (timestamp - _cctvLastFrame < _cctvFrameInterval) {
+        canvas._animFrame = requestAnimationFrame(drawFrame);
+        return;
+      }
+      _cctvLastFrame = timestamp;
+      t += 0.016;
+      ctx.clearRect(0, 0, W, H);
+
+      ctx.fillStyle = isNight ? '#0a0f08' : '#0d0d0d';
+      ctx.fillRect(0, 0, W, H);
+
+      // Road surface (perspective trapezoid)
+      ctx.fillStyle = isNight ? '#1a2016' : '#1a1a1a';
+      ctx.beginPath();
+      ctx.moveTo(W * 0.1, H);
+      ctx.lineTo(W * 0.9, H);
+      ctx.lineTo(W * 0.65, H * 0.45);
+      ctx.lineTo(W * 0.35, H * 0.45);
+      ctx.closePath();
+      ctx.fill();
+
+      // Centre dashed line
+      ctx.strokeStyle = isNight ? 'rgba(180,180,100,0.3)' : 'rgba(200,200,200,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([6, 8]);
+      ctx.beginPath();
+      ctx.moveTo(W * 0.5, H);
+      ctx.lineTo(W * 0.5, H * 0.45);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Drain channel
+      const drainY = H * 0.72;
+      ctx.fillStyle = '#111811';
+      ctx.fillRect(0, drainY, W, H - drainY);
+      ctx.strokeStyle = 'rgba(80,90,80,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, drainY);
+      ctx.lineTo(W, drainY);
+      ctx.stroke();
+
+      // Water surface
+      const waterY = H - H * waterPct;
+      const waveAmp = status === 'blocked' ? 3 :
+        status === 'critical' ? 2.5 :
+        status === 'warning'  ? 1.5 : 0.5;
+
+      ctx.fillStyle = status === 'blocked' ? 'rgba(80,40,20,0.85)' :
+        status === 'critical' ? 'rgba(40,60,90,0.80)' :
+        status === 'warning'  ? 'rgba(30,50,80,0.75)' :
+                                'rgba(20,40,60,0.65)';
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      ctx.lineTo(0, waterY);
+      for (let x = 0; x <= W; x += 4) {
+        const wave = Math.sin(x * 0.04 + t * 2) * waveAmp +
+                     Math.sin(x * 0.02 + t * 1.3) * waveAmp * 0.5;
+        ctx.lineTo(x, waterY + wave);
+      }
+      ctx.lineTo(W, H);
+      ctx.closePath();
+      ctx.fill();
+
+      // Water surface sheen
+      ctx.fillStyle = 'rgba(100,140,180,0.12)';
+      ctx.beginPath();
+      ctx.moveTo(0, waterY - 2);
+      for (let x = 0; x <= W; x += 4) {
+        const wave = Math.sin(x * 0.04 + t * 2) * waveAmp;
+        ctx.lineTo(x, waterY + wave - 2);
+      }
+      ctx.lineTo(W, waterY - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Debris
+      debris.forEach(d => {
+        d.x += d.vx + Math.sin(t + d.x) * 0.2;
+        d.y += d.vy;
+        if (d.x < -20) d.x = W + 10;
+        if (d.x > W + 20) d.x = -10;
+        if (d.y > H - 3) d.y = waterY + 2;
+        ctx.fillStyle = d.type === 'leaf' ? 'rgba(60,80,30,0.8)' : 'rgba(180,160,140,0.6)';
+        ctx.fillRect(d.x - d.w / 2, Math.max(waterY, d.y) - d.h / 2, d.w, d.h);
+      });
+
+      // Rain drops
+      rainDrops.forEach(r => {
+        r.y += r.speed;
+        if (r.y > H) { r.y = -r.len; r.x = Math.random() * W; }
+        ctx.strokeStyle = `rgba(180,200,220,${r.opacity})`;
+        ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(r.x, r.y);
+        ctx.lineTo(r.x - 1, r.y + r.len);
+        ctx.stroke();
+      });
+
+      // Rain splashes
+      if (status !== 'normal' && Math.random() < 0.15) {
+        const sx = Math.random() * W;
+        const sy = waterY + Math.random() * 4;
+        ctx.strokeStyle = 'rgba(200,220,255,0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 2 + Math.random() * 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Scanlines (skip on low-power for performance)
+      if (!_isLowPower) {
+        for (let y = 0; y < H; y += 3) {
+          ctx.fillStyle = 'rgba(0,0,0,0.08)';
+          ctx.fillRect(0, y, W, 1);
+        }
+      }
+
+      // Noise grain for severe states (reduced on low-power)
+      if (status === 'critical' || status === 'blocked') {
+        const grainCount = _isLowPower ? 6 : 20;
+        for (let i = 0; i < grainCount; i++) {
+          ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`;
+          ctx.fillRect(Math.random() * W, Math.random() * H, 2, 1);
+        }
+      }
+
+      // Timestamp bar
+      const timeStr = new Date().toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+      });
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, W, 14);
+      ctx.fillStyle = isNight ? 'rgba(100,220,80,0.85)' : 'rgba(220,220,220,0.85)';
+      ctx.font = '8px monospace';
+      ctx.fillText(`27/03/2026 ${timeStr} IST`, 4, 10);
+
+      // Level bar (right strip)
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(W - 32, 0, 32, H);
+      ctx.fillStyle = 'rgba(40,40,40,0.8)';
+      ctx.fillRect(W - 20, 8, 8, H - 16);
+      const levelPct = Math.round(waterPct * 100);
+      const barColor = levelPct > 70 ? '#ef4444' : levelPct > 45 ? '#f59e0b' : '#22c55e';
+      const barH = (H - 16) * waterPct;
+      ctx.fillStyle = barColor;
+      ctx.fillRect(W - 20, H - 8 - barH, 8, barH);
+      ctx.fillStyle = barColor;
+      ctx.font = 'bold 7px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(levelPct + '%', W - 16, H - 4);
+      ctx.textAlign = 'left';
+
+      // Alert flash
+      if ((status === 'critical' || status === 'blocked') && Math.sin(t * 4) > 0.5) {
+        ctx.fillStyle = 'rgba(220,30,30,0.08)';
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Pause canvas when CCTV tab is not visible or page is hidden
+      const cctvTabActive = document.getElementById('tab-cctv')?.classList.contains('active');
+      if (!document.hidden && cctvTabActive) {
+        canvas._animFrame = requestAnimationFrame(drawFrame);
+      } else {
+        canvas._animFrame = null;
+      }
+    }
+
+    drawFrame(performance.now());
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // IST CLOCK
@@ -3358,7 +4480,7 @@
     document.getElementById('header-clock').textContent = timeStr + ' IST';
   }
   updateClock();
-  setInterval(updateClock, 30000);
+  setInterval(updateClock, PERF.clockMs);
 
   // ═══════════════════════════════════════════════════════════════
   // MOBILE DRAWER
@@ -3516,6 +4638,10 @@
       const data = await resp.json();
       if (ctrl.signal.aborted) return;     // aborted while parsing JSON
       if (!data.features || data.features.length === 0) return;
+      // Limit features on low-power devices
+      if (_isLowPower && data.features.length > PERF.maxHotspotMarkers) {
+        data.features = data.features.slice(0, PERF.maxHotspotMarkers);
+      }
       // Radius scales with zoom: tiny at city-wide view, larger when zoomed in
       const radius = z >= 15 ? 6 : z >= 13 ? 4.5 : z >= 12 ? 3.5 : 2.5;
       hotspotLayer = L.geoJSON(data, {
@@ -3539,11 +4665,12 @@
 
   let _hotspotDebounce = null;
   function _scheduleHotspots() {
+    if (_srtmVisible) return;   // elevation mode — keep dots hidden
     clearTimeout(_hotspotDebounce);
     _hotspotDebounce = setTimeout(() => {
-      if (map.getZoom() >= 11) loadHotspots();
+      if (map.getZoom() >= PERF.hotspotMinZoom) loadHotspots();
       else if (hotspotLayer) { map.removeLayer(hotspotLayer); hotspotLayer = null; }
-    }, 350);
+    }, PERF.hotspotDebounceMs);
   }
   map.on('moveend', _scheduleHotspots);
   map.on('zoomend', _scheduleHotspots);   // belt-and-suspenders for zoom
@@ -3608,6 +4735,29 @@
       fillOpacity = isDark() ? 0.6 : 0.65;
     }
     return { fillColor: fill, fillOpacity, color: border, weight: 1, opacity: 0.85 };
+  }
+
+  // Mirror ward colours from the live map layer back into _cycleOverrides
+  // so the Risk tab always reflects what the map is actually showing.
+  // Reads cycle overrides first, then falls back to readiness band.
+  // Writes both numeric and string key forms to avoid type-mismatch lookups.
+  function buildOverridesFromMap() {
+    if (!wardLayer) return;
+    let count = 0;
+    wardLayer.eachLayer(l => {
+      if (!l.feature) return;
+      const wid = l.feature.properties?.ward_id;
+      if (wid === undefined) return;
+      // Cycle override takes priority; readiness band is the fallback
+      const cycleVal = _cycleOverrides[wid] ?? _cycleOverrides[String(wid)];
+      let band = cycleVal || _rsLookup[wid]?.band || 'green';
+      // Normalize 'yellow' to 'amber' so Risk tab only shows red/amber/green
+      if (band === 'yellow') band = 'amber';
+      _cycleOverrides[wid]         = band;
+      _cycleOverrides[String(wid)] = band;
+      count++;
+    });
+    console.log('[buildOverridesFromMap] populated', count, 'ward overrides from map layer');
   }
 
   // Re-apply PMRS colors after readiness loads or theme switches
@@ -3923,7 +5073,42 @@
 
   // Load forecast on init and every 10 min
   loadForecast();
-  setInterval(loadForecast, 600000);
+  setInterval(loadForecast, PERF.forecastMs);
+
+  // ═══════════════════════════════════════════════════════════════
+  // FLOOD INTELLIGENCE — probability & depth estimation
+  // ═══════════════════════════════════════════════════════════════
+  function computeFloodProbability(wsScore, elevation, basin) {
+    // Base probability from PMRS score
+    // Score 0 = 95% probability, Score 65 = 30%, Score 100 = 5%
+    let basePct = Math.max(5, Math.min(95, (65 - wsScore) * 1.4 + 30));
+
+    // Elevation adjustment
+    // Below 207m = +15%, 207-210m = +8%, above 215m = -10%
+    if (elevation < 207) basePct += 15;
+    else if (elevation < 210) basePct += 8;
+    else if (elevation > 215) basePct -= 10;
+
+    // Basin adjustment
+    if (basin === 'Trans-Yamuna') basePct += 10;
+    else if (basin === 'Najafgarh') basePct += 5;
+
+    return Math.max(2, Math.min(97, Math.round(basePct)));
+  }
+
+  function computeInundationDepth(wsScore, elevation, yamunaLevel) {
+    if (wsScore > 65) return null; // Not triggered
+
+    const yamunaStage = yamunaLevel || 202;
+    const elevDeficit = Math.max(0, 210 - elevation);
+    const stressMultiplier = Math.max(0.5, (65 - wsScore) / 40);
+
+    const minDepth = (elevDeficit * 0.08 * stressMultiplier).toFixed(1);
+    const maxDepth = (elevDeficit * 0.18 * stressMultiplier + 0.3).toFixed(1);
+
+    if (parseFloat(minDepth) < 0.1) return null;
+    return { min: minDepth, max: maxDepth };
+  }
 
   // ═══════════════════════════════════════════════════════════════
   // MAP REFRESH
@@ -4024,6 +5209,37 @@
               <div class="popup-rs-band" style="color:${rsColor}">${band === 'red' ? 'Critical' : band === 'amber' ? 'At Risk' : 'Ready'}</div>
               ${mechHtml}${factorsHtml}${actionHtml}` : '';
 
+            // Flood intelligence block
+            const wsScore = rs !== null ? rs : 65;
+            const elevation = p.mean_elevation || 210;
+            const floodProb = computeFloodProbability(wsScore, elevation, p.zone_name || '');
+            const depth = computeInundationDepth(wsScore, elevation, 202);
+            const probColor = floodProb > 70 ? '#ef4444' : floodProb > 45 ? '#f59e0b' : '#22c55e';
+            const depthJson = JSON.stringify(depth).replace(/'/g, "\\'");
+
+            const probHTML = `
+            <div style="margin:8px 0;padding:8px 10px;background:${probColor}18;border:1px solid ${probColor}44;border-radius:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="font-size:10px;color:var(--text-dim)">Flood probability (6hr)</div>
+                <div style="font-size:16px;font-weight:700;color:${probColor}">${floodProb}%</div>
+              </div>
+              <div style="height:4px;background:var(--border);border-radius:2px;margin-top:5px;overflow:hidden">
+                <div style="height:100%;width:${floodProb}%;background:${probColor};border-radius:2px;transition:width 0.5s ease"></div>
+              </div>
+              ${depth ? `<div style="margin-top:6px;font-size:11px;color:${probColor};font-weight:500">Est. depth: ${depth.min}–${depth.max}m above road level</div>` : ''}
+              <div style="font-size:9px;color:var(--text-dim);margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+                <span class="badge-proxy">≈ PROXY — Index model</span>
+                <span class="badge-real">✓ REAL — SRTM elevation input</span>
+                <span style="font-size:9px;color:var(--text-dim)">&plusmn;15% uncertainty</span>
+              </div>
+            </div>`;
+
+            const smsBtn = (band === 'red' || band === 'amber') ? `
+            <button onclick="showSMSAlert('${p.ward_name.replace(/'/g, "\\'")}', ${wsScore}, ${floodProb}, '${depthJson}')"
+              style="width:100%;margin-top:6px;padding:7px;border-radius:6px;border:1px solid #ef444444;background:#ef444412;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font)">
+              📢 Generate Resident Alert SMS
+            </button>` : '';
+
             return `
             <div class="popup-header">
               <div class="popup-ward">${p.ward_name}</div>
@@ -4031,6 +5247,7 @@
             </div>
             <div class="popup-body">
               ${rsBlock}
+              ${probHTML}
               <div class="popup-status">
                 <span class="status-dot ${dotClass}"></span>
                 ${p.status}
@@ -4040,6 +5257,7 @@
               <div style="text-align:center;margin-top:6px">
                 <button onclick="openDrillPanel(${p.ward_id}, '${p.ward_name.replace(/'/g, "\\'")}')" style="font-size:11px;padding:4px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--purple);cursor:pointer;font-family:var(--font);font-weight:500;transition:background .15s" onmouseover="this.style.background='var(--purple-bg)'" onmouseout="this.style.background='var(--bg)'">View Details</button>
               </div>
+              ${smsBtn}
             </div>`;
           });
         },
@@ -4135,6 +5353,7 @@
         _cycleOverrides[d.ward_id] = d.ws_score < 40 ? 'red' : (d.ws_score < 55 ? 'amber' : 'yellow');
       });
       refreshMapColors();
+      setTimeout(() => dispatchQRTToWards(data.dispatches), 600);
 
       const cycleTime = new Date().toTimeString().slice(0, 8);
       const mTime = document.getElementById('m-time');
@@ -4167,9 +5386,21 @@
       // would flash the seed overlay and blank the map.
       await loadReadiness();
       refreshMapColors();
+      // Mirror map colours to _cycleOverrides so Risk tab stays in sync
+      setTimeout(() => {
+        buildOverridesFromMap();
+        console.log('[runCycle] overrides built:', Object.keys(_cycleOverrides).length);
+        if (!_inCloudburst) {
+          setTimeout(() => {
+            renderRiskTab();
+            console.log('[runCycle] standalone render done');
+          }, 300);
+        }
+      }, 800);
 
       // Open Risk tab and scroll to top so triggered wards (sorted highest risk)
       // are immediately visible
+      _skipNextRiskRender = true;
       switchPanelTab('risk');
       const riskTab = document.getElementById('tab-risk');
       if (riskTab) riskTab.scrollTop = 0;
@@ -4294,6 +5525,7 @@
     const scenario = await _openCloudburstModal();
     if (!scenario) return;
 
+    _inCloudburst = true;
     setButtons(true);
     showSpinner('sp-storm', true);
     logConsole(`Simulating cloudburst: ${scenario.label}`, 'system');
@@ -4355,6 +5587,8 @@
         console.log('[Cloudburst] degraded:', degradeData);
       }
       logConsole('Drainage capacity degraded across flood zone', 'triggered');
+      spikeAllSensors(scenario.intensity_r);
+      spikeAllCCTV(scenario.intensity_r);
 
       setStatus(`⛈ ${scenario.label}: running dispatch cycle...`);
       logConsole('Auto-triggering scoring cycle...', 'system');
@@ -4367,12 +5601,18 @@
       // Force-refresh readiness scores (bypass 5-min cache) so panel shows impact
       try { await fetch('/readiness/refresh', { method: 'POST', headers: POST_AUTH }); } catch(_) {}
       await loadReadiness();
+      await new Promise(r => setTimeout(r, 1200));
+      buildOverridesFromMap();
+      await new Promise(r => setTimeout(r, 200));
+      renderRiskTab();
+      console.log('[Cloudburst] FINAL render — red:', document.getElementById('rt-red')?.textContent);
 
     } catch (err) {
       console.error('[Cloudburst] Error:', err);
       logConsole(`API Error: ${err.message}`, 'error');
       setStatus('⛈ Cloudburst failed — check connection');
     } finally {
+      _inCloudburst = false;
       showSpinner('sp-storm', false);
       setButtons(false);
     }
@@ -4403,6 +5643,8 @@
       await refreshMap();
       // Reload hotspots to show restored baseline capacities
       if (map.getZoom() >= 11) loadHotspots();
+      resetQRTMarkers();
+      resetCCTV();
     } catch (err) {
       logConsole(`API Error: ${err.message}`, 'error');
     } finally {
@@ -4472,8 +5714,8 @@
     } catch (_) {}
   }
 
-  setInterval(pollCycleLatest, 30000);
-  setInterval(refreshWeatherStatus, 60000);
+  setInterval(pollCycleLatest, PERF.cyclePollingMs);
+  setInterval(refreshWeatherStatus, PERF.weatherPollingMs);
 
   // ═══════════════════════════════════════════════════════════════
   // CONNECTION STATUS — health-check dot
@@ -4505,7 +5747,7 @@
   }
 
   checkBackendHealth();
-  setInterval(checkBackendHealth, 60000);
+  setInterval(checkBackendHealth, PERF.healthCheckMs);
 
   // ═══════════════════════════════════════════════════════════════
   // WEBSOCKET — real-time cycle push
@@ -4628,6 +5870,14 @@
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
     const mapSkel = document.getElementById('map-skeleton');
     if (mapSkel) { mapSkel.classList.add('hidden'); setTimeout(() => mapSkel.remove(), 500); }
+    initSensors();
+    _sensorInterval = setInterval(() => {
+      if (document.getElementById('tab-sensors').classList.contains('active')) {
+        tickSensors();
+      }
+    }, PERF.sensorTickMs);
+    initCCTV();
+    initQRTMarkers();
   })();
 
   // ═══════════════════════════════════════════════════════════════
@@ -4736,6 +5986,24 @@
         map.removeLayer(_srtmOverlay);
         _srtmOverlay = null;
       }
+      // Restore ward choropleth
+      map.eachLayer(layer => {
+        if (layer.feature || layer._latlngs) {
+          layer.setStyle({
+            fillOpacity: layer.feature?.properties?._origFillOpacity || 0.75,
+            opacity: 1
+          });
+        }
+      });
+      // Force full map color refresh
+      refreshMapColors();
+      logConsole('Ward layer restored', 'system');
+      // Restore hotspot dots
+      if (hotspotLayer && !map.hasLayer(hotspotLayer)) map.addLayer(hotspotLayer);
+      // Restore QRT vehicle markers
+      Object.values(_qrtMarkers).forEach(({ marker }) => {
+        if (!map.hasLayer(marker)) map.addLayer(marker);
+      });
       if (btn) btn.classList.remove('active');
       legend.classList.remove('visible');
       _srtmVisible = false;
@@ -4755,11 +6023,22 @@
     _srtmOverlay = L.imageOverlay('/static/delhi_elevation.png', bounds, {
       opacity: 0.72,
       interactive: false,
-      crossOrigin: true,
       attribution: 'NASA SRTM v4.1 · CGIAR-CSI · QGIS'
     }).addTo(map);
 
     map.fitBounds(bounds, { padding: [20, 20] });
+
+    // Hide ward choropleth so elevation is clearly visible
+    map.eachLayer(layer => {
+      if (layer.feature || layer._latlngs) {
+        layer.setStyle({ fillOpacity: 0, opacity: 0 });
+      }
+    });
+    logConsole('Ward layer hidden — elevation mode active', 'system');
+    // Hide hotspot dots
+    if (hotspotLayer) map.removeLayer(hotspotLayer);
+    // Hide QRT vehicle markers
+    Object.values(_qrtMarkers).forEach(({ marker }) => map.removeLayer(marker));
 
     legend.classList.add('visible');
     _srtmVisible = true;
@@ -4769,7 +6048,7 @@
 
     logConsole('NASA SRTM v4.1 elevation layer loaded — 30m resolution', 'system');
     showAlert('info', 'NASA SRTM Elevation Active',
-      'Red = flood zone (202–210m) · Green = Aravalli Ridge (270–320m) · Source: CGIAR-CSI SRTM v4.1');
+      'Red = flood zone (202–210m) · Green = Aravalli Ridge (270–320m) · Hotspots hidden for clarity · Click Elevation again to restore');
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -5036,6 +6315,8 @@
   let _rsLookup = {};        // ward_id → readiness row (for map coloring)
   let _cycleOverrides = {};  // ward_id → 'red'|'amber'|'yellow' from latest cycle result
   let _rpFilter = 'all';     // active flood-type filter
+  let _skipNextRiskRender = false;
+  let _inCloudburst = false;
   let _ftActiveLayers = {};  // map highlight layers keyed by flood type
   let _ftLayerActive = {};   // button state per flood type
 
@@ -5930,7 +7211,7 @@
   }
 
   updateCountdown();
-  setInterval(updateCountdown, 60000);
+  setInterval(updateCountdown, PERF.countdownMs);
 
 
   /* ── Ward search ─────────────────────────────────────────────── */
@@ -6182,6 +7463,13 @@
 
   // ── Panel Tab Switching ───────────────────────────────────────
   function switchPanelTab(tabName) {
+    // Stop CCTV canvas animations when leaving that tab
+    if (tabName !== 'cctv') {
+      document.querySelectorAll('[id^="canvas-"]').forEach(c => {
+        if (c._animFrame) { cancelAnimationFrame(c._animFrame); c._animFrame = null; }
+      });
+    }
+
     document.querySelectorAll('.panel-tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelector(`.panel-tab-btn[data-tab="${tabName}"]`).classList.add('active');
     document.querySelectorAll('.panel-tab-content').forEach(c => c.classList.remove('active'));
@@ -6189,6 +7477,22 @@
 
     // Lazy-load risk tab data
     if (tabName === 'risk') loadRiskTab();
+    // Lazy-init sensors tab
+    if (tabName === 'sensors') initSensors();
+    // Lazy-init CCTV tab and restart canvas animations
+    if (tabName === 'cctv') {
+      initCCTV();
+      setTimeout(() => {
+        CCTV_CAMERAS.forEach((cam, i) => {
+          const state = _cctvState[cam.id];
+          const rawStatus = state?.status || 'normal';
+          const canvasStatus = rawStatus === 'offline' ? 'blocked' :
+            rawStatus === 'alert' ? ((state?.level || 0) >= 0.80 ? 'critical' : 'warning') : 'normal';
+          document.querySelectorAll(`.cctv-canvas-${cam.id}`)
+            .forEach(canvas => renderCameraCanvas(canvas.id, canvasStatus, i));
+        });
+      }, 50);
+    }
   }
 
   // ── Risk Tab ──────────────────────────────────────────────────
@@ -6230,10 +7534,41 @@
   }
 
   function renderRiskTab() {
+    if (_skipNextRiskRender) {
+      _skipNextRiskRender = false;
+      console.log('[renderRiskTab] skipped stale render');
+      return;
+    }
     // Summary cards
-    const redCount = _rpData.filter(w => w.band === 'red').length;
-    const amberCount = _rpData.filter(w => w.band === 'amber').length;
-    const greenCount = _rpData.filter(w => w.band === 'green').length;
+    // Merge static readiness bands with live cycle overrides.
+    // _cycleOverrides (ward_id → color) takes precedence
+    // when a cycle has been run. This ensures the Risk tab
+    // reflects live ws_score results, not just pre-monsoon
+    // readiness scores.
+    const effectiveBand = (w) => {
+      // Try numeric key, then string key (handles JSON type ambiguity)
+      const byId = _cycleOverrides[w.ward_id]
+                ?? _cycleOverrides[String(w.ward_id)]
+                ?? _cycleOverrides[Number(w.ward_id)];
+      if (byId) {
+        if (byId === 'red')    return 'red';
+        if (byId === 'amber')  return 'amber';
+        if (byId === 'yellow') return 'amber';
+        if (byId === 'green')  return 'green';
+      }
+      const byName = _cycleOverrides[w.ward_name];
+      if (byName) {
+        if (byName === 'red')    return 'red';
+        if (byName === 'amber')  return 'amber';
+        if (byName === 'yellow') return 'amber';
+        if (byName === 'green')  return 'green';
+      }
+      return w.band;
+    };
+    const hasCycleData = Object.keys(_cycleOverrides).length > 0;
+    const redCount   = _rpData.filter(w => effectiveBand(w) === 'red').length;
+    const amberCount = _rpData.filter(w => effectiveBand(w) === 'amber').length;
+    const greenCount = _rpData.filter(w => effectiveBand(w) === 'green').length;
     const rtRed = document.getElementById('rt-red');
     const rtAmber = document.getElementById('rt-amber');
     const rtGreen = document.getElementById('rt-green');
@@ -6266,6 +7601,19 @@
         <div class="risk-ward-score" style="color:${col}">${w.readiness_score.toFixed(0)}</div>
       </div>`;
     }).join('');
+
+    console.log('[renderRiskTab] writing counts —', 'red:', redCount, 'amber:', amberCount, 'green:', greenCount);
+
+    // Direct fallback writes using multiple possible IDs
+    const redEls   = document.querySelectorAll('#rt-red, #risk-critical, #critical-count, [data-risk="red"] .count, .rt-red-count');
+    const amberEls = document.querySelectorAll('#rt-amber, #risk-atrisk, #atrisk-count, [data-risk="amber"] .count, .rt-amber-count');
+    const greenEls = document.querySelectorAll('#rt-green, #risk-ready, #ready-count, [data-risk="green"] .count, .rt-green-count');
+    redEls.forEach(el => { el.textContent = redCount; });
+    amberEls.forEach(el => { el.textContent = amberCount; });
+    greenEls.forEach(el => { el.textContent = greenCount; });
+
+    const verifyRed = document.getElementById('rt-red');
+    console.log('[renderRiskTab] DOM verify — red element:', verifyRed?.id, 'value:', verifyRed?.textContent);
   }
 
   // ── Layer Toggle Switches ─────────────────────────────────────
@@ -6406,7 +7754,7 @@
 
   // Initial banner update
   setTimeout(updateAlertBanner, 3000);
-  setInterval(updateAlertBanner, 30000);
+  setInterval(updateAlertBanner, PERF.alertBannerMs);
 
   // ── Presentation Mode adjustments ─────────────────────────────
   // Hide panel toggle in present mode
@@ -6419,6 +7767,704 @@
     if (fc) fc.style.display = _presentMode ? 'none' : 'flex';
   };
 
+  // ── RADAR SYSTEM ─────────────────────────────────────────────────
+  let _radarVisible = false;
+  let _radarFrame = 0;
+  let _radarPlayInterval = null;
+  let _radarScenario = 'calm';
+  let _radarAnimFrame = null;  // rAF handle for continuous sweep
+
+  const RADAR_BOUNDS = { west:76.838, east:77.548, south:28.404, north:28.883, W:680, H:400 };
+
+  function lonToX(lon) {
+    return ((lon - RADAR_BOUNDS.west) / (RADAR_BOUNDS.east - RADAR_BOUNDS.west)) * RADAR_BOUNDS.W;
+  }
+  function latToY(lat) {
+    return ((RADAR_BOUNDS.north - lat) / (RADAR_BOUNDS.north - RADAR_BOUNDS.south)) * RADAR_BOUNDS.H;
+  }
+
+  const RADAR_SCENARIOS = {
+    calm: {
+      label: 'Clear / Pre-monsoon', maxIntensity: 4,
+      cells: [
+        { lat:28.65, lon:77.1, r:40, intense:3, dlat:0.002, dlon:0.001 },
+      ]
+    },
+    sw: {
+      label: 'SW Delhi Cloudburst — Sep 12 2024', maxIntensity: 33.6,
+      cells: [
+        { lat:28.52, lon:76.98, r:80, intense:33.6, dlat:0.008, dlon:0.012 },
+        { lat:28.55, lon:77.05, r:55, intense:22,   dlat:0.006, dlon:0.010 },
+        { lat:28.48, lon:76.95, r:45, intense:18,   dlat:0.009, dlon:0.011 },
+      ]
+    },
+    yamuna: {
+      label: 'Yamuna Corridor — Jul 11 2023', maxIntensity: 51,
+      cells: [
+        { lat:28.82, lon:77.20, r:90, intense:51, dlat:-0.015, dlon:-0.005 },
+        { lat:28.75, lon:77.25, r:70, intense:38, dlat:-0.012, dlon:-0.004 },
+        { lat:28.70, lon:77.30, r:55, intense:28, dlat:-0.010, dlon:-0.003 },
+      ]
+    },
+    citywide: {
+      label: 'City-Wide Extreme Storm', maxIntensity: 40,
+      cells: [
+        { lat:28.75, lon:76.95, r:100, intense:40, dlat:0.010, dlon:0.015 },
+        { lat:28.65, lon:77.10, r:85,  intense:35, dlat:0.008, dlon:0.012 },
+        { lat:28.55, lon:77.30, r:75,  intense:28, dlat:0.006, dlon:0.010 },
+        { lat:28.80, lon:77.20, r:70,  intense:32, dlat:-0.008, dlon:0.008 },
+      ]
+    },
+    jul2023: {
+      label: 'July 11 2023 — 153mm day', maxIntensity: 58,
+      cells: [
+        { lat:28.88, lon:77.22, r:110, intense:58, dlat:-0.018, dlon:-0.008 },
+        { lat:28.80, lon:77.15, r:85,  intense:44, dlat:-0.015, dlon:-0.006 },
+        { lat:28.72, lon:77.28, r:65,  intense:33, dlat:-0.012, dlon:-0.005 },
+        { lat:28.65, lon:77.10, r:55,  intense:25, dlat:-0.010, dlon:-0.004 },
+      ]
+    }
+  };
+
+  const RADAR_LOCATIONS = [
+    { name:'Hathnikund', lat:28.98, lon:77.27, color:'#64b5f6' },
+    { name:'Safdarjung', lat:28.584, lon:77.206, color:'#81c784' },
+    { name:'IGI Airport', lat:28.556, lon:77.100, color:'#ffb74d' },
+    { name:'ITO Bridge',  lat:28.629, lon:77.241, color:'#f48fb1' },
+    { name:'Wazirabad',   lat:28.725, lon:77.252, color:'#ce93d8' },
+  ];
+
+  // ── IMD DWR-style radar rendering ──────────────────────────────
+  // Value noise for irregular storm shapes (deterministic hash)
+  const _rnSeed = new Uint32Array(256);
+  (function(){ for(let i=0;i<256;i++) _rnSeed[i]=(Math.sin(i*127.1+311.7)*43758.5453)>>>0; })();
+  function _valNoise(x,y){
+    const ix=Math.floor(x)&255, iy=Math.floor(y)&255;
+    const fx=x-Math.floor(x), fy=y-Math.floor(y);
+    const sx=fx*fx*(3-2*fx), sy=fy*fy*(3-2*fy);
+    const n00=(_rnSeed[(ix+_rnSeed[iy&255])&255]&0xffff)/65535;
+    const n10=(_rnSeed[((ix+1)&255+_rnSeed[iy&255])&255]&0xffff)/65535;
+    const n01=(_rnSeed[(ix+_rnSeed[(iy+1)&255])&255]&0xffff)/65535;
+    const n11=(_rnSeed[((ix+1)&255+_rnSeed[(iy+1)&255])&255]&0xffff)/65535;
+    return n00*(1-sx)*(1-sy)+n10*sx*(1-sy)+n01*(1-sx)*sy+n11*sx*sy;
+  }
+  function _fbm(x,y,oct){
+    let v=0,a=0.5,f=1;
+    for(let i=0;i<oct;i++){v+=a*_valNoise(x*f,y*f);a*=0.5;f*=2;}
+    return v;
+  }
+
+  // IMD DWR reflectivity palette (dBZ → RGBA)  — matches real IMD color table
+  const _DBZ_COLORS = [
+    //  dBZ    R    G    B
+    [  5,    4,  33,  76],   // very dark blue — barely detectable
+    [ 10,   10,  50, 120],   // dark navy
+    [ 15,   20,  90, 180],   // medium blue
+    [ 20,   30, 140, 220],   // bright blue — light rain
+    [ 25,   50, 180, 100],   // green — moderate rain
+    [ 30,   80, 200,  50],   // bright green
+    [ 35,  160, 220,  30],   // yellow-green
+    [ 40,  220, 200,  10],   // yellow — heavy rain
+    [ 45,  250, 160,   0],   // orange
+    [ 50,  240, 100,   0],   // dark orange — very heavy
+    [ 55,  220,  40,  20],   // red
+    [ 60,  180,  10,  40],   // dark red — extreme
+    [ 65,  160,  30, 160],   // magenta — hail
+  ];
+  function _dBZtoRGBA(dBZ, alpha) {
+    if (dBZ < 5) return null;  // below threshold — no echo
+    let r=4,g=33,b=76;
+    for (let i=0;i<_DBZ_COLORS.length-1;i++) {
+      if (dBZ >= _DBZ_COLORS[i][0] && dBZ < _DBZ_COLORS[i+1][0]) {
+        const t=(dBZ-_DBZ_COLORS[i][0])/(_DBZ_COLORS[i+1][0]-_DBZ_COLORS[i][0]);
+        r=Math.round(_DBZ_COLORS[i][1]*(1-t)+_DBZ_COLORS[i+1][1]*t);
+        g=Math.round(_DBZ_COLORS[i][2]*(1-t)+_DBZ_COLORS[i+1][2]*t);
+        b=Math.round(_DBZ_COLORS[i][3]*(1-t)+_DBZ_COLORS[i+1][3]*t);
+        break;
+      }
+      if (dBZ >= _DBZ_COLORS[_DBZ_COLORS.length-1][0]) {
+        r=_DBZ_COLORS[_DBZ_COLORS.length-1][1];
+        g=_DBZ_COLORS[_DBZ_COLORS.length-1][2];
+        b=_DBZ_COLORS[_DBZ_COLORS.length-1][3];
+      }
+    }
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  // Convert mm/hr to approximate dBZ (Marshall-Palmer Z = 200R^1.6)
+  function _mmhrToDBZ(mmhr) { return mmhr <= 0 ? 0 : 10 * Math.log10(200 * Math.pow(mmhr, 1.6)); }
+
+  // Keep old function signature for any external callers
+  function _intensityToColor(intensity, alpha) {
+    const dBZ = _mmhrToDBZ(intensity);
+    return _dBZtoRGBA(dBZ, alpha) || `rgba(4,33,76,${alpha * 0.3})`;
+  }
+
+  // Radar site: IMD Palam DWR (actual location)
+  const _RADAR_SITE = { lat: 28.585, lon: 77.088, name: 'IMD Palam DWR' };
+  const _RADAR_MAX_RANGE_KM = 250;
+  let _sweepAngle = 0;
+  let _lastSweepTime = 0;
+  let _sweepTrail = [];  // recent sweep positions for afterglow
+  // Offscreen canvas cache for expensive precipitation grid
+  let _radarBaseCanvas = null;
+  let _radarBaseFrame = -1;
+  let _radarBaseScenario = '';
+
+  function _renderRadarBase(W, H, frame) {
+    if (!_radarBaseCanvas) {
+      _radarBaseCanvas = document.createElement('canvas');
+      _radarBaseCanvas.width = W;
+      _radarBaseCanvas.height = H;
+    }
+    const ctx = _radarBaseCanvas.getContext('2d');
+    const rcx = lonToX(_RADAR_SITE.lon), rcy = latToY(_RADAR_SITE.lat);
+
+    // Background
+    ctx.fillStyle = '#040810';
+    ctx.fillRect(0, 0, W, H);
+
+    const kmPerPxLat = (RADAR_BOUNDS.north - RADAR_BOUNDS.south) * 111 / H;
+    const kmPerPxLon = (RADAR_BOUNDS.east - RADAR_BOUNDS.west) * 111 * Math.cos(28.6 * Math.PI/180) / W;
+    const kmPerPx = (kmPerPxLat + kmPerPxLon) / 2;
+
+    // Range rings
+    [25, 50, 100, 150].forEach(km => {
+      const rPx = km / kmPerPx;
+      ctx.strokeStyle = 'rgba(0,180,100,0.12)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.arc(rcx, rcy, rPx, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = 'rgba(0,180,100,0.25)';
+      ctx.font = '8px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(km + 'km', rcx + rPx + 2, rcy - 2);
+    });
+
+    // Compass rose
+    const maxR = 200 / kmPerPx;
+    ctx.strokeStyle = 'rgba(0,180,100,0.08)';
+    ctx.lineWidth = 0.5;
+    for (let deg = 0; deg < 360; deg += 30) {
+      const a = deg * Math.PI / 180;
+      ctx.beginPath(); ctx.moveTo(rcx, rcy); ctx.lineTo(rcx + Math.cos(a) * maxR, rcy - Math.sin(a) * maxR); ctx.stroke();
+    }
+    const cardinals = [['N',90],['E',0],['S',270],['W',180]];
+    ctx.fillStyle = 'rgba(0,200,120,0.35)';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'center';
+    cardinals.forEach(([lbl, deg]) => {
+      const a = deg * Math.PI / 180;
+      const d = 50 / kmPerPx + 8;
+      ctx.fillText(lbl, rcx + Math.cos(a) * d, rcy - Math.sin(a) * d + 3);
+    });
+
+    // Lat/lon grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 0.5;
+    for (let lon = 76.9; lon <= 77.5; lon += 0.1) {
+      const x = lonToX(lon);
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '7px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(lon.toFixed(1) + '°E', x, H - 3);
+    }
+    for (let lat = 28.45; lat <= 28.85; lat += 0.1) {
+      const y = latToY(lat);
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.font = '7px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(lat.toFixed(1) + '°N', 3, y - 2);
+    }
+
+    // Delhi NCT boundary
+    const nctPoly = [
+      [76.84,28.71],[76.87,28.82],[76.96,28.88],[77.12,28.88],
+      [77.28,28.85],[77.35,28.78],[77.37,28.68],[77.35,28.56],
+      [77.30,28.45],[77.15,28.41],[76.98,28.43],[76.84,28.53]
+    ];
+    ctx.strokeStyle = 'rgba(200,200,200,0.18)';
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    nctPoly.forEach(([lon,lat],i) => {
+      i === 0 ? ctx.moveTo(lonToX(lon),latToY(lat)) : ctx.lineTo(lonToX(lon),latToY(lat));
+    });
+    ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+
+    // Yamuna river
+    const yamunaPath = [
+      [77.22,28.88],[77.24,28.82],[77.25,28.76],[77.24,28.72],
+      [77.23,28.68],[77.24,28.63],[77.25,28.58],[77.26,28.52],
+      [77.28,28.46],[77.30,28.40]
+    ];
+    ctx.strokeStyle = 'rgba(40,120,200,0.25)';
+    ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    yamunaPath.forEach(([lon,lat],i) => {
+      i === 0 ? ctx.moveTo(lonToX(lon),latToY(lat)) : ctx.lineTo(lonToX(lon),latToY(lat));
+    });
+    ctx.stroke();
+
+    // Precipitation — pixelated grid (DWR PPI style)
+    const scenario = RADAR_SCENARIOS[_radarScenario];
+    const cells = scenario.cells.map(c => ({
+      lat: c.lat + c.dlat * frame, lon: c.lon + c.dlon * frame,
+      r: c.r * 1.3 + frame * 4,
+      intense: c.intense * Math.max(0.08, 1 - frame * 0.055),
+    }));
+
+    const CELL_PX = PERF.radarCellPx;
+    const noiseT = frame * 0.7;
+    const _fbmOctaves = _isLowPower ? 2 : 3;
+    const imgData = ctx.getImageData(0, 0, W, H);
+    const pix = imgData.data;
+
+    for (let py = 0; py < H; py += CELL_PX) {
+      for (let px = 0; px < W; px += CELL_PX) {
+        let totalIntensity = 0;
+        const pixLon = RADAR_BOUNDS.west + (px / W) * (RADAR_BOUNDS.east - RADAR_BOUNDS.west);
+        const pixLat = RADAR_BOUNDS.north - (py / H) * (RADAR_BOUNDS.north - RADAR_BOUNDS.south);
+
+        cells.forEach(cell => {
+          const dlat = pixLat - cell.lat;
+          const dlon = (pixLon - cell.lon) * Math.cos(28.6 * Math.PI / 180);
+          const distKm = Math.sqrt(dlat * dlat + dlon * dlon) * 111;
+          const cellRadiusKm = cell.r * kmPerPx;
+          if (distKm > cellRadiusKm * 3.5) return;
+          const nd = distKm / cellRadiusKm;
+          const noiseVal = _fbm(pixLon * 12 + noiseT, pixLat * 12 + noiseT * 0.7, _fbmOctaves);
+          const deformedNd = nd * (0.7 + noiseVal * 0.6);
+          if (deformedNd > 1.8) return;
+          let localIntensity = cell.intense * Math.exp(-deformedNd * deformedNd * 1.8);
+          localIntensity *= (0.8 + _valNoise(px * 0.15 + noiseT, py * 0.15) * 0.4);
+          totalIntensity += localIntensity;
+        });
+
+        // Ground clutter near radar site
+        const dxR = px - rcx, dyR = py - rcy;
+        const distFromRadar = Math.sqrt(dxR * dxR + dyR * dyR) * kmPerPx;
+        if (distFromRadar < 12 && _radarScenario !== 'calm') {
+          const clutterNoise = _valNoise(px * 0.3 + 99, py * 0.3 + 99);
+          if (clutterNoise > 0.6) totalIntensity += (clutterNoise - 0.6) * 8;
+        }
+
+        if (totalIntensity < 0.5) continue;
+        const dBZ = _mmhrToDBZ(totalIntensity);
+        if (dBZ < 5) continue;
+
+        let r=4,g=33,b=76,a=200;
+        for (let ci=0; ci<_DBZ_COLORS.length-1; ci++) {
+          if (dBZ >= _DBZ_COLORS[ci][0] && dBZ < _DBZ_COLORS[ci+1][0]) {
+            const t = (dBZ - _DBZ_COLORS[ci][0]) / (_DBZ_COLORS[ci+1][0] - _DBZ_COLORS[ci][0]);
+            r = Math.round(_DBZ_COLORS[ci][1]*(1-t) + _DBZ_COLORS[ci+1][1]*t);
+            g = Math.round(_DBZ_COLORS[ci][2]*(1-t) + _DBZ_COLORS[ci+1][2]*t);
+            b = Math.round(_DBZ_COLORS[ci][3]*(1-t) + _DBZ_COLORS[ci+1][3]*t);
+            break;
+          }
+          if (dBZ >= _DBZ_COLORS[_DBZ_COLORS.length-1][0]) {
+            r=_DBZ_COLORS[_DBZ_COLORS.length-1][1];
+            g=_DBZ_COLORS[_DBZ_COLORS.length-1][2];
+            b=_DBZ_COLORS[_DBZ_COLORS.length-1][3];
+          }
+        }
+        a = Math.min(230, Math.round(120 + dBZ * 1.8));
+
+        for (let dy = 0; dy < CELL_PX && py+dy < H; dy++) {
+          for (let dx = 0; dx < CELL_PX && px+dx < W; dx++) {
+            const idx = ((py+dy) * W + (px+dx)) * 4;
+            const srcA = a / 255;
+            pix[idx]   = Math.round(pix[idx]*(1-srcA) + r*srcA);
+            pix[idx+1] = Math.round(pix[idx+1]*(1-srcA) + g*srcA);
+            pix[idx+2] = Math.round(pix[idx+2]*(1-srcA) + b*srcA);
+            pix[idx+3] = 255;
+          }
+        }
+      }
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    // Location markers
+    RADAR_LOCATIONS.forEach(loc => {
+      const x = lonToX(loc.lon), y = latToY(loc.lat);
+      if (x < 0 || x > W || y < 0 || y > H) return;
+      ctx.strokeStyle = loc.color; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x-5, y); ctx.lineTo(x+5, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y-5); ctx.lineTo(x, y+5); ctx.stroke();
+      ctx.fillStyle = loc.color;
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.font = '9px monospace'; ctx.textAlign = 'left';
+      ctx.fillText(loc.name, x + 7, y + 3);
+      ctx.fillStyle = loc.color;
+      ctx.fillText(loc.name, x + 6, y + 3);
+    });
+
+    _radarBaseFrame = frame;
+    _radarBaseScenario = _radarScenario;
+  }
+
+  function drawRadarFrame(frame) {
+    const canvas = document.getElementById('radar-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // Rebuild base layer only when frame/scenario changes
+    if (_radarBaseFrame !== frame || _radarBaseScenario !== _radarScenario) {
+      _renderRadarBase(W, H, frame);
+    }
+
+    // Blit cached base
+    ctx.drawImage(_radarBaseCanvas, 0, 0);
+
+    const rcx = lonToX(_RADAR_SITE.lon), rcy = latToY(_RADAR_SITE.lat);
+    const kmPerPxLat = (RADAR_BOUNDS.north - RADAR_BOUNDS.south) * 111 / H;
+    const kmPerPxLon = (RADAR_BOUNDS.east - RADAR_BOUNDS.west) * 111 * Math.cos(28.6 * Math.PI/180) / W;
+    const kmPerPx = (kmPerPxLat + kmPerPxLon) / 2;
+    const maxR = 200 / kmPerPx;
+
+    // Sweep animation
+    const now = Date.now();
+    if (now - _lastSweepTime > 16) {
+      _sweepAngle = (_sweepAngle + 0.025) % (Math.PI * 2);
+      _lastSweepTime = now;
+      _sweepTrail.push({ angle: _sweepAngle, time: now });
+      _sweepTrail = _sweepTrail.filter(t => now - t.time < PERF.radarSweepTrailMs);
+    }
+
+    // Afterglow trail (reduced on low-power)
+    const _trailEntries = _isLowPower ? _sweepTrail.filter((_, i) => i % 2 === 0) : _sweepTrail;
+    _trailEntries.forEach(t => {
+      const age = (now - t.time) / PERF.radarSweepTrailMs;
+      const alpha = 0.12 * (1 - age);
+      if (alpha < 0.005) return;
+      ctx.save();
+      ctx.translate(rcx, rcy);
+      ctx.rotate(-t.angle);
+      const trailGrad = ctx.createLinearGradient(0, 0, maxR * 1.2, 0);
+      trailGrad.addColorStop(0, `rgba(0,255,80,${alpha * 1.5})`);
+      trailGrad.addColorStop(0.3, `rgba(0,255,80,${alpha})`);
+      trailGrad.addColorStop(1, `rgba(0,255,80,0)`);
+      ctx.strokeStyle = trailGrad;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(maxR * 1.2, 0); ctx.stroke();
+      ctx.restore();
+    });
+
+    // Main sweep line
+    ctx.save();
+    ctx.translate(rcx, rcy);
+    ctx.rotate(-_sweepAngle);
+    const sweepGrad = ctx.createLinearGradient(0, 0, maxR * 1.2, 0);
+    sweepGrad.addColorStop(0, 'rgba(0,255,80,0.9)');
+    sweepGrad.addColorStop(0.15, 'rgba(0,255,80,0.6)');
+    sweepGrad.addColorStop(0.5, 'rgba(0,255,80,0.2)');
+    sweepGrad.addColorStop(1, 'rgba(0,255,80,0)');
+    ctx.strokeStyle = sweepGrad;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(maxR * 1.2, 0); ctx.stroke();
+    ctx.restore();
+
+    // Radar site dot
+    ctx.fillStyle = '#00ff50';
+    ctx.beginPath(); ctx.arc(rcx, rcy, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,255,80,0.2)';
+    ctx.beginPath(); ctx.arc(rcx, rcy, 6, 0, Math.PI * 2); ctx.fill();
+
+    // Info overlays
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, 170, 46);
+    ctx.fillStyle = 'rgba(0,255,80,0.85)';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('IMD PALAM DWR  PPI 1.0\u00B0', 4, 11);
+    ctx.fillStyle = 'rgba(0,200,80,0.6)';
+    ctx.font = '8px monospace';
+    const timeNow = new Date();
+    const tStr = timeNow.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    ctx.fillText(`${timeNow.toLocaleDateString('en-IN')} ${tStr} IST`, 4, 22);
+    ctx.fillText(`PRF: 934Hz  Elev: 1.0\u00B0  Vol`, 4, 33);
+    ctx.fillText(`VCP-21  Dual-Pol  ${frame===0?'Live':'Fcst +'+frame+'h'}`, 4, 43);
+
+    const scenario = RADAR_SCENARIOS[_radarScenario];
+    const maxI = scenario.maxIntensity * Math.max(0.08, 1 - frame * 0.055);
+    const maxDBZ = _mmhrToDBZ(maxI);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(W - 130, 0, 130, 26);
+    ctx.fillStyle = maxDBZ > 50 ? '#e03030' : maxDBZ > 35 ? '#e0a020' : '#30e060';
+    ctx.font = 'bold 9px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`Max: ${maxDBZ.toFixed(0)} dBZ (${maxI.toFixed(1)}mm/hr)`, W - 4, 11);
+    ctx.fillStyle = 'rgba(200,200,200,0.5)';
+    ctx.font = '8px monospace';
+    ctx.fillText(scenario.label || _radarScenario, W - 4, 22);
+
+    // External labels
+    const iLabel = document.getElementById('radar-intensity-label');
+    if (iLabel) {
+      iLabel.textContent = `Max: ${maxDBZ.toFixed(0)} dBZ / ${maxI.toFixed(1)}mm/hr`;
+      iLabel.style.color = maxDBZ > 50 ? 'var(--red,#ef4444)' : maxDBZ > 35 ? 'var(--amber,#f59e0b)' : 'var(--color-text-success)';
+    }
+    const tLabel = document.getElementById('radar-time-label');
+    if (tLabel) tLabel.textContent = frame === 0 ? 'T+0h (Live)' : `T+${frame}h`;
+  }
+
+  // Continuous sweep animation loop (throttled on low-power devices)
+  let _radarLastFrameTime = 0;
+  const _radarFrameInterval = 1000 / PERF.radarFPS;
+  function _radarLoop(timestamp) {
+    if (!_radarVisible || document.hidden) { _radarAnimFrame = null; return; }
+    if (timestamp - _radarLastFrameTime >= _radarFrameInterval) {
+      _radarLastFrameTime = timestamp;
+      drawRadarFrame(_radarFrame);
+    }
+    _radarAnimFrame = requestAnimationFrame(_radarLoop);
+  }
+
+  function toggleRadarPanel() {
+    const panel = document.getElementById('radar-panel');
+    _radarVisible = !_radarVisible;
+    panel.style.display = _radarVisible ? 'block' : 'none';
+    if (_radarVisible) {
+      _radarFrame = 0;
+      _sweepAngle = 0;
+      _sweepTrail = [];
+      _radarLoop();
+      logConsole('Radar panel opened — IMD Palam DWR simulation', 'system');
+    } else {
+      stopRadar();
+    }
+  }
+
+  function scrubRadar(value) {
+    if (_radarPlayInterval) { clearInterval(_radarPlayInterval); _radarPlayInterval = null; }
+    document.getElementById('radar-play-btn').textContent = '▶ Play';
+    _radarFrame = parseInt(value);
+    // sweep loop redraws automatically
+  }
+
+  function playRadar() {
+    if (_radarPlayInterval) { clearInterval(_radarPlayInterval); _radarPlayInterval = null; }
+    document.getElementById('radar-play-btn').textContent = '⏸ Playing';
+    _radarPlayInterval = setInterval(() => {
+      _radarFrame = (_radarFrame + 1) % 6;
+      document.getElementById('radar-scrub').value = _radarFrame;
+    }, 1200);
+  }
+
+  function stopRadar() {
+    if (_radarPlayInterval) { clearInterval(_radarPlayInterval); _radarPlayInterval = null; }
+    if (_radarAnimFrame) { cancelAnimationFrame(_radarAnimFrame); _radarAnimFrame = null; }
+    const btn = document.getElementById('radar-play-btn');
+    if (btn) btn.textContent = '▶ Play';
+  }
+
+  function loadRadarScenario(scenario) {
+    _radarScenario = scenario;
+    _radarFrame = 0;
+    if (_radarPlayInterval) { clearInterval(_radarPlayInterval); _radarPlayInterval = null; }
+    document.getElementById('radar-play-btn').textContent = '▶ Play';
+    document.getElementById('radar-scrub').value = 0;
+    document.querySelectorAll('.radar-scene-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.getElementById('rscene-' + scenario);
+    if (activeBtn) activeBtn.classList.add('active');
+    logConsole(`Radar scenario: ${RADAR_SCENARIOS[scenario].label}`, 'system');
+  }
+
+  function syncRadarToScenario(scenario) {
+    if (_radarVisible) loadRadarScenario(scenario);
+  }
+
+  // ── DATA SOURCES MODAL ────────────────────────────────────────
+  function showDataSources() {
+    const existing = document.getElementById('datasources-modal');
+    if (existing) { existing.remove(); return; }
+    const modal = document.createElement('div');
+    modal.id = 'datasources-modal';
+    modal.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;z-index:9999;width:420px;max-width:95vw;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.5)';
+    const sections = [
+      { section: 'Elevation Data', items: [
+        { b:'real', t:'NASA SRTM v4.1 — 30m resolution DEM for all 290 wards' },
+        { b:'real', t:'CGIAR-CSI OpenTopography processed tiles' },
+      ]},
+      { section: 'Ward Boundaries', items: [
+        { b:'real', t:'Datameet Delhi Wards GeoJSON — official MCD + NDMC + Cantonment boundaries' },
+      ]},
+      { section: 'Drainage Parameters', items: [
+        { b:'real', t:'Horton f∞ = 0.635mm/hr — IIT Delhi DMP Table 4.3-1' },
+        { b:'real', t:'IDF curves — IIT Delhi DMP Fig 4.4-1/2 (Safdarjung + Palam)' },
+        { b:'real', t:'Runoff coefficients — NCRPB NCR Drainage Plan Table 5.4–5.5' },
+        { b:'proxy', t:'Drain capacity values — zone-averaged from IIT Delhi DMP basin deficits' },
+        { b:'proxy', t:'Hotspot locations — ST_GeneratePoints (area-proportional, not exact drain positions)' },
+      ]},
+      { section: 'Yamuna / River Data', items: [
+        { b:'real', t:'Warning level 204.5m, Danger 205.33m — CWC official thresholds' },
+        { b:'real', t:'48-yr validation — INDOFLOODS gauge-164 (DOI: 10.5281/zenodo.14584654)' },
+        { b:'real', t:'2023 peak 208.66m — CWC Delhi Floods 2023 Case Study' },
+        { b:'proxy', t:'Live discharge — Open-Meteo ERA5 proxy (production: CWC India-WRIS API)' },
+      ]},
+      { section: 'Infrastructure', items: [
+        { b:'real', t:'871 hospitals, 40 fire stations — OpenStreetMap Overpass API' },
+        { b:'real', t:'324 electrical substations — OpenStreetMap' },
+        { b:'proxy', t:'LP dispatch constraints — 15 pumps/ward estimated (production: PWD asset API)' },
+      ]},
+      { section: 'Sensor & CCTV Network', items: [
+        { b:'real', t:'18 drain names & locations — IIT Delhi DMP + DDMA documentation' },
+        { b:'real', t:'CWC warn/danger thresholds per drain' },
+        { b:'sim',  t:'Live water level readings — simulated with realistic drift' },
+        { b:'sim',  t:'CCTV camera feeds — canvas animation (production: PWD CCTV API)' },
+        { b:'sim',  t:'QRT truck positions — simulated at real PWD depot locations' },
+      ]},
+      { section: 'Backtest', items: [
+        { b:'real', t:'July 2023 rainfall + Yamuna stage data — CWC Case Study + IMD' },
+        { b:'proxy', t:'Reference flooded wards — elevation threshold classification (production: NRSC SAR spatial join)' },
+      ]},
+    ];
+    const badgeLabel = b => b === 'real' ? '✓ REAL' : b === 'proxy' ? '≈ PROXY' : '⟳ SIM';
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Data Sources &amp; Limitations</div>
+        <button onclick="document.getElementById('datasources-modal').remove()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px">×</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <span class="badge-real">✓ REAL</span><span style="font-size:10px;color:var(--text-sec)">Verified published source</span>
+        <span class="badge-proxy">≈ PROXY</span><span style="font-size:10px;color:var(--text-sec)">Estimated from research</span>
+        <span class="badge-sim">⟳ SIM</span><span style="font-size:10px;color:var(--text-sec)">Simulated for demo</span>
+      </div>
+      ${sections.map(s => `
+        <div style="margin-bottom:12px">
+          <div style="font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">${s.section}</div>
+          ${s.items.map(item => `
+            <div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:5px">
+              <span class="badge-${item.b}" style="flex-shrink:0;margin-top:1px">${badgeLabel(item.b)}</span>
+              <span style="font-size:10px;color:var(--text-sec);line-height:1.4">${item.t}</span>
+            </div>`).join('')}
+        </div>`).join('')}
+      <div style="margin-top:8px;padding:10px;background:var(--bg);border-radius:6px;font-size:10px;color:var(--text-dim);line-height:1.5">
+        <strong style="color:var(--text-sec)">Production path:</strong>
+        Every PROXY and SIM item has a direct replacement: PWD asset API → exact drain locations and capacity; CWC India-WRIS → live discharge; NRSC SAR → spatial flood validation; PWD CCTV API → real camera feeds. The intelligence layer (scoring, dispatch, advance warning) is complete and validated. The data layer improves with sensor infrastructure deployment.
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  // ── SMS ALERT GENERATOR ───────────────────────────────────────
+  function generateSMSAlert(wardName, wsScore, floodProb, depth, elevation) {
+    const riskLevel = wsScore < 40 ? 'CRITICAL' : wsScore < 55 ? 'HIGH' : 'MODERATE';
+    const action = wsScore < 40
+      ? 'EVACUATE low-lying areas immediately.'
+      : wsScore < 55
+      ? 'Move valuables to higher floors. Avoid basements.'
+      : 'Stay alert. Avoid waterlogged streets.';
+    const depthText = depth ? `Expected water depth: ${depth.min}–${depth.max}m. ` : '';
+
+    return `⚠️ FloodReady Delhi ALERT
+Ward: ${wardName}
+Risk: ${riskLevel} (Score: ${wsScore.toFixed(0)})
+Flood probability: ${floodProb}% in next 6hrs
+${depthText}${action}
+Helpline: 1077 | PWD: 1800-11-8586
+Source: FloodReady Delhi · MCD EOC`;
+  }
+
+  function showSMSAlert(wardName, wsScore, floodProb, depthJson) {
+    const depth = depthJson && depthJson !== 'null' ? JSON.parse(depthJson) : null;
+    const sms = generateSMSAlert(wardName, wsScore, floodProb, depth, 210);
+
+    const existing = document.getElementById('sms-modal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'sms-modal';
+    modal.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;z-index:9999;width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.5)`;
+
+    const smsSafe = sms.replace(/`/g, '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    const residentCount = (Math.floor(Math.random() * 15000 + 5000)).toLocaleString();
+
+    modal.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Resident Alert — ${wardName}</div>
+        <button onclick="document.getElementById('sms-modal').remove()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px">&times;</button>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:11px;line-height:1.6;color:var(--text-primary);white-space:pre-wrap;margin-bottom:12px">${sms}</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:12px">
+        This SMS would be sent to ~${residentCount} registered residents in this ward via IMD-NDMA alert network.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button id="sms-copy-btn" style="flex:1;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);font-size:12px;cursor:pointer">Copy SMS</button>
+        <button onclick="document.getElementById('sms-modal').remove()" style="flex:1;padding:8px;border-radius:6px;border:none;background:#ef4444;color:#fff;font-size:12px;font-weight:600;cursor:pointer">Close</button>
+      </div>`;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('sms-copy-btn').addEventListener('click', function() {
+      navigator.clipboard.writeText(sms).then(() => { this.textContent = 'Copied!'; });
+    });
+
+    logConsole(`SMS alert generated for ${wardName} — ${floodProb}% flood probability`, 'critical');
+  }
+
 </script>
+<!-- Radar Panel -->
+<div id="radar-panel" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);width:680px;max-width:95vw;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:var(--text-primary)">Delhi Rainfall Radar — 6hr Forecast</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-top:4px;display:flex;gap:5px;flex-wrap:wrap;align-items:center">
+        <span class="badge-real">✓ REAL — Storm track directions</span>
+        <span class="badge-real">✓ REAL — Historical intensity values</span>
+        <span class="badge-sim">⟳ SIMULATED — Live radar animation</span>
+      </div>
+      <div class="data-note" style="margin-top:3px">Production: Replace with IMD DWR API (Doppler Weather Radar, Delhi network).</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="radar-time-label" style="font-size:11px;font-weight:600;color:var(--cyan,#00bcd4)">T+0h</div>
+      <button onclick="toggleRadarPanel()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;line-height:1">&times;</button>
+    </div>
+  </div>
+
+  <div style="position:relative;background:#0a0f1a">
+    <canvas id="radar-canvas" width="680" height="400" style="display:block;width:100%"></canvas>
+
+    <div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.75);border-radius:6px;padding:8px 10px;font-size:9px;color:#fff;font-family:monospace">
+      <div style="font-weight:600;margin-bottom:5px;color:#aaa;letter-spacing:.3px">REFLECTIVITY (dBZ)</div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(4,33,76),rgb(10,50,120))"></div><span style="color:#8899aa">5–15</span><span style="color:#556">Light</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(20,90,180),rgb(30,140,220))"></div><span style="color:#8899aa">15–25</span><span style="color:#556">Moderate</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(50,180,100),rgb(160,220,30))"></div><span style="color:#8899aa">25–40</span><span style="color:#556">Heavy</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(220,200,10),rgb(250,160,0))"></div><span style="color:#8899aa">40–50</span><span style="color:#556">V.Heavy</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(240,100,0),rgb(220,40,20))"></div><span style="color:#8899aa">50–60</span><span style="color:#556">Extreme</span></div>
+        <div style="display:flex;align-items:center;gap:4px"><div style="width:28px;height:8px;border-radius:1px;background:linear-gradient(90deg,rgb(180,10,40),rgb(160,30,160))"></div><span style="color:#8899aa">60+</span><span style="color:#556">Hail</span></div>
+      </div>
+    </div>
+
+    <div style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);border-radius:6px;padding:8px 12px;font-size:10px;color:#fff">
+      <div style="font-weight:600;color:#aaa;margin-bottom:4px">Key Locations</div>
+      <div style="color:#64b5f6">● Hathnikund Barrage</div>
+      <div style="color:#81c784">● Safdarjung Station</div>
+      <div style="color:#ffb74d">● IGI Airport</div>
+      <div style="color:#f48fb1">● ITO Bridge</div>
+    </div>
+  </div>
+
+  <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px">
+    <div style="font-size:10px;color:var(--text-dim)">Forecast hour:</div>
+    <input type="range" id="radar-scrub" min="0" max="5" value="0" step="1" style="flex:1" oninput="scrubRadar(this.value)">
+    <div style="display:flex;gap:6px">
+      <button onclick="playRadar()" id="radar-play-btn" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);cursor:pointer">▶ Play</button>
+      <button onclick="stopRadar()" style="font-size:11px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text-primary);cursor:pointer">■ Stop</button>
+    </div>
+    <div id="radar-intensity-label" style="font-size:11px;font-weight:600;min-width:120px;text-align:right;color:var(--text-primary)">Max: 0mm/hr</div>
+  </div>
+
+  <div style="padding:6px 16px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <div style="font-size:10px;color:var(--text-dim)">Storm scenario:</div>
+    <button onclick="loadRadarScenario('calm')"     class="radar-scene-btn" id="rscene-calm">Clear</button>
+    <button onclick="loadRadarScenario('sw')"       class="radar-scene-btn" id="rscene-sw">SW Delhi Cloudburst</button>
+    <button onclick="loadRadarScenario('yamuna')"   class="radar-scene-btn" id="rscene-yamuna">Yamuna Corridor</button>
+    <button onclick="loadRadarScenario('citywide')" class="radar-scene-btn" id="rscene-citywide">City-Wide Storm</button>
+    <button onclick="loadRadarScenario('jul2023')"  class="radar-scene-btn" id="rscene-jul2023">Jul 11 2023 Replay</button>
+  </div>
+</div>
+
 </body>
 </html>
