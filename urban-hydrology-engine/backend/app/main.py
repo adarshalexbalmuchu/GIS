@@ -45,6 +45,14 @@ app.include_router(export_router)
 
 # Resolve frontend directory — works in Docker and local dev
 _FRONTEND_DIR = os.getenv("FRONTEND_DIR", "/app/frontend")
+if not os.path.isdir(_FRONTEND_DIR):
+    # Fallback: check relative to this file (local dev / non-Docker)
+    _alt = os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
+    if os.path.isdir(_alt):
+        _FRONTEND_DIR = os.path.abspath(_alt)
+    else:
+        os.makedirs(_FRONTEND_DIR, exist_ok=True)
+        print(f"WARNING: Frontend directory created (was missing): {_FRONTEND_DIR}")
 app.mount("/static", StaticFiles(directory=_FRONTEND_DIR), name="static")
 
 # Shared httpx client for tile proxy
