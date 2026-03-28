@@ -916,6 +916,7 @@
       top: var(--header-h);
       right: 0;
       bottom: calc(var(--ctrl-h) + var(--footer-h));
+      width: min(380px, 92vw);
       z-index: 900;
       transform: translateX(100%);
       box-shadow: var(--shadow-lg);
@@ -3699,7 +3700,7 @@
       }
     } else {
       // Restart radar if panel is open
-      if (typeof _radarVisible !== 'undefined' && _radarVisible && typeof _radarLoop === 'function') {
+      if (typeof _radarVisible !== 'undefined' && _radarVisible && !_radarAnimFrame && typeof _radarLoop === 'function') {
         _radarAnimFrame = requestAnimationFrame(_radarLoop);
       }
       // Restart CCTV if tab active
@@ -4072,6 +4073,8 @@
 
           if (step >= steps) {
             clearInterval(moveInterval);
+            const idx = (qrt._animIntervals || []).indexOf(moveInterval);
+            if (idx >= 0) qrt._animIntervals.splice(idx, 1);
             const arrivedIcon = L.divIcon({
               className: '',
               html: `<div style="
@@ -4109,6 +4112,8 @@
             );
           }
         }, 180);
+        if (!qrt._animIntervals) qrt._animIntervals = [];
+        qrt._animIntervals.push(moveInterval);
       }, departureDelay);
     });
 
@@ -4127,6 +4132,9 @@
     QRT_DEPOTS.forEach(depot => {
       const qrt = _qrtMarkers[depot.id];
       if (!qrt) return;
+      // Clear any running animation intervals
+      (qrt._animIntervals || []).forEach(id => clearInterval(id));
+      qrt._animIntervals = [];
       qrt.marker.setLatLng([depot.lat, depot.lon]);
       qrt.currentLat = depot.lat;
       qrt.currentLon = depot.lon;
@@ -4290,6 +4298,7 @@
       // Pause canvas when CCTV tab is not visible or page is hidden
       const cctvTabActive = document.getElementById('tab-cctv')?.classList.contains('active');
       if (document.hidden || !cctvTabActive) {
+        if (canvas._animFrame) cancelAnimationFrame(canvas._animFrame);
         canvas._animFrame = null;
         return;
       }
@@ -4453,9 +4462,8 @@
         ctx.fillRect(0, 0, W, H);
       }
 
-      // Pause canvas when CCTV tab is not visible or page is hidden
-      const cctvTabActive = document.getElementById('tab-cctv')?.classList.contains('active');
-      if (!document.hidden && cctvTabActive) {
+      // Schedule next frame (cctvTabActive already checked at top of drawFrame)
+      if (!document.hidden && document.getElementById('tab-cctv')?.classList.contains('active')) {
         canvas._animFrame = requestAnimationFrame(drawFrame);
       } else {
         canvas._animFrame = null;
@@ -4757,7 +4765,6 @@
       _cycleOverrides[String(wid)] = band;
       count++;
     });
-    console.log('[buildOverridesFromMap] populated', count, 'ward overrides from map layer');
   }
 
   // Re-apply PMRS colors after readiness loads or theme switches
@@ -4813,6 +4820,7 @@
     const panel = document.getElementById('drill-panel');
     const loading = document.getElementById('drill-loading');
     const content = document.getElementById('drill-content');
+    if (!panel || !loading || !content) return;
     document.getElementById('drill-ward-name').textContent = wardName || '—';
     document.getElementById('drill-subtitle').textContent = '';
     document.getElementById('drill-badge').textContent = '...';
@@ -4821,7 +4829,6 @@
     loading.textContent = 'Loading ward data';
     content.style.display = 'none';
     panel.classList.add('open');
-    console.log(`%c[DRILL] Opening ward ${wardId}: ${wardName}`, 'color:#7C3AED');
     fetchWardDetail(wardId);
   }
 
@@ -5344,7 +5351,6 @@
       }
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const data = await resp.json();
-      console.log('[runCycle] response:', JSON.stringify(data, null, 2));
 
       // Build cycle overrides for immediate map recoloring (before readiness reload)
       _cycleOverrides = {};
@@ -5389,11 +5395,9 @@
       // Mirror map colours to _cycleOverrides so Risk tab stays in sync
       setTimeout(() => {
         buildOverridesFromMap();
-        console.log('[runCycle] overrides built:', Object.keys(_cycleOverrides).length);
         if (!_inCloudburst) {
           setTimeout(() => {
             renderRiskTab();
-            console.log('[runCycle] standalone render done');
           }, 300);
         }
       }, 800);
@@ -5487,13 +5491,13 @@
       `).join('');
 
       // Highlight on click
-      list.querySelectorAll('.cb-scenario').forEach(el => {
-        el.addEventListener('click', () => {
-          list.querySelectorAll('.cb-scenario').forEach(x => x.classList.remove('selected'));
-          el.classList.add('selected');
-          el.querySelector('input').checked = true;
-        });
-      });
+      list.onclick = function(e) {
+        const scenario = e.target.closest('.cb-scenario');
+        if (!scenario) return;
+        list.querySelectorAll('.cb-scenario').forEach(x => x.classList.remove('selected'));
+        scenario.classList.add('selected');
+        scenario.querySelector('input').checked = true;
+      };
 
       document.getElementById('cloudburst-overlay').classList.add('open');
       document.body.style.overflow = 'hidden';
@@ -5570,7 +5574,6 @@
       }
       if (!rainResp || !rainResp.ok) throw new Error(`Rain POST failed after 4 attempts: HTTP ${rainResp ? rainResp.status : 'no response'}`);
       const rainData = await rainResp.json();
-      console.log('[Cloudburst] rain event:', rainData);
       logConsole(`Rain event (${scenario.label}): ${rainData.hotspots_in_polygon} hotspots in flood zone`, 'critical');
 
       // Degrade ALL hotspots within the polygon in one backend query.
@@ -5584,7 +5587,6 @@
         console.warn('[Cloudburst] degrade-polygon HTTP', degradeResp.status, '— continuing anyway');
       } else {
         const degradeData = await degradeResp.json();
-        console.log('[Cloudburst] degraded:', degradeData);
       }
       logConsole('Drainage capacity degraded across flood zone', 'triggered');
       spikeAllSensors(scenario.intensity_r);
@@ -5599,14 +5601,12 @@
       if (map.getZoom() >= 11) loadHotspots();
 
       // Force-refresh readiness scores (bypass 5-min cache) so panel shows impact
-      try { await fetch('/readiness/refresh', { method: 'POST', headers: POST_AUTH }); } catch(_) {}
+      try { await fetch('/readiness/refresh', { method: 'POST', headers: POST_AUTH }); } catch(e) { logConsole('Readiness refresh skipped — ' + e.message, 'system'); }
       await loadReadiness();
       await new Promise(r => setTimeout(r, 1200));
       buildOverridesFromMap();
       await new Promise(r => setTimeout(r, 200));
       renderRiskTab();
-      console.log('[Cloudburst] FINAL render — red:', document.getElementById('rt-red')?.textContent);
-
     } catch (err) {
       console.error('[Cloudburst] Error:', err);
       logConsole(`API Error: ${err.message}`, 'error');
@@ -5870,14 +5870,14 @@
     document.querySelectorAll('.skeleton').forEach(el => el.classList.remove('skeleton'));
     const mapSkel = document.getElementById('map-skeleton');
     if (mapSkel) { mapSkel.classList.add('hidden'); setTimeout(() => mapSkel.remove(), 500); }
-    initSensors();
+    try { initSensors(); } catch(e) { console.warn('[INIT] Sensors failed:', e.message); }
     _sensorInterval = setInterval(() => {
       if (document.getElementById('tab-sensors').classList.contains('active')) {
         tickSensors();
       }
     }, PERF.sensorTickMs);
-    initCCTV();
-    initQRTMarkers();
+    try { initCCTV(); } catch(e) { console.warn('[INIT] CCTV failed:', e.message); }
+    try { initQRTMarkers(); } catch(e) { console.warn('[INIT] QRT failed:', e.message); }
   })();
 
   // ═══════════════════════════════════════════════════════════════
@@ -6120,7 +6120,7 @@
       ]);
 
       if (!timelineResp.ok || !worstResp.ok || !summaryResp.ok) {
-        throw new Error('History API error');
+        throw new Error(`History fetch failed (${timelineResp.status}/${worstResp.status}/${summaryResp.status})`);
       }
 
       const data = {
@@ -7536,7 +7536,6 @@
   function renderRiskTab() {
     if (_skipNextRiskRender) {
       _skipNextRiskRender = false;
-      console.log('[renderRiskTab] skipped stale render');
       return;
     }
     // Summary cards
@@ -7602,8 +7601,6 @@
       </div>`;
     }).join('');
 
-    console.log('[renderRiskTab] writing counts —', 'red:', redCount, 'amber:', amberCount, 'green:', greenCount);
-
     // Direct fallback writes using multiple possible IDs
     const redEls   = document.querySelectorAll('#rt-red, #risk-critical, #critical-count, [data-risk="red"] .count, .rt-red-count');
     const amberEls = document.querySelectorAll('#rt-amber, #risk-atrisk, #atrisk-count, [data-risk="amber"] .count, .rt-amber-count');
@@ -7612,8 +7609,6 @@
     amberEls.forEach(el => { el.textContent = amberCount; });
     greenEls.forEach(el => { el.textContent = greenCount; });
 
-    const verifyRed = document.getElementById('rt-red');
-    console.log('[renderRiskTab] DOM verify — red element:', verifyRed?.id, 'value:', verifyRed?.textContent);
   }
 
   // ── Layer Toggle Switches ─────────────────────────────────────
@@ -8404,7 +8399,7 @@ Source: FloodReady Delhi · MCD EOC`;
 
 </script>
 <!-- Radar Panel -->
-<div id="radar-panel" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);width:680px;max-width:95vw;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden">
+<div id="radar-panel" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);width:min(680px,94vw);max-width:94vw;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;z-index:2000;box-shadow:0 8px 32px rgba(0,0,0,0.4);overflow:hidden">
 
   <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)">
     <div>
